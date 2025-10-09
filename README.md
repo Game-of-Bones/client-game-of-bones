@@ -1,6 +1,9 @@
 <<<<<<< HEAD
 # client-game-of-bones
 <<<<<<< HEAD
+#readme
+=======
+<<<<<<< HEAD
 =======
 # React + TypeScript + Vite
 
@@ -79,3 +82,4 @@ export default defineConfig([
 =======
 #readme
 >>>>>>> 0536e40386c30dfa442c04d8c2b461851981a5ce
+>>>>>>> a594cf055a8189bf907f8bff46a021357c45f6c9
