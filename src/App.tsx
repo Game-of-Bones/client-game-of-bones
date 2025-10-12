@@ -1,16 +1,10 @@
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div>
-          <h1>Game of Bones</h1>
-          <p>Blog de descubrimientos paleontológicos</p>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <div style={{ padding: '2rem' }}>
+      <h1>Game of Bones</h1>
+      <p>Blog de descubrimientos paleontológicos</p>
+      <p>✅ AuthContext funcionando</p>
+    </div>
   );
 }
 
