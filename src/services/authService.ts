@@ -35,7 +35,7 @@ class AuthService {
       throw new Error('Credenciales inválidas');
     }
 
-    const { password, ...user } = foundUser;
+    const { password: __password, ...user  } = foundUser;
     const token = `mock-token-${user.id}-${Date.now()}`;
 
     return { user, token };
@@ -82,7 +82,7 @@ class AuthService {
       throw new Error('Usuario no encontrado');
     }
 
-    const { password, ...user } = foundUser;
+    const { password: __password, ...user } = foundUser;
     return user;
   }
 

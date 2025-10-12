@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type {
   AuthContextType,
   AuthState,
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (error) {
+    } catch {
       localStorage.removeItem('token');
       setState({
         user: null,
@@ -49,33 +50,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const login = async (credentials: LoginCredentials) => {
-    try {
-      const { user, token } = await authService.login(credentials);
-      localStorage.setItem('token', token);
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error) {
-      throw error;
-    }
+    const { user, token } = await authService.login(credentials);
+    localStorage.setItem('token', token);
+    setState({
+      user,
+      token,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   };
 
   const register = async (data: RegisterData) => {
-    try {
-      const { user, token } = await authService.register(data);
-      localStorage.setItem('token', token);
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error) {
-      throw error;
-    }
+    const { user, token } = await authService.register(data);
+    localStorage.setItem('token', token);
+    setState({
+      user,
+      token,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   };
 
   const logout = () => {
@@ -91,6 +84,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  if (state.isLoading) {
+    return <div>Cargando autenticación...</div>;
+  }
 
   return (
     <AuthContext.Provider
