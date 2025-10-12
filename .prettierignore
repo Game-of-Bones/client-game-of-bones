@@ -1,0 +1,15 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+coverage/
+
+# Archivos de configuración
+package-lock.json
+*.min.js
+*.min.css
+
+# Git
+.git/
