@@ -1,5 +1,5 @@
 import apiClient from './interceptors';
-import { ApiResponse } from '../../types/api.types';
+import type { ApiResponse } from '../../types/api.types';
 
 class ApiService {
   async get<T>(url: string): Promise<ApiResponse<T>> {
@@ -7,12 +7,12 @@ class ApiService {
     return response.data;
   }
 
-  async post<T>(url: string, data: any): Promise<ApiResponse<T>> {
+  async post<T>(url: string, data: unknown): Promise<ApiResponse<T>> {
     const response = await apiClient.post<ApiResponse<T>>(url, data);
     return response.data;
   }
 
-  async put<T>(url: string, data: any): Promise<ApiResponse<T>> {
+  async put<T>(url: string, data: unknown): Promise<ApiResponse<T>> {
     const response = await apiClient.put<ApiResponse<T>>(url, data);
     return response.data;
   }
