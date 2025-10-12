@@ -1,9 +1,16 @@
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+
 function App() {
   return (
-    <div>
-      <h1>Game of Bones - Paleontología</h1>
-      <p>Bienvenida al blog de descubrimientos paleontológicos</p>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <div>
+          <h1>Game of Bones</h1>
+          <p>Blog de descubrimientos paleontológicos</p>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
