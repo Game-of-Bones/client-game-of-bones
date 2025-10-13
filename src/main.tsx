@@ -9,7 +9,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router/index.tsx';
-import './styles/globals.css'; 
+import { AuthProvider } from './context/AuthContext.tsx';
+import './index.css';
 
 /**
  * Renderiza la aplicación con React Router
