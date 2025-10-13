@@ -27,14 +27,7 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation(); // Hook para obtener la ubicación actual
-
-  // TODO: Descomentar cuando useAuth esté implementado--> hecho :)
   const { isAuthenticated, isLoading } = useAuth();
-
-  // // MOCK temporal - CAMBIAR cuando useAuth esté listo
-  // // Simula verificación de autenticación desde localStorage
-  // const isAuthenticated = !!localStorage.getItem('token');
-  // const isLoading = false; // En producción, esto vendría de useAuth
 
   // /**
   //  * Mientras se verifica la autenticación, mostrar un loading
