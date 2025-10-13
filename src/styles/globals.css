@@ -1,16 +1,14 @@
-/* 1) SIEMPRE primero */
 @import "tailwindcss";
 
-/* 2) Tokens del design system */
+/* Tokens del design system */
 @theme {
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  --font-serif: Merriweather, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: Inter, ui-sans-serif, system-ui;
+  --font-serif: Merriweather, serif;
 
-  /* Paleta clara */
   --color-primary-50:  #FAF2E5;
   --color-primary-100: #F5EBC8;
   --color-primary-200: #C0C3A4;
-  --color-primary-300: #AA7B5C;  /* principal */
+  --color-primary-300: #AA7B5C;
   --color-primary-400: #8B6543;
   --color-primary-500: #864B39;
 
@@ -20,32 +18,24 @@
 
   --color-accent-coral: #F76C5E;
 
-  /* Paleta dark */
   --color-dark-background:     #1a1410;
   --color-dark-surface:        #2d2419;
   --color-dark-text:           #F5EBC8;
   --color-dark-text-secondary: #C0C3A4;
 }
 
-/* 3) Globales */
+/* Globales */
 html, body, #root { height: 100%; }
 
 body {
-  /* usa utilidades tailwind, no theme() */
   @apply bg-primary-50 text-zinc-900 font-sans;
-  cursor: url('/src/styles/cursor-dino.png') 2 2, auto;
+  /* cursor: url('/src/styles/cursor-dino.png') 2 2, auto;  // desactívalo por ahora */
 }
 
-/* Dark mode por clase .dark en <html> */
-html.dark body {
-  @apply bg-dark-background text-dark-text;
-}
+html.dark body { @apply bg-dark-background text-dark-text; }
 
-/* Focus accesible */
 *:focus-visible {
   outline: none;
-  /* usa utilidades en vez de theme() */
-  box-shadow: none;
   @apply ring-2 ring-accent-coral ring-offset-2 ring-offset-primary-50;
 }
 html.dark *:focus-visible { @apply ring-offset-dark-background; }

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 /**
  * Home - Página principal de Game of Bones
- * 
+ *
  * Contenido sugerido para el futuro:
  * - Hero section con mensaje de bienvenida
  * - Lista de posts destacados (últimos 3-5 posts)
@@ -61,7 +61,7 @@ const Home = () => {
       </section>
 
       {/* TODO: Agregar sección de posts destacados */}
-      {/* 
+      {/*
       <section>
         <h2 className="text-2xl font-bold mb-4">Posts Destacados</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -99,21 +99,21 @@ export default Home;
 
 /**
  * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
+ *
  * 1. Posts destacados:
  *    - Llamar al endpoint GET /posts?limit=5&sort=popular
  *    - Usar un componente PostCard reutilizable
  *    - Agregar skeleton loading mientras carga
- * 
+ *
  * 2. Estadísticas:
  *    - Crear endpoint en backend GET /stats que devuelva:
  *      { totalPosts, totalUsers, totalComments }
  *    - Actualizar en tiempo real o con polling
- * 
+ *
  * 3. Animaciones:
  *    - Usar Framer Motion para animaciones suaves
  *    - Fade in de secciones al hacer scroll
- * 
+ *
  * 4. SEO:
  *    - Agregar meta tags apropiadas
  *    - Considerar usar React Helmet para manejar <head>
