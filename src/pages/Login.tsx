@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// TODO: Importar servicios de autenticación cuando estén disponibles
-// import { login } from '../services/authService';
-// import { useAuth } from '../hooks/useAuth';
+// TODO: Descomentar cuando el hook useAuth esté disponible
+// import { useAuth } from '../hooks/useAuth'; 
 
 /**
  * Login - Página de inicio de sesión
@@ -17,8 +16,8 @@ import { Link, useNavigate } from 'react-router-dom';
  */
 const Login = () => {
   const navigate = useNavigate();
-  // TODO: Descomentar cuando useAuth esté implementado
-  // const { login: authLogin } = useAuth();
+  // TODO: Descomentar cuando el hook useAuth esté disponible
+  // const { login } = useAuth();
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -58,28 +57,24 @@ const Login = () => {
     }
 
     try {
-      // TODO: Implementar cuando el servicio de auth esté listo
-      // const response = await login(formData.email, formData.password);
-      // authLogin(response.token, response.user);
-      
-      // MOCK temporal - ELIMINAR cuando el servicio esté listo
-      console.log('Login attempt:', formData);
-      
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulación de login exitoso
-      // navigate('/'); // Redirigir a home tras login exitoso
-      
-      // Simulación de error para testing
-      throw new Error('Credenciales incorrectas');
-      
+      // TODO: Descomentar y usar la función de login del contexto
+      // await login(formData);
+
+      // --- INICIO: Bloque de simulación (eliminar cuando se integre el contexto) ---
+      console.log('Simulando intento de login con:', formData);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simula la espera de la red
+      // Para probar el caso de éxito, comenta la línea de abajo
+      throw new Error('Credenciales incorrectas (simulado)');
+      // Para probar el caso de éxito, descomenta la línea de abajo y la de arriba
+      // navigate('/'); // Redirige a la página principal tras un login exitoso
+      // --- FIN: Bloque de simulación ---
+
     } catch (err: any) {
       // Manejar diferentes tipos de errores
       if (err.response?.status === 401) {
         setError('Email o contraseña incorrectos');
       } else if (err.response?.status === 500) {
-        setError('Error del servidor. Intenta más tarde');
+        setError('Error del servidor. Por favor, intenta más tarde.');
       } else {
         setError(err.message || 'Error al iniciar sesión');
       }

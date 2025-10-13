@@ -1,6 +1,7 @@
 // Componente principal de la aplicación con layout y Outlet para rutas
-import { Outlet } from 'react-router-dom';
+import { BrowserRouter, Outlet, Routes, Route } from 'react-router-dom';
 import Navbar from './layout/navbar';
+import Login from './pages/Login';
 
 /**
  * App - Componente raíz con layout principal
@@ -12,25 +13,38 @@ import Navbar from './layout/navbar';
  */
 function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Navbar - barra de navegación principal */}
-      <Navbar />
-      {/* Main Content - aquí se renderizan las páginas */}
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      {/* Footer opcional */}
-      <footer className="bg-gray-800 text-white py-6 mt-auto">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm">
-            © 2024 Game of Bones - Blog de Paleontología
-          </p>
-          <p className="text-xs text-gray-400 mt-2">
-            Hecho con 🦴 y React
-          </p>
-        </div>
-      </footer>
-    </div>
+    <BrowserRouter>
+      {/*Layout Components*/}
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        {/* Navbar - barra de navegación principal */}
+        <Navbar />
+        {/* Main Content - aquí se renderizan las páginas */}
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        {/* Footer opcional */}
+        <footer className="bg-gray-800 text-white py-6 mt-auto">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-sm">
+              © 2024 Game of Bones - Blog de Paleontología
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Hecho con 🦴 y React
+            </p>
+          </div>
+        </footer>
+      </div>
+      <Routes>
+        {/* Ruta para la página de inicio */}
+        <Route path="/" element={<div>Página de Inicio</div>} />
+
+        {/* 3. Añade la ruta para tu componente Login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Aquí irían otras rutas como /register, /posts, etc. */}
+      </Routes>
+
+    </BrowserRouter>
   );
 }
 
