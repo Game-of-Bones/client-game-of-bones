@@ -2,8 +2,7 @@
 import { BrowserRouter, Outlet, Routes, Route } from 'react-router-dom';
 import Navbar from './layout/navbar';
 import Login from './pages/Login'; // Asegúrate de que el nombre del archivo es Login.tsx (mayúscula)
-// TODO: Importar el AuthProvider cuando esté creado
-// import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 
 /**
  * Layout - Componente de la estructura principal de la página.
@@ -39,8 +38,7 @@ const Layout = () => {
  */
 function App() {
   return (
-    // TODO: Envolver con AuthProvider cuando esté listo
-    // <AuthProvider>
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* Ruta principal que usa el Layout */}
@@ -53,7 +51,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-    // </AuthProvider>
+    </AuthProvider>
   );
 }
 

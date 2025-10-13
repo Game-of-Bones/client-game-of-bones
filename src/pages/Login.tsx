@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// TODO: Descomentar cuando el hook useAuth esté disponible
-// import { useAuth } from '../hooks/useAuth'; 
+import { useAuth } from '../hooks/useAuth';
 
 
 //Login - Página de inicio de sesión
 const Login = () => {
   const navigate = useNavigate();
-  // TODO: Descomentar cuando el hook useAuth esté disponible
-  // const { login } = useAuth();
+  const { login } = useAuth();
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -75,17 +73,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Descomentar y usar la función de login del contexto
-      // await login(formData);
-
-      // --- INICIO: Bloque de simulación (eliminar cuando se integre el contexto) ---
-      console.log('Simulando intento de login con:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simula la espera de la red
-      // Para probar el caso de éxito, comenta la línea de abajo
-      throw new Error('Credenciales incorrectas (simulado)');
-      // Para probar el caso de éxito, descomenta la línea de abajo y la de arriba
-      // navigate('/'); // Redirige a la página principal tras un login exitoso
-      // --- FIN: Bloque de simulación ---
+      await login(formData); // Llama a la función login del contexto
+      navigate('/'); // Redirige a la página principal tras un login exitoso
 
     } catch (err: any) {
       // Manejar diferentes tipos de errores
