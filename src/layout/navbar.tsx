@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 /**
  * Navbar - Componente de navegación principal
@@ -9,6 +11,7 @@ import { Link } from 'react-router-dom';
 const Navbar = () => {
   // Las clases de Tailwind CSS añadidas son mínimas (flex, gap) 
   // para que los enlaces se vean uno al lado del otro.
+  const { theme, toggleTheme } = useTheme(); 
   return (
     <nav className="bg-gray-800 p-4 text-white">
       <div className="container mx-auto flex items-center justify-between">
@@ -51,6 +54,9 @@ const Navbar = () => {
                y solo serán visibles si el usuario está autenticado/es admin.
                La lógica de visibilidad se implementará en el futuro. */}
 
+          <button onClick={toggleTheme} className="btn-secondary">
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>     
         </div>
       </div>
     </nav>

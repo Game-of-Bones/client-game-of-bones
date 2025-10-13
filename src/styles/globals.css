@@ -1,49 +1,369 @@
-/**
- * GAME OF BONES - DESIGN SYSTEM
- *
- * Colores basados en el diseño final de Figma
- * Temática: Paleontología / National Geographic
- *
- * Issue #26: https://github.com/Game-of-Bones/client-game-of-bones/issues/26
- Cambiad lo que neceistéis para que sea fiel a la última versión de figma, hay tipografías en index.html también*/
-@import "tailwindcss";
+/* ========================================
+   GAME OF BONES - GLOBAL STYLES
+   ======================================== */
 
-/* Tokens del design system */
-@theme {
-  --font-sans: Inter, ui-sans-serif, system-ui;
-  --font-serif: Merriweather, serif;
+   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700;900&display=swap');
 
-  --color-primary-50:  #FAF2E5;
-  --color-primary-100: #F5EBC8;
-  --color-primary-200: #C0C3A4;
-  --color-primary-300: #AA7B5C;
-  --color-primary-400: #8B6543;
-  --color-primary-500: #864B39;
-
-  --color-secondary-50:  #E0F2F1;
-  --color-secondary-400: #8BA4A6;
-  --color-secondary-500: #6DA49C;
-
-  --color-accent-coral: #F76C5E;
-
-  --color-dark-background:     #1a1410;
-  --color-dark-surface:        #2d2419;
-  --color-dark-text:           #F5EBC8;
-  --color-dark-text-secondary: #C0C3A4;
-}
-
-/* Globales */
-html, body, #root { height: 100%; }
-
-body {
-  @apply bg-primary-50 text-zinc-900 font-sans;
-  /* cursor: url('/src/styles/cursor-dino.png') 2 2, auto;  // desactívalo por ahora */
-}
-
-html.dark body { @apply bg-dark-background text-dark-text; }
-
-*:focus-visible {
-  outline: none;
-  @apply ring-2 ring-accent-coral ring-offset-2 ring-offset-primary-50;
-}
-html.dark *:focus-visible { @apply ring-offset-dark-background; }
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+   
+   /* ========================================
+      VARIABLES CSS - SISTEMA DE TEMAS
+      ======================================== */
+   
+   :root {
+     /* === MODO CLARO (DEFAULT) === */
+     
+     /* Backgrounds */
+     --bg-primary: #FAF2E5;      /* Crema claro */
+     --bg-secondary: #F5EBC8;    /* Beige claro */
+     --bg-card: #FFFFFF;         /* Blanco para cards */
+     --bg-hover: #E8D9B8;        /* Beige para hover */
+     
+     /* Text */
+     --text-primary: #2D1F13;    /* Marrón oscuro */
+     --text-secondary: #6F4E35;  /* Marrón medio */
+     --text-muted: #8B6543;      /* Marrón claro */
+     --text-inverse: #FAF2E5;    /* Crema para fondos oscuros */
+     
+     /* Borders */
+     --border-color: #C0B39A;    /* Beige oscuro */
+     --border-light: #E8D9B8;    /* Beige claro */
+     
+     /* Accent colors */
+     --color-coral: #F76C5E;
+     --color-teal: #6DA49C;
+     --color-sage: #8BA4A6;
+     --color-amber: #D4A574;
+     
+     /* Shadows */
+     --shadow-sm: 0 1px 2px rgba(45, 31, 19, 0.05);
+     --shadow-md: 0 4px 6px rgba(45, 31, 19, 0.1);
+     --shadow-lg: 0 10px 15px rgba(45, 31, 19, 0.1);
+     --shadow-xl: 0 20px 25px rgba(45, 31, 19, 0.15);
+   }
+   
+   /* === MODO OSCURO === */
+   [data-theme="dark"] {
+     /* Backgrounds */
+     --bg-primary: #1A110B;      /* Casi negro */
+     --bg-secondary: #2D1F13;    /* Marrón muy oscuro */
+     --bg-card: #3A2819;         /* Marrón oscuro para cards */
+     --bg-hover: #4A3322;        /* Marrón para hover */
+     
+     /* Text */
+     --text-primary: #FAF2E5;    /* Crema claro */
+     --text-secondary: #E8D9B8;  /* Beige claro */
+     --text-muted: #C0B39A;      /* Beige oscuro */
+     --text-inverse: #2D1F13;    /* Marrón oscuro para fondos claros */
+     
+     /* Borders */
+     --border-color: #6F4E35;    /* Marrón medio */
+     --border-light: #4A3322;    /* Marrón chocolate */
+     
+     /* Accent colors (más brillantes en dark) */
+     --color-coral: #FF8A7F;
+     --color-teal: #7DB5AD;
+     --color-sage: #9BB5B7;
+     --color-amber: #E5B685;
+     
+     /* Shadows (más sutiles en dark) */
+     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+     --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+   }
+   
+   /* ========================================
+      BASE STYLES
+      ======================================== */
+   
+   @layer base {
+     * {
+       @apply border-border;
+     }
+     
+     html {
+       /* Smooth scroll */
+       scroll-behavior: smooth;
+       /* Prevenir zoom en iOS */
+       -webkit-text-size-adjust: 100%;
+     }
+     
+     body {
+       /* Fondo principal con variable CSS */
+       background-color: var(--bg-primary);
+       color: var(--text-primary);
+       
+       /* Tipografía base */
+       font-family: 'Inter', system-ui, -apple-system, sans-serif;
+       font-size: 16px;
+       line-height: 1.6;
+       
+       /* Suavizado de fuentes */
+       -webkit-font-smoothing: antialiased;
+       -moz-osx-font-smoothing: grayscale;
+       
+       /* Transición suave al cambiar tema */
+       transition: background-color 0.3s ease, color 0.3s ease;
+     }
+     
+     /* Headings con Merriweather */
+     h1, h2, h3, h4, h5, h6 {
+       font-family: 'Merriweather', Georgia, serif;
+       font-weight: 700;
+       line-height: 1.2;
+       color: var(--text-primary);
+     }
+     
+     h1 {
+       @apply text-4xl md:text-5xl lg:text-6xl;
+     }
+     
+     h2 {
+       @apply text-3xl md:text-4xl lg:text-5xl;
+     }
+     
+     h3 {
+       @apply text-2xl md:text-3xl lg:text-4xl;
+     }
+     
+     h4 {
+       @apply text-xl md:text-2xl lg:text-3xl;
+     }
+     
+     h5 {
+       @apply text-lg md:text-xl lg:text-2xl;
+     }
+     
+     h6 {
+       @apply text-base md:text-lg lg:text-xl;
+     }
+     
+     /* Links */
+     a {
+       @apply transition-colors duration-200;
+       color: var(--color-coral);
+     }
+     
+     a:hover {
+       color: var(--color-teal);
+     }
+     
+     /* Focus states para accesibilidad */
+     a:focus-visible,
+     button:focus-visible,
+     input:focus-visible,
+     textarea:focus-visible,
+     select:focus-visible {
+       @apply outline-none ring-2 ring-accent-coral ring-offset-2;
+       ring-offset-color: var(--bg-primary);
+     }
+   }
+   
+   /* ========================================
+      UTILITY CLASSES PERSONALIZADAS
+      ======================================== */
+   
+   @layer utilities {
+     /* Backgrounds con variables CSS */
+     .bg-theme-primary {
+       background-color: var(--bg-primary);
+     }
+     
+     .bg-theme-secondary {
+       background-color: var(--bg-secondary);
+     }
+     
+     .bg-theme-card {
+       background-color: var(--bg-card);
+     }
+     
+     /* Text colors con variables CSS */
+     .text-theme-primary {
+       color: var(--text-primary);
+     }
+     
+     .text-theme-secondary {
+       color: var(--text-secondary);
+     }
+     
+     .text-theme-muted {
+       color: var(--text-muted);
+     }
+     
+     /* Borders con variables CSS */
+     .border-theme {
+       border-color: var(--border-color);
+     }
+     
+     /* Container personalizado */
+     .container-custom {
+       @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+       max-width: 1280px;
+     }
+     
+     /* Secciones con espaciado consistente */
+     .section-padding {
+       @apply py-12 md:py-16 lg:py-20;
+     }
+     
+     /* Card con efecto hover */
+     .card-hover {
+       @apply transition-all duration-300 hover:scale-105 hover:shadow-lg;
+     }
+     
+     /* Glassmorphism effect */
+     .glass {
+       background: rgba(255, 255, 255, 0.1);
+       backdrop-filter: blur(10px);
+       -webkit-backdrop-filter: blur(10px);
+       border: 1px solid rgba(255, 255, 255, 0.2);
+     }
+     
+     /* Text gradient */
+     .text-gradient {
+       @apply bg-clip-text text-transparent;
+       background-image: linear-gradient(135deg, #AA7B5C 0%, #4A8B6A 100%);
+     }
+   }
+   
+   /* ========================================
+      COMPONENTES BASE
+      ======================================== */
+   
+   @layer components {
+     /* Button base */
+     .btn {
+       @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200;
+       @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+       @apply disabled:opacity-50 disabled:cursor-not-allowed;
+     }
+     
+     .btn-primary {
+       @apply btn bg-accent-coral text-white hover:bg-accent-coralDark;
+       @apply focus-visible:ring-accent-coral;
+     }
+     
+     .btn-secondary {
+       @apply btn text-theme-primary hover:bg-theme-hover;
+       background-color: var(--bg-secondary);
+       border: 1px solid var(--border-color);
+     }
+     
+     /* Input base */
+     .input {
+       @apply w-full px-4 py-3 rounded-lg border transition-colors duration-200;
+       background-color: var(--bg-card);
+       color: var(--text-primary);
+       border-color: var(--border-color);
+     }
+     
+     .input:focus {
+       @apply outline-none ring-2 ring-accent-coral border-accent-coral;
+     }
+     
+     /* Card base */
+     .card {
+       @apply rounded-xl p-6 border;
+       background-color: var(--bg-card);
+       border-color: var(--border-light);
+       box-shadow: var(--shadow-md);
+     }
+   }
+   
+   /* ========================================
+      CURSOR PERSONALIZADO (Huellitas)
+      TODO: Implementar cuando se tenga la imagen
+      ======================================== */
+   
+   /* 
+   body {
+     cursor: url('/cursor-dino.png'), auto;
+   }
+   
+   a, button {
+     cursor: url('/cursor-dino-pointer.png'), pointer;
+   }
+   */
+   
+   /* ========================================
+      SCROLLBAR PERSONALIZADA
+      ======================================== */
+   
+   ::-webkit-scrollbar {
+     width: 12px;
+   }
+   
+   ::-webkit-scrollbar-track {
+     background-color: var(--bg-secondary);
+   }
+   
+   ::-webkit-scrollbar-thumb {
+     background-color: var(--border-color);
+     border-radius: 6px;
+     border: 2px solid var(--bg-secondary);
+   }
+   
+   ::-webkit-scrollbar-thumb:hover {
+     background-color: var(--text-muted);
+   }
+   
+   /* ========================================
+      ANIMACIONES GLOBALES
+      ======================================== */
+   
+   @keyframes fadeIn {
+     from {
+       opacity: 0;
+     }
+     to {
+       opacity: 1;
+     }
+   }
+   
+   @keyframes slideUp {
+     from {
+       transform: translateY(20px);
+       opacity: 0;
+     }
+     to {
+       transform: translateY(0);
+       opacity: 1;
+     }
+   }
+   
+   /* Clase para elementos que entran con animación */
+   .animate-on-scroll {
+     animation: slideUp 0.6s ease-out;
+   }
+   
+   /* ========================================
+      RESPONSIVE HELPERS
+      ======================================== */
+   
+   /* Ocultar en móvil */
+   .hide-mobile {
+     @apply hidden md:block;
+   }
+   
+   /* Ocultar en desktop */
+   .hide-desktop {
+     @apply block md:hidden;
+   }
+   
+   /* ========================================
+      PRINT STYLES
+      ======================================== */
+   
+   @media print {
+     body {
+       background: white;
+       color: black;
+     }
+     
+     .no-print {
+       display: none !important;
+     }
+   }
