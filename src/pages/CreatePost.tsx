@@ -1,4 +1,3 @@
-// src/pages/CreatePost.tsx
 // Página para crear un nuevo post (ruta de administrador)
 
 import { useState } from 'react';
