@@ -1,4 +1,3 @@
-// src/App.tsx
 // Componente principal de la aplicación con layout y Outlet para rutas
 
 import { Outlet } from 'react-router-dom';

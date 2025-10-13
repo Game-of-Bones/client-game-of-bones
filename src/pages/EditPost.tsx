@@ -1,4 +1,3 @@
-// src/pages/EditPost.tsx
 // Página para editar un post existente (ruta de administrador)
 
 import { useState, useEffect } from 'react';

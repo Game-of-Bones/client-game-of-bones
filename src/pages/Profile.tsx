@@ -1,4 +1,3 @@
-// src/pages/Profile.tsx
 // Página de perfil de usuario (ruta protegida)
 
 import { useState, useEffect } from 'react';
