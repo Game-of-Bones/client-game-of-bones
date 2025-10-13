@@ -1,8 +1,6 @@
 // Componente principal de la aplicación con layout y Outlet para rutas
-import { BrowserRouter, Outlet, Routes, Route } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import Navbar from './layout/navbar';
-import Login from './pages/Login'; // Asegúrate de que el nombre del archivo es Login.tsx (mayúscula)
-import { AuthProvider } from './context/AuthContext';
 
 /**
  * Layout - Componente de la estructura principal de la página.
@@ -37,22 +35,7 @@ const Layout = () => {
  * App - Componente raíz con layout principal
  */
 function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Ruta principal que usa el Layout */}
-          <Route path="/" element={<Layout />}>
-            {/* Rutas hijas que se renderizarán dentro del <Outlet> del Layout */}
-            <Route index element={<div>Página de Inicio</div>} />
-            <Route path="login" element={<Login />} />
-            {/* Aquí irían otras rutas como /register, /posts, etc. */}
-            {/* <Route path="register" element={<Register />} /> */}
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
+  return <Layout />;
 }
 
 export default App;
