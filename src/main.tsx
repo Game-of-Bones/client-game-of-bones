@@ -1,16 +1,21 @@
-// Punto de entrada de la aplicación
+/**
+ * Punto de entrada de la aplicación
+ * 
+ * - RouterProvider: maneja el enrutamiento
+ * - globals.css: estilos globales + Tailwind CSS
+ */
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router/index.tsx';
-import './index.css';
+import './styles/globals.css'; 
 
 /**
  * Renderiza la aplicación con React Router
  * 
- * Usando RouterProvider en lugar de BrowserRouter porque estamos
- * usando createBrowserRouter (data router de React Router v6.4+)
+ * Usando RouterProvider porque estamos usando createBrowserRouter
+ * (data router de React Router v6.4+)
  */
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -22,15 +27,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
  * NOTAS DE IMPLEMENTACIÓN FUTURA:
  * 
  * 1. Providers adicionales:
- *    Cuando implementes los contextos, envolver RouterProvider:
+ *    Cuando implementes más contextos, envolver RouterProvider:
  *    
  *    <React.StrictMode>
  *      <AuthProvider>
- *        <ThemeProvider>
+ *        <ToastProvider>
  *          <RouterProvider router={router} />
- *        </ThemeProvider>
+ *        </ToastProvider>
  *      </AuthProvider>
  *    </React.StrictMode>
+ * 
+ *    NOTA: ThemeProvider ya está en App.tsx
  * 
  * 2. Error Boundary:
  *    Agregar error boundary para capturar errores globales
@@ -39,4 +46,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
  *    - Integrar analytics (Google Analytics, Mixpanel)
  *    - Error tracking (Sentry)
  */
-
