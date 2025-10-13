@@ -1,5 +1,4 @@
 // Componente principal de la aplicación con layout y Outlet para rutas
-
 import { Outlet } from 'react-router-dom';
 import Navbar from './layout/navbar';
 
@@ -16,12 +15,10 @@ function App() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Navbar - barra de navegación principal */}
       <Navbar />
-
       {/* Main Content - aquí se renderizan las páginas */}
       <main className="flex-1">
         <Outlet />
       </main>
-
       {/* Footer opcional */}
       <footer className="bg-gray-800 text-white py-6 mt-auto">
         <div className="container mx-auto px-4 text-center">

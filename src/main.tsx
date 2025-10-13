@@ -39,3 +39,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
  *    - Integrar analytics (Google Analytics, Mixpanel)
  *    - Error tracking (Sentry)
  */
+
