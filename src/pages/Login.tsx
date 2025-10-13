@@ -1,6 +1,6 @@
 // Página de inicio de sesión
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -8,7 +8,18 @@ import { useAuth } from '../hooks/useAuth';
 //Login - Página de inicio de sesión
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    // Si el estado de autenticación aún está cargando, no hacer nada.
+    if (isAuthLoading) {
+      return;
+    }
+    // Si el usuario ya está autenticado, redirigirlo a la página de inicio.
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, isAuthLoading, navigate]);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -74,7 +85,7 @@ const Login = () => {
 
     try {
       await login(formData); // Llama a la función login del contexto
-      navigate('/'); // Redirige a la página principal tras un login exitoso
+      navigate('/posts'); // Redirige a la página de posts tras un login exitoso
 
     } catch (err: any) {
       // Manejar diferentes tipos de errores
@@ -89,6 +100,13 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  // Muestra un estado de carga mientras se verifica la autenticación inicial
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">Verificando autenticación...</div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
