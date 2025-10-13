@@ -1,0 +1,10 @@
+[33m233ab04[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32msetup/design-system[m[33m, [m[1;31morigin/setup/design-system[m[33m)[m fix(styles): wire Tailwind build via npm scripts and import generated CSS
+[33m251e977[m feat(design-system): configure Tailwind globals and add favicon - Cleaned old index.css and extras.css (no longer needed with Tailwind v4) - Updated globals.css with @theme tokens and global styles - Added Google Fonts to index.html - Linked new favicon (dinosaur-icon.png) from /public/ - Verified Tailwind rendering correctly in App.tsx
+[33m8f6922e[m feat(design-system): add Tailwind CSS v4 setup and global styles import - Installed Tailwind CSS v4.1.14 with modern @import syntax - Added globals.css with @theme tokens for colors and fonts - Removed obsolete tailwind.config.js and postcss.config.js - Imported global styles into main.tsx - Verified React 19 + TypeScript 5.9 + Vite + SWC environment
+[33m5f162c9[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m Merge pull request #23 from Game-of-Bones/setup/api-service
+[33m85cc75e[m[33m ([m[1;31morigin/setup/api-service[m[33m, [m[1;32msetup/api-service[m[33m)[m chore: merge dev into setup/api-service and fix ESLint errors
+[33m4313cee[m Merge pull request #24 from Game-of-Bones/setup/frontend-structure
+[33m0532b63[m chore: add environment variables example file
+[33m5bab99a[m style: format code with Prettier
+[33ma830e01[m chore: remove default Vite example assets
+[33m78483b4[m chore: configure Prettier formatting rules
