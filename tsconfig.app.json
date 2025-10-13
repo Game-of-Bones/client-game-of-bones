@@ -1,6 +1,5 @@
 {
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+  "compilerOptions": {    
     "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -19,10 +18,8 @@
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUnusedParameters": true,    
+    "noFallthroughCasesInSwitch": true,    
   },
   "include": ["src"]
 }
