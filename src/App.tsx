@@ -14,8 +14,8 @@ const Layout = () => {
         {/* Navbar - barra de navegación principal */}
         <Navbar />
         
-        {/* Main Content - aquí se renderizan las páginas */}
-        <main className="flex-1">
+        {/* AÑADE style={{ minHeight: 'calc(100vh - 200px)' }} */}
+        <main className="flex-1" style={{ minHeight: 'calc(100vh - 200px)' }}>
           <Outlet />
         </main>
         
