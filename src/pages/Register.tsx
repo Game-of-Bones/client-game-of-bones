@@ -19,6 +19,7 @@ const Register = () => {
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -79,6 +80,12 @@ const Register = () => {
       errors.password = 'La contraseña es requerida';
     } else if (formData.password.length < 6) {
       errors.password = 'Mínimo 6 caracteres';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Confirma tu contraseña';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
     setValidationErrors(errors);
@@ -312,6 +319,41 @@ const Register = () => {
               )}
             </div>
 
+            {/* CONFIRMAR CONTRASEÑA */}
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-xs mb-2 uppercase"
+                style={{ 
+                  color: '#C9A875',
+                  fontFamily: 'Cinzel, serif',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                Confirmar contraseña
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                style={{ 
+                  backgroundColor: '#8B7355',
+                  borderColor: validationErrors.confirmPassword ? '#EF4444' : 'transparent',
+                  color: '#FFFFFF',
+                  fontFamily: 'Cinzel, serif',
+                }}
+                autoComplete="new-password"
+              />
+              {validationErrors.confirmPassword && (
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                  {validationErrors.confirmPassword}
+                </p>
+              )}
+            </div>
+
             {/* BOTÓN */}
             <div className="pt-6">
               <Button
@@ -321,6 +363,30 @@ const Register = () => {
               >
                 {isLoading ? 'REGISTRANDO...' : 'REGISTRAR'}
               </Button>
+            </div>
+
+            {/* ENLACE A LOGIN */}
+            <div className="text-center pt-4">
+              <p
+                className="text-sm"
+                style={{ 
+                  color: '#E8D9B8',
+                  fontFamily: 'Cinzel, serif',
+                }}
+              >
+                ¿Estás ya registrado?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="underline hover:text-[#C9A875] transition-colors"
+                  style={{ 
+                    color: '#D4A574',
+                    fontFamily: 'Cinzel, serif',
+                  }}
+                >
+                  ¡Inicia sesión aquí!
+                </button>
+              </p>
             </div>
           </form>
         </div>
