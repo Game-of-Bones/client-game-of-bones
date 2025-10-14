@@ -10,7 +10,8 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router/index.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
-import './index.css';
+import './styles/globals.css'; // Importa los estilos globales correctos
+// import './index.css'; // Este archivo solo contiene las directivas de Tailwind
 
 /**
  * Renderiza la aplicación con React Router
