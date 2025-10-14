@@ -48,7 +48,8 @@
 /* === MODO OSCURO === */
 [data-theme="dark"] {
   /* Backgrounds */
-  --bg-primary: #1A110B;
+ /* Backgrounds */
+  --bg-primary: linear-gradient(to bottom, rgba(70, 46, 27, 0.852) 0%, rgba(172, 113, 66, 0.8) 100%);
   --bg-secondary: #2D1F13;
   --bg-card: #3A2819;
   --bg-hover: #4A3322;
@@ -93,13 +94,13 @@
   body {
     background: var(--bg-primary);
   color: var(--text-primary);
-    font-family: 'Playfair Display', serif;
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s ease, color 0.3s ease;
+}
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
