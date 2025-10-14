@@ -17,7 +17,7 @@
   /* === MODO CLARO (DEFAULT) === */
 
   /* Backgrounds */
-  --bg-primary: #FAF2E5;
+  --bg-primary: linear-gradient(to bottom, #F5E6CC 0%, #AC7142 73%);
   --bg-secondary: #F5EBC8;
   --bg-card: #FFFFFF;
   --bg-hover: #E8D9B8;
@@ -37,6 +37,8 @@
   --color-teal: #6DA49C;
   --color-sage: #8BA4A6;
   --color-amber: #D4A574;
+  --color-danger: #dc2626;  /* red-600 */
+  --color-danger-hover: #b91c1c;  /* red-700 */
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(45, 31, 19, 0.05);
@@ -68,6 +70,8 @@
   --color-teal: #7DB5AD;
   --color-sage: #9BB5B7;
   --color-amber: #E5B685;
+--color-danger: #ef4444; /* red-500 */
+  --color-danger-hover: #dc2626; /* red-600 */
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -91,7 +95,7 @@
   }
 
   body {
-    background-color: var(--bg-primary);
+    background: var(--bg-primary);
     color: var(--text-primary);
     font-family: 'Playfair Display', serif;
     font-size: 16px;
@@ -101,19 +105,41 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Playfair Display', serif;
     font-weight: 700;
     line-height: 1.2;
     color: var(--text-primary);
   }
 
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl md:text-4xl lg:text-5xl; }
-  h3 { @apply text-2xl md:text-3xl lg:text-4xl; }
-  h4 { @apply text-xl md:text-2xl lg:text-3xl; }
-  h5 { @apply text-lg md:text-xl lg:text-2xl; }
-  h6 { @apply text-base md:text-lg lg:text-xl; }
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl lg:text-2xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg lg:text-xl;
+  }
 
   a {
     @apply transition-colors duration-200;
@@ -138,24 +164,46 @@
    ======================================== */
 
 @layer utilities {
-  .bg-theme-primary { background-color: var(--bg-primary); }
-  .bg-theme-secondary { background-color: var(--bg-secondary); }
-  .bg-theme-card { background-color: var(--bg-card); }
+  .bg-theme-primary {
+    background-color: var(--bg-primary);
+  }
 
-  .text-theme-primary { color: var(--text-primary); }
-  .text-theme-secondary { color: var(--text-secondary); }
-  .text-theme-muted { color: var(--text-muted); }
+  .bg-theme-secondary {
+    background-color: var(--bg-secondary);
+  }
 
-  .border-theme { border-color: var(--border-color); }
+  .bg-theme-card {
+    background-color: var(--bg-card);
+  }
+
+  .text-theme-primary {
+    color: var(--text-primary);
+  }
+
+  .text-theme-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-theme-muted {
+    color: var(--text-muted);
+  }
+
+  .border-theme {
+    border-color: var(--border-color);
+  }
 
   .container-custom {
     @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
     max-width: 1280px;
   }
 
-  .section-padding { @apply py-12 md:py-16 lg:py-20; }
+  .section-padding {
+    @apply py-12 md:py-16 lg:py-20;
+  }
 
-  .card-hover { @apply transition-all duration-300 hover:scale-105 hover:shadow-lg; }
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-lg;
+  }
 
   .glass {
     background: rgba(255, 255, 255, 0.1);
@@ -175,6 +223,7 @@
    ======================================== */
 
 @layer components {
+
   /* Botón base */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200;
@@ -191,6 +240,15 @@
     @apply btn text-theme-primary hover:bg-theme-hover;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
+  }
+
+  .btn-danger {
+    @apply btn text-white;
+    background-color: var(--color-danger);
+  }
+
+  .btn-danger:hover {
+    background-color: var(--color-danger-hover);
   }
 
   /* Input base */
@@ -241,8 +299,13 @@
    ======================================== */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -250,6 +313,7 @@
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -264,8 +328,13 @@
    RESPONSIVE HELPERS
    ======================================== */
 
-.hide-mobile { @apply hidden md:block; }
-.hide-desktop { @apply block md:hidden; }
+.hide-mobile {
+  @apply hidden md:block;
+}
+
+.hide-desktop {
+  @apply block md:hidden;
+}
 
 /* ========================================
    PRINT STYLES
