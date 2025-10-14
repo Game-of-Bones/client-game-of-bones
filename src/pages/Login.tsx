@@ -1,24 +1,25 @@
 // Página de inicio de sesión
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// TODO: Importar servicios de autenticación cuando estén disponibles
-// import { login } from '../services/authService';
-// import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
-/**
- * Login - Página de inicio de sesión
- * 
- * Funcionalidad:
- * - Formulario con email/username y password
- * - Validación de campos
- * - Manejo de errores (credenciales incorrectas, servidor caído, etc)
- * - Redireccionamiento tras login exitoso
- */
+
+//Login - Página de inicio de sesión
 const Login = () => {
   const navigate = useNavigate();
-  // TODO: Descomentar cuando useAuth esté implementado
-  // const { login: authLogin } = useAuth();
+  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    // Si el estado de autenticación aún está cargando, no hacer nada.
+    if (isAuthLoading) {
+      return;
+    }
+    // Si el usuario ya está autenticado, redirigirlo a la página de inicio.
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, isAuthLoading, navigate]);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -27,8 +28,8 @@ const Login = () => {
   });
 
   // Estado para manejar errores y loading
-  const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
 
   /**
    * Maneja cambios en los inputs del formulario
@@ -38,8 +39,35 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Limpiar error cuando el usuario empiece a escribir
-    if (error) setError('');
+    // Limpiar el error específico del campo cuando el usuario empieza a escribir
+    if (errors[e.target.name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [e.target.name]: undefined }));
+    }
+    // Limpiar el error general del formulario
+    if (errors.form) {
+      setErrors(prev => ({ ...prev, form: undefined }));
+    }
+  };
+
+  /**
+   * Valida el formulario y actualiza el estado de errores.
+   * @returns `true` si el formulario es válido, `false` en caso contrario.
+   */
+  const validateForm = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!formData.email) {
+      newErrors.email = 'El email es requerido.';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'El formato del email es inválido.';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'La contraseña es requerida.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   /**
@@ -47,46 +75,38 @@ const Login = () => {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
 
-    // Validación básica
-    if (!formData.email || !formData.password) {
-      setError('Por favor completa todos los campos');
-      setIsLoading(false);
+    // Si la validación del frontend falla, no continuar.
+    if (!validateForm()) {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      // TODO: Implementar cuando el servicio de auth esté listo
-      // const response = await login(formData.email, formData.password);
-      // authLogin(response.token, response.user);
-      
-      // MOCK temporal - ELIMINAR cuando el servicio esté listo
-      console.log('Login attempt:', formData);
-      
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulación de login exitoso
-      // navigate('/'); // Redirigir a home tras login exitoso
-      
-      // Simulación de error para testing
-      throw new Error('Credenciales incorrectas');
-      
+      await login(formData); // Llama a la función login del contexto
+      navigate('/posts'); // Redirige a la página de posts tras un login exitoso
+
     } catch (err: any) {
       // Manejar diferentes tipos de errores
       if (err.response?.status === 401) {
-        setError('Email o contraseña incorrectos');
+        setErrors({ form: 'Email o contraseña incorrectos.' });
       } else if (err.response?.status === 500) {
-        setError('Error del servidor. Intenta más tarde');
+        setErrors({ form: 'Error del servidor. Por favor, intenta más tarde.' });
       } else {
-        setError(err.message || 'Error al iniciar sesión');
+        setErrors({ form: err.message || 'Error al iniciar sesión.' });
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Muestra un estado de carga mientras se verifica la autenticación inicial
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">Verificando autenticación...</div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -104,10 +124,10 @@ const Login = () => {
 
         {/* Formulario */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Mostrar error si existe */}
-          {error && (
+          {/* Mostrar error general del formulario si existe */}
+          {errors.form && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
+              {errors.form}
             </div>
           )}
 
@@ -125,9 +145,14 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
                 placeholder="tu@email.com"
               />
+              {errors.email && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.email}
+                </p>
+              )}
             </div>
 
             {/* Campo Password */}
@@ -143,9 +168,14 @@ const Login = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
                 placeholder="••••••••"
               />
+              {errors.password && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.password}
+                </p>
+              )}
             </div>
           </div>
 
@@ -180,80 +210,9 @@ const Login = () => {
             {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
-
-        {/* TODO: Agregar opción de login con redes sociales */}
-        {/*
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">O continúa con</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button className="w-full py-2 border rounded hover:bg-gray-50">
-              Google
-            </button>
-            <button className="w-full py-2 border rounded hover:bg-gray-50">
-              GitHub
-            </button>
-          </div>
-        </div>
-        */}
       </div>
     </div>
   );
 };
 
 export default Login;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Servicio de autenticación (src/services/authService.ts):
- *    export const login = async (email: string, password: string) => {
- *      const response = await fetch('http://localhost:3000/auth/login', {
- *        method: 'POST',
- *        headers: { 'Content-Type': 'application/json' },
- *        body: JSON.stringify({ email, password })
- *      });
- *      
- *      if (!response.ok) throw new Error('Login failed');
- *      const data = await response.json();
- *      return data; // { token, user }
- *    };
- * 
- * 2. Guardar token después del login:
- *    localStorage.setItem('token', response.token);
- *    localStorage.setItem('user', JSON.stringify(response.user));
- * 
- * 3. Funcionalidad "Recordarme":
- *    - Si está marcado, guardar en localStorage
- *    - Si no, guardar en sessionStorage (se borra al cerrar navegador)
- * 
- * 4. Recuperar contraseña:
- *    - Crear página src/pages/ForgotPassword.tsx
- *    - Endpoint en backend: POST /auth/forgot-password
- *    - Enviar email con token para resetear contraseña
- * 
- * 5. Validación mejorada:
- *    - Usar una librería como Yup o Zod para validación de esquemas
- *    - Validar formato de email antes de enviar
- *    - Mostrar errores específicos por campo
- * 
- * 6. OAuth (login con redes sociales):
- *    - Implementar Google OAuth
- *    - Implementar GitHub OAuth
- *    - Requiere configuración en backend y credenciales de API
- * 
- * 7. Redirección inteligente:
- *    - Si el usuario vino de una ruta protegida, redirigir ahí después del login
- *    - Usar useLocation() para obtener el "from" state
- * 
- * 8. Rate limiting:
- *    - Limitar intentos de login (máximo 5 en 15 minutos)
- *    - Mostrar captcha después de X intentos fallidos
- */

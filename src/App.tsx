@@ -1,21 +1,17 @@
-/**
- * App - Componente raíz con layout principal y ThemeProvider
- * 
- * Estructura:
- * - ThemeProvider: maneja el tema claro/oscuro
- * - Navbar: navegación principal (siempre visible)
- * - Outlet: renderiza las rutas hijas definidas en router/index.tsx
- * - Footer: información adicional
- */
-
 import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './layout/navbar';
 
-function App() {
+/**
+ * Layout - Componente de la estructura principal de la página.
+ * Contiene los elementos que se repiten en todas las vistas, como la Navbar y el Footer.
+ * El <Outlet /> es el marcador de posición donde se renderizarán las rutas hijas.
+ */
+const Layout = () => {
   return (
     <ThemeProvider defaultTheme="light">
-      <div className="min-h-screen flex flex-col bg-theme-primary text-theme-primary">
+      <div className="min-h-screen flex flex-col bg-gray-50 text-theme-primary">
+        {/* Navbar - barra de navegación principal */}
         <Navbar />
         
         {/* AÑADE style={{ minHeight: 'calc(100vh - 200px)' }} */}
@@ -23,12 +19,13 @@ function App() {
           <Outlet />
         </main>
         
-        <footer className="bg-primary-800 text-primary-50 py-6 mt-auto">
-          <div className="container-custom text-center">
+        {/* Footer */}
+        <footer className="bg-gray-800 text-white py-6 mt-auto">
+          <div className="container mx-auto px-4 text-center">
             <p className="text-sm">
               © 2024 Game of Bones - Blog de Paleontología
             </p>
-            <p className="text-xs text-primary-200 mt-2">
+            <p className="text-xs text-gray-400 mt-2">
               Hecho con 🦴 y React
             </p>
           </div>
@@ -36,24 +33,13 @@ function App() {
       </div>
     </ThemeProvider>
   );
+};
+
+/**
+ * App - Componente raíz con layout principal
+ */
+function App() {
+  return <Layout />;
 }
 
 export default App;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN:
- * 
- * ✅ ThemeProvider ya implementado
- * 
- * PRÓXIMOS PASOS:
- * 1. Añadir ThemeToggle en Navbar
- * 2. AuthProvider para autenticación
- * 3. ToastProvider para notificaciones
- * 
- * Ejemplo futuro en main.tsx:
- * <AuthProvider>
- *   <ToastProvider>
- *     <RouterProvider router={router} />
- *   </ToastProvider>
- * </AuthProvider>
- */
