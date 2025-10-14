@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-
+import { useAuth } from '../hooks/useAuth'; // Hook para la lógica de autenticación
+import LoginForm from '../components/ui/LoginForm'; // Importamos el nuevo componente
 
 //Login - Página de inicio de sesión
 const Login = () => {
@@ -123,93 +123,31 @@ const Login = () => {
         </div>
 
         {/* Formulario */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Mostrar error general del formulario si existe */}
-          {errors.form && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {errors.form}
-            </div>
-          )}
+        <LoginForm
+          formData={formData}
+          isLoading={isLoading}
+          errors={errors}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+        />
 
-          <div className="space-y-4">
-            {/* Campo Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
-                placeholder="tu@email.com"
-              />
-              {errors.email && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Campo Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.password}
-                </p>
-              )}
-            </div>
+        {/* Opciones adicionales fuera del componente de formulario */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm">
+              Recordarme
+            </label>
           </div>
-
-          {/* Checkbox "Recordarme" y "Olvidé mi contraseña" */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                Recordarme
-              </label>
-            </div>
-
-            {/* TODO: Implementar funcionalidad de "Olvidé mi contraseña" */}
-            <div className="text-sm">
-              <a href="#" className="text-blue-600 hover:underline">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
-          </div>
-
-          {/* Botón Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+          <a href="#" className="text-blue-600 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
       </div>
     </div>
   );
