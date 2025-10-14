@@ -10,8 +10,9 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router/index.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
-import './styles/globals.css'; // Importa los estilos globales correctos
-// import './index.css'; // Este archivo solo contiene las directivas de Tailwind
+import './index.css';
+import "./styles/globals.css";
+
 
 /**
  * Renderiza la aplicación con React Router
@@ -19,7 +20,7 @@ import './styles/globals.css'; // Importa los estilos globales correctos
  * Usando RouterProvider porque estamos usando createBrowserRouter
  * (data router de React Router v6.4+)
  */
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
       <RouterProvider router={router} />

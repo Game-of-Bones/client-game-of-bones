@@ -30,20 +30,20 @@ const LoginForm: React.FC<LoginFormProps> = ({
   handleSubmit,
 }) => {
   return (
-    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       {/* Mostrar error general del formulario si existe */}
       {errors.form && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
           {errors.form}
         </div>
       )}
 
-      <div className="space-y-4">
-        {/* Campo Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
+      {/* Campo Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium leading-6 text-theme-primary">
+          Email
+        </label>
+        <div className="mt-2">
           <input
             id="email"
             name="email"
@@ -52,23 +52,29 @@ const LoginForm: React.FC<LoginFormProps> = ({
             required
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-              errors.email
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`input ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-theme'}`}
             placeholder="tu@email.com"
           />
-          {errors.email && (
-            <p className="text-red-600 text-sm mt-1">{errors.email}</p>
-          )}
         </div>
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+        )}
+      </div>
 
-        {/* Campo Password */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
+      {/* Campo Password */}
+      <div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="block text-sm font-medium leading-6 text-theme-primary">
             Contraseña
           </label>
+          <div className="text-sm">
+            {/* TODO: Implementar funcionalidad de "Olvidé mi contraseña" */}
+            <a href="#" className="font-semibold text-accent-coral hover:text-accent-teal">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+        </div>
+        <div className="mt-2">
           <input
             id="password"
             name="password"
@@ -77,27 +83,21 @@ const LoginForm: React.FC<LoginFormProps> = ({
             required
             value={formData.password}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-              errors.password
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`input ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-theme'}`}
             placeholder="••••••••"
           />
-          {errors.password && (
-            <p className="text-red-600 text-sm mt-1">{errors.password}</p>
-          )}
         </div>
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+        )}
       </div>
 
       {/* Botón Submit */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-      </button>
+      <div>
+        <button type="submit" disabled={isLoading} className="btn btn-primary w-full">
+          {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+        </button>
+      </div>
     </form>
   );
 };

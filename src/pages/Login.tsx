@@ -1,7 +1,7 @@
 // Página de inicio de sesión
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth'; // Hook para la lógica de autenticación
 import LoginForm from '../components/ui/LoginForm'; // Importamos el nuevo componente
 
@@ -10,16 +10,21 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
+  // Obtener la ubicación para la redirección inteligente
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
+
   useEffect(() => {
     // Si el estado de autenticación aún está cargando, no hacer nada.
     if (isAuthLoading) {
       return;
     }
-    // Si el usuario ya está autenticado, redirigirlo a la página de inicio.
+    // Si el usuario ya está autenticado, redirigirlo.
     if (isAuthenticated) {
-      navigate('/');
+      // Redirige a la página que intentaba visitar o a la página de inicio.
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate]);
+  }, [isAuthenticated, isAuthLoading, navigate, from]);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -85,7 +90,7 @@ const Login = () => {
 
     try {
       await login(formData); // Llama a la función login del contexto
-      navigate('/posts'); // Redirige a la página de posts tras un login exitoso
+      navigate(from, { replace: true }); // Redirige a la página original o a la de inicio
 
     } catch (err: any) {
       // Manejar diferentes tipos de errores
@@ -109,19 +114,20 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold">Iniciar Sesión</h2>
-          <p className="mt-2 text-gray-600">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-blue-600 hover:underline">
-              Regístrate aquí
-            </Link>
-          </p>
-        </div>
+    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        {/* TODO: Reemplazar con el logo del proyecto */}
+        <img
+          alt="Game of Bones Logo"
+          src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+          className="mx-auto h-10 w-auto"
+        />
+        <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-theme-primary">
+          Iniciar Sesión
+        </h2>
+      </div>
 
+      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm card p-8">
         {/* Formulario */}
         <LoginForm
           formData={formData}
@@ -131,23 +137,12 @@ const Login = () => {
           handleSubmit={handleSubmit}
         />
 
-        {/* Opciones adicionales fuera del componente de formulario */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm">
-              Recordarme
-            </label>
-          </div>
-          <a href="#" className="text-blue-600 hover:underline">
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
+        <p className="mt-10 text-center text-sm text-theme-secondary">
+            ¿No tienes cuenta?{' '}
+          <Link to="/register" className="font-semibold text-accent-coral hover:text-accent-teal">
+              Regístrate aquí
+            </Link>
+        </p>
       </div>
     </div>
   );
