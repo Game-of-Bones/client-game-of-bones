@@ -17,7 +17,7 @@
   /* === MODO CLARO (DEFAULT) === */
 
   /* Backgrounds */
-  --bg-primary: #FAF2E5;
+  --bg-primary: linear-gradient(to bottom, #F5E6CC 0%, #AC7142 73%);
   --bg-secondary: #F5EBC8;
   --bg-card: #FFFFFF;
   --bg-hover: #E8D9B8;
@@ -91,8 +91,8 @@
   }
 
   body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background: var(--bg-primary);
+  color: var(--text-primary);
     font-family: 'Playfair Display', serif;
     font-size: 16px;
     line-height: 1.6;
