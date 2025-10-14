@@ -1,388 +1,332 @@
-// Página de registro de nuevos usuarios
-
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-// TODO: Importar servicios cuando estén disponibles
-// import { register } from '../services/authService';
-// import { useAuth } from '../hooks/useAuth';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/ui/button';
+import { useAuthStore } from '../stores/authStore';
 
 /**
- * Register - Página de registro de usuarios
+ * REGISTER PAGE - Game of Bones
  * 
- * Funcionalidad:
- * - Formulario con username, email, password y confirmación
- * - Validación de campos (formato email, longitud password, passwords coinciden)
- * - Validación de username disponible (en tiempo real idealmente)
- * - Manejo de errores (email ya existe, servidor caído, etc)
- * - Redireccionamiento tras registro exitoso (a login o auto-login)
+ * Página de registro con diseño exacto del Figma.
+ * Split-screen: Fósil izquierda, formulario derecha.
  */
+
 const Register = () => {
   const navigate = useNavigate();
-  // TODO: Descomentar cuando useAuth esté implementado
-  // const { login: authLogin } = useAuth();
+  
+  const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
   });
 
-  // Estado para errores y loading
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  /**
-   * Maneja cambios en los inputs
-   */
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
-    if (errors[name]) {
-      setErrors(prev => {
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
     }
+
+    if (error) {
+      clearError();
+    }
   };
 
-  /**
-   * Valida el formulario antes de enviar
-   */
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+    const errors: Record<string, string> = {};
 
-    // Validar username
-    if (!formData.username) {
-      newErrors.username = 'El nombre de usuario es requerido';
+    if (!formData.username.trim()) {
+      errors.username = 'El nombre de usuario es requerido';
     } else if (formData.username.length < 3) {
-      newErrors.username = 'El nombre de usuario debe tener al menos 3 caracteres';
+      errors.username = 'Mínimo 3 caracteres';
+    } else if (formData.username.length > 20) {
+      errors.username = 'Máximo 20 caracteres';
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Solo se permiten letras, números y guiones bajos';
+      errors.username = 'Solo letras, números y guiones bajos';
     }
 
-    // Validar email
-    if (!formData.email) {
-      newErrors.email = 'El email es requerido';
+    if (!formData.email.trim()) {
+      errors.email = 'El email es requerido';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+      errors.email = 'Formato de email inválido';
     }
 
-    // Validar password
     if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida';
+      errors.password = 'La contraseña es requerida';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+      errors.password = 'Mínimo 6 caracteres';
     }
 
-    // Validar confirmación de password
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirma tu contraseña';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  /**
-   * Maneja el envío del formulario
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar formulario
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // TODO: Implementar cuando el servicio esté listo
-      // const response = await register({
-      //   username: formData.username,
-      //   email: formData.email,
-      //   password: formData.password
-      // });
-      
-      // Opción 1: Auto-login después del registro
-      // authLogin(response.token, response.user);
-      // navigate('/');
-      
-      // Opción 2: Redirigir a login con mensaje de éxito
-      // navigate('/login', { state: { message: 'Registro exitoso. Inicia sesión.' } });
-
-      // MOCK temporal - ELIMINAR cuando el servicio esté listo
-      console.log('Register attempt:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulación de registro exitoso
-      alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-      navigate('/login');
-
-    } catch (err: any) {
-      // Manejar errores del backend
-      if (err.response?.status === 409) {
-        // Conflicto: email o username ya existe
-        const field = err.response.data.field; // 'email' o 'username'
-        setErrors({ [field]: `Este ${field} ya está en uso` });
-      } else if (err.response?.status === 400) {
-        // Validación fallida en backend
-        setErrors(err.response.data.errors || { general: 'Datos inválidos' });
-      } else {
-        setErrors({ general: 'Error al registrar. Intenta más tarde' });
-      }
-    } finally {
-      setIsLoading(false);
+      await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+    } catch (err) {
+      console.error('Error en registro:', err);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold">Crear Cuenta</h2>
-          <p className="mt-2 text-gray-600">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">
-              Inicia sesión aquí
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-[calc(100vh-88px)] flex">
+      {/* LADO IZQUIERDO - IMAGEN FÓSIL */}
+      <div className="hidden lg:block lg:w-1/2 relative">
+        <img 
+          src="/shell_fossil.jpg" 
+          alt="Fósil de concha" 
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
 
-        {/* Formulario */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Error general */}
-          {errors.general && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {errors.general}
-            </div>
-          )}
+      {/* LADO DERECHO - FORMULARIO */}
+      <div
+        className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12"
+        style={{ backgroundColor: '#5D4A3A' }}
+      >
+        <div className="w-full max-w-md">
+          {/* LOGO */}
+          <div className="flex justify-center mb-10">
+            <img
+              src="/gob_logo.png"
+              alt="Game of Bones"
+              className="h-24 w-auto object-contain"
+            />
+          </div>
 
-          <div className="space-y-4">
-            {/* Campo Username */}
+          {/* HEADER */}
+          <div className="text-center mb-8">
+            <h1
+              className="text-lg sm:text-xl mb-3"
+              style={{ 
+                color: '#C9A875',
+                fontFamily: 'Cinzel, serif',
+                letterSpacing: '0.08em',
+                lineHeight: '1.5',
+                textTransform: 'uppercase',
+              }}
+            >
+              Rellena los datos para crear tu perfil
+            </h1>
+            <p
+              className="text-sm uppercase mb-4"
+              style={{ 
+                color: '#E8D9B8',
+                fontFamily: 'Cinzel, serif',
+                letterSpacing: '0.25em',
+              }}
+            >
+              Registro
+            </p>
+            {/* Línea horizontal */}
+            <div 
+              className="w-full max-w-sm mx-auto"
+              style={{
+                height: '1px',
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              }}
+            />
+          </div>
+
+          {/* FORMULARIO */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error del backend */}
+            {error && (
+              <div
+                className="px-4 py-3 rounded border text-center"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: '#EF4444',
+                  color: '#FEE2E2',
+                }}
+              >
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* NOMBRE */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-1">
-                Nombre de Usuario
+              <label
+                htmlFor="username"
+                className="block text-xs mb-2 uppercase"
+                style={{ 
+                  color: '#C9A875',
+                  fontFamily: 'Cinzel, serif',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                Nombre
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
-                required
                 value={formData.username}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                  errors.username
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="usuario123"
+                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                style={{ 
+                  backgroundColor: '#8B7355',
+                  borderColor: validationErrors.username ? '#EF4444' : 'transparent',
+                  color: '#FFFFFF',
+                  fontFamily: 'Cinzel, serif',
+                }}
+                autoComplete="username"
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+              {validationErrors.username && (
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                  {validationErrors.username}
+                </p>
               )}
             </div>
 
-            {/* Campo Email */}
+            {/* NOMBRE DE PERFIL */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email
+              <label
+                htmlFor="username-display"
+                className="block text-xs mb-2 uppercase"
+                style={{ 
+                  color: '#C9A875',
+                  fontFamily: 'Cinzel, serif',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                Nombre de perfil
+              </label>
+              <input
+                id="username-display"
+                type="text"
+                value={formData.username || ''}
+                readOnly
+                className="w-full px-4 py-2.5 rounded border cursor-not-allowed opacity-70"
+                style={{ 
+                  backgroundColor: '#6B5B4A',
+                  borderColor: 'transparent',
+                  color: '#9CA3AF',
+                  fontFamily: 'Cinzel, serif',
+                }}
+              />
+            </div>
+
+            {/* EMAIL */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-xs mb-2 uppercase"
+                style={{ 
+                  color: '#C9A875',
+                  fontFamily: 'Cinzel, serif',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                Correo electrónico
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
-                required
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                  errors.email
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="tu@email.com"
+                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                style={{ 
+                  backgroundColor: '#8B7355',
+                  borderColor: validationErrors.email ? '#EF4444' : 'transparent',
+                  color: '#FFFFFF',
+                  fontFamily: 'Cinzel, serif',
+                }}
+                autoComplete="email"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              {validationErrors.email && (
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                  {validationErrors.email}
+                </p>
               )}
             </div>
 
-            {/* Campo Password */}
+            {/* CONTRASEÑA */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="password"
+                className="block text-xs mb-2 uppercase"
+                style={{ 
+                  color: '#C9A875',
+                  fontFamily: 'Cinzel, serif',
+                  letterSpacing: '0.15em',
+                }}
+              >
                 Contraseña
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
-                required
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                  errors.password
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Mínimo 6 caracteres
-              </p>
-            </div>
-
-            {/* Campo Confirmar Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                Confirmar Contraseña
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
+                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                style={{ 
+                  backgroundColor: '#8B7355',
+                  borderColor: validationErrors.password ? '#EF4444' : 'transparent',
+                  color: '#FFFFFF',
+                  fontFamily: 'Cinzel, serif',
+                }}
                 autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                  errors.confirmPassword
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="••••••••"
               />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              {validationErrors.password && (
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                  {validationErrors.password}
+                </p>
               )}
             </div>
-          </div>
 
-          {/* Términos y condiciones */}
-          <div className="flex items-start">
-            <input
-              id="terms"
-              name="terms"
-              type="checkbox"
-              required
-              className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-              Acepto los{' '}
-              <a href="#" className="text-blue-600 hover:underline">
-                términos y condiciones
-              </a>{' '}
-              y la{' '}
-              <a href="#" className="text-blue-600 hover:underline">
-                política de privacidad
-              </a>
-            </label>
-          </div>
-
-          {/* Botón Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Registrando...' : 'Crear Cuenta'}
-          </button>
-        </form>
+            {/* BOTÓN */}
+            <div className="pt-6">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? 'REGISTRANDO...' : 'REGISTRAR'}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Register;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Servicio de registro (src/services/authService.ts):
- *    export const register = async (data: {
- *      username: string;
- *      email: string;
- *      password: string;
- *    }) => {
- *      const response = await fetch('http://localhost:3000/auth/register', {
- *        method: 'POST',
- *        headers: { 'Content-Type': 'application/json' },
- *        body: JSON.stringify(data)
- *      });
- *      
- *      if (!response.ok) {
- *        const error = await response.json();
- *        throw { response: { status: response.status, data: error } };
- *      }
- *      
- *      return await response.json(); // { token, user } o { message }
- *    };
- * 
- * 2. Validación de username disponible en tiempo real:
- *    - Crear endpoint GET /auth/check-username/:username
- *    - Usar debounce para no hacer peticiones en cada tecla
- *    - Mostrar ✓ o ✗ al lado del input mientras el usuario escribe
- *    
- *    const checkUsernameAvailable = async (username: string) => {
- *      const response = await fetch(`/auth/check-username/${username}`);
- *      return response.json(); // { available: boolean }
- *    };
- * 
- * 3. Indicador de fortaleza de contraseña:
- *    - Crear componente PasswordStrength
- *    - Mostrar barra de progreso (débil, media, fuerte)
- *    - Validar: longitud, mayúsculas, números, caracteres especiales
- *    - Usar librería como zxcvbn para calcular fortaleza
- * 
- * 4. Verificación de email:
- *    - Después del registro, enviar email de verificación
- *    - Usuario debe hacer click en link para activar cuenta
- *    - Ruta: GET /auth/verify-email/:token
- *    - Página src/pages/VerifyEmail.tsx
- * 
- * 5. Captcha para prevenir bots:
- *    - Integrar Google reCAPTCHA v3
- *    - Validar en backend antes de crear usuario
- *    - O usar alternativas como hCaptcha
- * 
- * 6. Foto de perfil al registrarse:
- *    - Campo opcional para subir avatar
- *    - O generar avatar automático (iniciales con color random)
- *    - O integrar con Gravatar usando el email
- * 
- * 7. OAuth / Social login:
- *    - Botones para registrarse con Google, GitHub, etc
- *    - Mismo flujo que en Login.tsx
- * 
- * 8. Validación de librería:
- *    - Usar Zod o Yup para esquemas de validación
- *    - Reutilizar esquemas entre frontend y backend
- *    
- *    import { z } from 'zod';
- *    
- *    const registerSchema = z.object({
- *      username: z.string().min(3).regex(/^[a-zA-Z0-9_]+$/),
- *      email: z.string().email(),
- *      password: z.string().min(6),
- *      confirmPassword: z.string()
- *    }).refine(data => data.password === data.confirmPassword, {
- *      message: "Las contraseñas no coinciden",
- *      path: ["confirmPassword"]
- *    });
- */
