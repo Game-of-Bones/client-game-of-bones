@@ -16,15 +16,13 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light">
       <div className="min-h-screen flex flex-col bg-theme-primary text-theme-primary">
-        {/* Navbar - barra de navegación principal */}
         <Navbar />
         
-        {/* Main Content - aquí se renderizan las páginas */}
-        <main className="flex-1">
+        {/* AÑADE style={{ minHeight: 'calc(100vh - 200px)' }} */}
+        <main className="flex-1" style={{ minHeight: 'calc(100vh - 200px)' }}>
           <Outlet />
         </main>
         
-        {/* Footer */}
         <footer className="bg-primary-800 text-primary-50 py-6 mt-auto">
           <div className="container-custom text-center">
             <p className="text-sm">

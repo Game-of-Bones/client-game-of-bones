@@ -1,6 +1,6 @@
 // Home.tsx
 import { Link } from 'react-router-dom';
-import MapComponent from '../components/ui/MapComponent'; // Ajusta la ruta según tu estructura
+import MapComponent from '../components/ui/MapComponent';
 
 const Home = () => {
   return (
@@ -30,7 +30,7 @@ const Home = () => {
       </section>
 
       {/* 🗺️ MAPA DE DESCUBRIMIENTOS */}
-      <section className="mb-8">
+      <section className="mb-8" style={{ minHeight: '800px' }}>
         <h2 className="text-3xl font-bold mb-4 text-center">
           Mapa de Descubrimientos
         </h2>
