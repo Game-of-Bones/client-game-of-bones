@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import authService from '../services/authService';
-import type {
-  AuthState,
-  AuthActions,
-  LoginCredentials,
-  RegisterData,
+import type { AuthState, AuthActions, LoginCredentials, RegisterData,
 } from '../types/auth.types';
 
 /**
