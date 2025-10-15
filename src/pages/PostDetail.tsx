@@ -59,7 +59,7 @@ El fósil, apodado "Sue II" en honor al famoso espécimen anterior, se encuentra
 El Dr. Marcus Thompson, líder de la expedición, explica que este hallazgo es extraordinario no solo por su completitud, sino por lo que nos puede enseñar sobre el comportamiento social de estos animales.
 
 El análisis preliminar indica que el ejemplar era un adulto joven, de aproximadamente 20 años de edad al momento de su muerte. Los sedimentos circundantes sugieren que el animal murió cerca de un antiguo lecho de río.`,
-        image_url: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?w=800',
+        image_url: '/public/montana.jpg',
         location: 'Montana, Estados Unidos',
         discovery_date: '2023-07-15',
         paleontologist: 'Dr. Marcus Thompson',
