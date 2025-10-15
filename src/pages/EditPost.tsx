@@ -1,97 +1,100 @@
-// Página para editar un post existente (ruta de administrador)
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// TODO: Importar servicios cuando estén disponibles
-// import { getPostById, updatePost } from '../services/postService';
+import { useAuthStore } from '../stores/authStore';
+import { usePostStore } from '../stores/postStore';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload';
+import { Camera, Upload, Link as LinkIcon } from 'lucide-react';
+import Input from '../components/ui/Input';
 
-/**
- * EditPost - Página para editar un post existente
- * 
- * Funcionalidad:
- * - Cargar datos del post existente
- * - Formulario pre-rellenado con los datos actuales
- * - Guardar cambios
- * - Preview de cambios
- * - Historial de versiones (opcional)
- */
+type FossilType = 'bones_teeth' | 'shell_exoskeletons' | 'plant_impressions' | 'tracks_traces' | 'amber_insects';
+
 const EditPost = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  const user = useAuthStore((state) => state.user);
+  const { currentPost, isLoading, error, fetchPostById, updatePost } = usePostStore();
 
-  // Estado del formulario
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    summary: string;
+    image_url: string;
+    discovery_date: string;
+    location: string;
+    paleontologist: string;
+    fossil_type: FossilType;
+    geological_period: string;
+    source: string;
+    status: 'draft' | 'published';
+  }>({
     title: '',
-    content: ''
+    summary: '',
+    image_url: '',
+    discovery_date: '',
+    location: '',
+    paleontologist: '',
+    fossil_type: 'bones_teeth',
+    geological_period: '',
+    source: '',
+    status: 'draft'
   });
 
-  // Estado para control de carga y errores
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPreview, setShowPreview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadMethod, setUploadMethod] = useState<'url' | 'file' | 'camera'>('url');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-  /**
-   * Cargar el post al montar el componente
-   */
+  const fossilTypes = [
+    { value: 'bones_teeth', label: 'Huesos y Dientes' },
+    { value: 'shell_exoskeletons', label: 'Conchas y Exoesqueletos' },
+    { value: 'plant_impressions', label: 'Impresiones de Plantas' },
+    { value: 'tracks_traces', label: 'Huellas y Rastros' },
+    { value: 'amber_insects', label: 'Insectos en Ámbar' }
+  ];
+
   useEffect(() => {
     if (id) {
-      fetchPost();
+      fetchPostById(parseInt(id));
     }
-  }, [id]);
+  }, [id, fetchPostById]);
 
-  /**
-   * Obtener datos del post a editar
-   */
-  const fetchPost = async () => {
-    setIsLoading(true);
-
-    try {
-      // TODO: Implementar cuando el servicio esté listo
-      // const response = await getPostById(id);
-      // setFormData({
-      //   title: response.title,
-      //   content: response.content
-      // });
-
-      // MOCK temporal - ELIMINAR cuando el servicio esté listo
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockPost = {
-        id: id,
-        title: 'El destino de los reinos',
-        content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.`.trim()
-      };
-
+  useEffect(() => {
+    if (currentPost) {
       setFormData({
-        title: mockPost.title,
-        content: mockPost.content
+        title: currentPost.title || '',
+        summary: currentPost.summary || '',
+        image_url: currentPost.image_url || '',
+        discovery_date: currentPost.discovery_date || '',
+        location: currentPost.location || '',
+        paleontologist: currentPost.paleontologist || '',
+        fossil_type: (currentPost.fossil_type as FossilType) || 'bones_teeth',
+        geological_period: currentPost.geological_period || '',
+        source: currentPost.source || '',
+        status: currentPost.status || 'draft'
       });
-
-    } catch (err: any) {
-      setErrors({ general: 'Error al cargar el post' });
-      console.error('Error fetching post:', err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [currentPost]);
 
-  /**
-   * Maneja cambios en los inputs
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Limpiar stream de cámara al desmontar
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-
-    // Limpiar error del campo
+    
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -101,35 +104,95 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.`.trim()
     }
   };
 
-  /**
-   * Valida el formulario
-   */
+  // Manejar subida desde archivo local
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      setFormData(prev => ({ ...prev, image_url: imageUrl }));
+      setServerError('');
+    } catch (error: any) {
+      setServerError(error.message || 'Error al subir la imagen');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Iniciar cámara
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      setServerError('No se pudo acceder a la cámara');
+    }
+  };
+
+  // Capturar foto desde cámara
+  const capturePhoto = async () => {
+    if (!videoRef.current) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(videoRef.current, 0, 0);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      
+      setIsUploadingImage(true);
+      try {
+        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+        const imageUrl = await uploadToCloudinary(file);
+        setFormData(prev => ({ ...prev, image_url: imageUrl }));
+        
+        // Detener cámara
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          setStream(null);
+        }
+        setUploadMethod('url');
+      } catch (error: any) {
+        setServerError(error.message || 'Error al subir la imagen');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }, 'image/jpeg', 0.9);
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'El título es requerido';
-    } else if (formData.title.length < 5) {
-      newErrors.title = 'El título debe tener al menos 5 caracteres';
-    } else if (formData.title.length > 200) {
-      newErrors.title = 'El título no puede tener más de 200 caracteres';
+      newErrors.title = 'El título es obligatorio';
+    } else if (formData.title.length > 255) {
+      newErrors.title = 'El título no puede tener más de 255 caracteres';
     }
 
-    if (!formData.content.trim()) {
-      newErrors.content = 'El contenido es requerido';
-    } else if (formData.content.length < 20) {
-      newErrors.content = 'El contenido debe tener al menos 20 caracteres';
+    if (!formData.summary.trim()) {
+      newErrors.summary = 'El resumen es obligatorio';
+    }
+
+    if (!formData.fossil_type) {
+      newErrors.fossil_type = 'Debes seleccionar un tipo de fósil';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  /**
-   * Guarda los cambios del post
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
 
     if (!validateForm()) {
       return;
@@ -138,239 +201,396 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.`.trim()
     setIsSubmitting(true);
 
     try {
-      // TODO: Implementar cuando el servicio esté listo
-      // await updatePost(id, formData);
-
-      // MOCK temporal - ELIMINAR cuando el servicio esté listo
-      console.log('Updating post:', id, formData);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // TODO: Mostrar notificación de éxito
-      // toast.success('Post actualizado correctamente');
-
-      // Redirigir al post actualizado
+      await updatePost(parseInt(id!), formData);
       navigate(`/posts/${id}`);
-
     } catch (err: any) {
-      // Manejar errores
-      if (err.response?.status === 400) {
-        setErrors(err.response.data.errors || { general: 'Datos inválidos' });
-      } else if (err.response?.status === 404) {
-        setErrors({ general: 'Post no encontrado' });
-      } else if (err.response?.status === 403) {
-        setErrors({ general: 'No tienes permisos para editar este post' });
-      } else {
-        setErrors({ general: 'Error al actualizar el post' });
-      }
+      setServerError(err.message || 'Error al actualizar el descubrimiento');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando post...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#AA7B5C] mx-auto mb-4"></div>
+          <p style={{ color: 'var(--text-secondary)' }}>Cargando descubrimiento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="container-custom section-padding">
+        <div className="card text-center" style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}>
+          <p className="text-lg font-semibold">No tienes permisos para editar descubrimientos</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Editar Post</h1>
-        
-        {/* Toggle Preview */}
-        <button
-          onClick={() => setShowPreview(!showPreview)}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
-        >
-          {showPreview ? 'Editar' : 'Vista Previa'}
-        </button>
+    <div className="container-custom section-padding">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: 'var(--text-primary)' }}>
+          Editar Descubrimiento
+        </h1>
       </div>
 
       {/* Error general */}
-      {errors.general && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          {errors.general}
+      {(serverError || error) && (
+        <div className="card mb-6" style={{ backgroundColor: '#FEE2E2', borderColor: 'var(--color-danger)' }}>
+          <p style={{ color: 'var(--color-danger)' }}>{serverError || error}</p>
         </div>
       )}
 
-      {showPreview ? (
-        /* MODO PREVIEW */
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-4xl font-bold mb-4">{formData.title}</h2>
-          <div className="prose max-w-none">
-            {formData.content.split('\n').map((paragraph, index) => (
-              <p key={index} className="mb-4 text-gray-700">
-                {paragraph || <br />}
-              </p>
-            ))}
+      {/* Formulario */}
+      <form onSubmit={handleSubmit}>
+        <div className="card space-y-6">
+          {/* Título - Usando Input component */}
+          <Input
+            id="title"
+            name="title"
+            type="text"
+            label="Título del Descubrimiento"
+            value={formData.title}
+            onChange={handleChange}
+            error={errors.title}
+            placeholder="Título del descubrimiento"
+            disabled={isSubmitting}
+            required
+          />
+
+          {/* Resumen - Mantiene textarea manual porque Input no lo soporta */}
+          <div>
+            <label htmlFor="summary" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+              Resumen *
+            </label>
+            <textarea
+              id="summary"
+              name="summary"
+              value={formData.summary}
+              onChange={handleChange}
+              placeholder="Descripción detallada del descubrimiento"
+              rows={6}
+              disabled={isSubmitting}
+              className="input"
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                borderColor: errors.summary ? 'var(--color-danger)' : 'var(--border-color)',
+                resize: 'vertical'
+              }}
+            />
+            {errors.summary && (
+              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.summary}</p>
+            )}
           </div>
-        </div>
-      ) : (
-        /* MODO EDICIÓN */
-        <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
-            {/* Campo Título */}
+
+          {/* Tipo de Fósil y Período */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Select mantiene su estilo porque Input no soporta select */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium mb-2">
-                Título del Post *
+              <label htmlFor="fossil_type" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Tipo de Fósil *
               </label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                value={formData.title}
+              <select
+                id="fossil_type"
+                name="fossil_type"
+                value={formData.fossil_type}
                 onChange={handleChange}
-                placeholder="Un título épico para tu historia..."
-                className={`w-full px-4 py-3 text-2xl border rounded focus:outline-none focus:ring-2 ${
-                  errors.title
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-              )}
-              <p className="mt-1 text-sm text-gray-500">
-                {formData.title.length}/200 caracteres
-              </p>
+                disabled={isSubmitting}
+                className="input"
+                style={{
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-color)'
+                }}
+              >
+                {fossilTypes.map(type => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Campo Contenido */}
-            <div>
-              <label htmlFor="content" className="block text-sm font-medium mb-2">
-                Contenido *
-              </label>
-              <textarea
-                id="content"
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                rows={15}
-                placeholder="Escribe tu historia aquí..."
-                className={`w-full px-4 py-3 border rounded focus:outline-none focus:ring-2 font-mono ${
-                  errors.content
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
+            {/* Período Geológico - Usando Input */}
+            <Input
+              id="geological_period"
+              name="geological_period"
+              type="text"
+              label="Período Geológico"
+              value={formData.geological_period}
+              onChange={handleChange}
+              placeholder="Ej: Cretácico Superior"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Fecha y Ubicación */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Fecha de Descubrimiento - Usando Input */}
+            <Input
+              id="discovery_date"
+              name="discovery_date"
+              type="date"
+              label="Fecha de Descubrimiento"
+              value={formData.discovery_date}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            />
+
+            {/* Ubicación - Usando Input */}
+            <Input
+              id="location"
+              name="location"
+              type="text"
+              label="Ubicación"
+              value={formData.location}
+              onChange={handleChange}
+              placeholder="Ej: Montana, USA"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Paleontólogo - Usando Input */}
+          <Input
+            id="paleontologist"
+            name="paleontologist"
+            type="text"
+            label="Paleontólogo"
+            value={formData.paleontologist}
+            onChange={handleChange}
+            placeholder="Nombre del paleontólogo"
+            disabled={isSubmitting}
+          />
+
+          {/* Imagen con múltiples opciones */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+              Imagen del Descubrimiento
+            </label>
+
+            {/* Botones de método */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadMethod('url');
+                  if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    setStream(null);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  uploadMethod === 'url' 
+                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
+                    : 'bg-transparent border-[var(--border-color)]'
                 }`}
-              />
-              {errors.content && (
-                <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-              )}
-              <p className="mt-1 text-sm text-gray-500">
-                {formData.content.length} caracteres
-              </p>
+                style={{ color: uploadMethod === 'url' ? 'white' : 'var(--text-primary)' }}
+              >
+                <LinkIcon size={18} />
+                URL
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadMethod('file');
+                  fileInputRef.current?.click();
+                  if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    setStream(null);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  uploadMethod === 'file' 
+                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
+                    : 'bg-transparent border-[var(--border-color)]'
+                }`}
+                style={{ color: uploadMethod === 'file' ? 'white' : 'var(--text-primary)' }}
+                disabled={isUploadingImage}
+              >
+                <Upload size={18} />
+                Subir Archivo
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadMethod('camera');
+                  startCamera();
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  uploadMethod === 'camera' 
+                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
+                    : 'bg-transparent border-[var(--border-color)]'
+                }`}
+                style={{ color: uploadMethod === 'camera' ? 'white' : 'var(--text-primary)' }}
+                disabled={isUploadingImage}
+              >
+                <Camera size={18} />
+                Cámara
+              </button>
             </div>
+
+            {/* Input oculto para archivos */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {/* Campo URL - Usando Input cuando el método es URL */}
+            {uploadMethod === 'url' && (
+              <Input
+                id="image_url"
+                name="image_url"
+                type="url"
+                value={formData.image_url}
+                onChange={handleChange}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                disabled={isSubmitting}
+              />
+            )}
+
+            {/* Vista previa de cámara */}
+            {uploadMethod === 'camera' && stream && (
+              <div className="space-y-4">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full rounded-lg"
+                  style={{ maxHeight: '400px', objectFit: 'cover' }}
+                />
+                <button
+                  type="button"
+                  onClick={capturePhoto}
+                  className="btn btn-primary w-full"
+                  disabled={isUploadingImage}
+                >
+                  {isUploadingImage ? 'Subiendo...' : 'Capturar Foto'}
+                </button>
+              </div>
+            )}
+
+            {/* Estado de carga */}
+            {isUploadingImage && (
+              <div className="mt-2 text-center" style={{ color: 'var(--text-secondary)' }}>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#AA7B5C] mx-auto mb-2"></div>
+                Subiendo imagen...
+              </div>
+            )}
+
+            {/* Vista previa */}
+            {formData.image_url && !stream && (
+              <div className="mt-4">
+                <img
+                  src={formData.image_url}
+                  alt="Vista previa"
+                  className="w-full rounded-lg"
+                  style={{ maxHeight: '300px', objectFit: 'cover' }}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Botones de acción */}
-          <div className="mt-6 flex gap-4">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
-            >
-              {isSubmitting ? 'Guardando cambios...' : 'Guardar Cambios'}
-            </button>
+          {/* Fuente - Usando Input */}
+          <Input
+            id="source"
+            name="source"
+            type="url"
+            label="Fuente"
+            value={formData.source}
+            onChange={handleChange}
+            placeholder="https://enlace-a-articulo-cientifico.com"
+            disabled={isSubmitting}
+          />
 
-            <button
-              type="button"
-              onClick={() => navigate(`/posts/${id}`)}
-              disabled={isSubmitting}
-              className="px-6 py-3 border border-gray-300 rounded hover:bg-gray-100 transition"
-            >
-              Cancelar
-            </button>
+          {/* ⭐ NUEVO: Estado de Publicación (Draft/Published) */}
+          <div>
+            <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Estado de Publicación *
+            </label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  value="draft"
+                  checked={formData.status === 'draft'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
+                />
+                <span 
+                  className="text-base transition-colors"
+                  style={{ 
+                    color: formData.status === 'draft' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontWeight: formData.status === 'draft' ? '600' : '400'
+                  }}
+                >
+                  📝 Borrador
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  value="published"
+                  checked={formData.status === 'published'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
+                />
+                <span 
+                  className="text-base transition-colors"
+                  style={{ 
+                    color: formData.status === 'published' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontWeight: formData.status === 'published' ? '600' : '400'
+                  }}
+                >
+                  ✅ Publicado
+                </span>
+              </label>
+            </div>
+            <p className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+              {formData.status === 'draft' 
+                ? '⚠️ Los borradores no son visibles en la página principal' 
+                : '✓ Este descubrimiento será visible públicamente'}
+            </p>
           </div>
-        </form>
-      )}
-
-      {/* Advertencia de cambios sin guardar */}
-      {/* TODO: Implementar detección de cambios sin guardar
-      {hasUnsavedChanges && (
-        <div className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded shadow-lg">
-          Tienes cambios sin guardar
         </div>
-      )}
-      */}
+
+        {/* Botones */}
+        <div className="mt-6 flex gap-4">
+          <button
+            type="button"
+            onClick={() => navigate(`/posts/${id}`)}
+            disabled={isSubmitting}
+            className="btn btn-secondary flex-1"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || isUploadingImage}
+            className="btn btn-primary flex-1"
+          >
+            {isSubmitting ? 'Guardando cambios...' : 'Guardar Cambios'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
 export default EditPost;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Servicio de actualización (src/services/postService.ts):
- *    export const updatePost = async (id: string, data: {
- *      title: string;
- *      content: string;
- *    }) => {
- *      const response = await fetch(`http://localhost:3000/posts/${id}`, {
- *        method: 'PUT',
- *        headers: {
- *          'Content-Type': 'application/json',
- *          'Authorization': `Bearer ${localStorage.getItem('token')}`
- *        },
- *        body: JSON.stringify(data)
- *      });
- *      
- *      if (!response.ok) throw new Error('Update failed');
- *      return await response.json();
- *    };
- * 
- * 2. Detectar cambios sin guardar:
- *    - Comparar formData con los datos originales
- *    - Mostrar advertencia al intentar salir de la página
- *    - Usar beforeunload event del navegador:
- *    
- *    useEffect(() => {
- *      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
- *        if (hasUnsavedChanges) {
- *          e.preventDefault();
- *          e.returnValue = '';
- *        }
- *      };
- *      window.addEventListener('beforeunload', handleBeforeUnload);
- *      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
- *    }, [hasUnsavedChanges]);
- * 
- * 3. Historial de versiones:
- *    - Guardar cada edición como una versión
- *    - Botón "Ver historial" que muestra versiones anteriores
- *    - Opción de restaurar versión anterior
- *    - Diff visual entre versiones (qué cambió)
- * 
- * 4. Auto-guardar cambios:
- *    - Guardar automáticamente cada X segundos
- *    - Indicador visual "Guardando..." / "Todos los cambios guardados"
- *    - Usar debounce para no guardar en cada tecla
- * 
- * 5. Validación de permisos:
- *    - Verificar en el backend que el usuario puede editar
- *    - Solo el autor o admin pueden editar
- *    - Mostrar mensaje apropiado si no tiene permisos
- * 
- * 6. Editor colaborativo en tiempo real:
- *    - Usar WebSockets para edición simultánea
- *    - Mostrar cursor de otros usuarios editando
- *    - Conflict resolution si múltiples personas editan
- *    - Librerías: Y.js, ShareDB, Operational Transform
- * 
- * 7. Metadatos de edición:
- *    - Mostrar quién editó por última vez y cuándo
- *    - Mostrar número total de ediciones
- *    - Log de cambios (audit trail)
- * 
- * 8. Despublicar post:
- *    - Botón para cambiar status de published a draft
- *    - Útil si se encuentra un error después de publicar
- *    - Solo admin puede despublicar posts de otros
- */
