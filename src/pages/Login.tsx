@@ -1,30 +1,17 @@
 // Página de inicio de sesión
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth'; // Hook para la lógica de autenticación
-import LoginForm from '../components/ui/LoginForm'; // Importamos el nuevo componente
+import { useAuth } from '../hooks/useAuth';
+import LoginForm from '../components/ui/LoginForm';
 
-//Login - Página de inicio de sesión
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { login } = useAuth();
 
   // Obtener la ubicación para la redirección inteligente
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
-
-  useEffect(() => {
-    // Si el estado de autenticación aún está cargando, no hacer nada.
-    if (isAuthLoading) {
-      return;
-    }
-    // Si el usuario ya está autenticado, redirigirlo.
-    if (isAuthenticated) {
-      // Redirige a la página que intentaba visitar o a la página de inicio.
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, isAuthLoading, navigate, from]);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -86,13 +73,16 @@ const Login = () => {
       return;
     }
 
+    console.log('📧 Datos enviados:', formData);
     setIsLoading(true);
+    setErrors({}); // Limpiar errores previos
 
     try {
-      await login(formData); // Llama a la función login del contexto
-      navigate(from, { replace: true }); // Redirige a la página original o a la de inicio
-
+      await login(formData);
+      // Solo después de un login exitoso, navegar
+      navigate(from, { replace: true });
     } catch (err: any) {
+      console.error('❌ Error completo:', err); 
       // Manejar diferentes tipos de errores
       if (err.response?.status === 401) {
         setErrors({ form: 'Email o contraseña incorrectos.' });
@@ -101,22 +91,14 @@ const Login = () => {
       } else {
         setErrors({ form: err.message || 'Error al iniciar sesión.' });
       }
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Solo poner en false si hay error
     }
+    // NO hay finally - si el login es exitoso, la navegación ocurre inmediatamente
   };
-
-  // Muestra un estado de carga mientras se verifica la autenticación inicial
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">Verificando autenticación...</div>
-    );
-  }
 
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        {/* TODO: Reemplazar con el logo del proyecto */}
         <img
           alt="Game of Bones Logo"
           src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
@@ -138,10 +120,10 @@ const Login = () => {
         />
 
         <p className="mt-10 text-center text-sm text-theme-secondary">
-            ¿No tienes cuenta?{' '}
+          ¿No tienes cuenta?{' '}
           <Link to="/register" className="font-semibold text-accent-coral hover:text-accent-teal">
-              Regístrate aquí
-            </Link>
+            Regístrate aquí
+          </Link>
         </p>
       </div>
     </div>
