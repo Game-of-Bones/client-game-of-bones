@@ -140,7 +140,7 @@
 
   .btn-primary {
     background-color: var(--color-coral);
-    color: white;
+    color: var(--text-inverse); /* FIX: Usar variable CSS en lugar de 'white' */
   }
 
   .btn-primary:hover {
