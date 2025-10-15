@@ -1,15 +1,18 @@
-import { useState, useRef, type ChangeEvent } from 'react';
+// src/components/forms/EditPostForm.tsx
+import { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../stores/authStore';
-import { usePostStore } from '../../stores/postStore';
-import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
-import { Upload, Link, MapPin } from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore'; 
+import { usePostStore } from '../../stores/postStore'; 
+import { uploadToCloudinary } from '../../utils/cloudinaryUpload'; 
+import { Upload, Link, Save, MapPin } from 'lucide-react';
 import Input from '../ui/Input';
 import { FOSSIL_TYPE_OPTIONS } from '../../types/post.types';
+import type { Post, FossilType } from '../../types/post.types';
+
 type FormData = {
     title: string;
     post_content: string;
-    summary: string;
+    summary: string; 
     image_url: string;
     paleontologist: string;
     location: string;
@@ -22,48 +25,63 @@ type FormData = {
     status: 'draft' | 'published';
 };
 
-{
-    FOSSIL_TYPE_OPTIONS.map(type => (
-        <option key={type.value} value={type.value}>
-            {type.label}
-        </option>
-    ))
+interface EditPostFormProps {
+    postId: string;
+    initialData: Post;
 }
 
-const CreatePostForm = () => {
+const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     const navigate = useNavigate();
-    const user = useAuthStore((state) => state.user);
-    const createPost = usePostStore((state) => state.createPost);
+    const user = useAuthStore((state) => state.user); 
+    const updatePost = usePostStore((state) => state.updatePost);
     const isSubmitting = usePostStore((state) => state.isLoading);
     const postError = usePostStore((state) => state.error);
-
+    
     const [formData, setFormData] = useState<FormData>({
-        title: '',
-        post_content: '',
-        summary: '',
-        image_url: '',
-        paleontologist: '',
-        location: '',
-        latitude: null,
-        longitude: null,
-        fossil_type: FOSSIL_TYPE_OPTIONS[0].value,
-        geological_period: '',
-        discovery_date: '',
-        source: '',
-        status: 'draft'
+        title: initialData.title || '',
+        post_content: initialData.post_content || '',
+        summary: initialData.summary || '', 
+        image_url: initialData.image_url || '',
+        paleontologist: initialData.paleontologist || '',
+        location: initialData.location || '',
+        latitude: initialData.latitude || null,
+        longitude: initialData.longitude || null,
+        fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value, 
+        geological_period: initialData.geological_period || '',
+        discovery_date: initialData.discovery_date ? new Date(initialData.discovery_date).toISOString().split('T')[0] : '',
+        source: initialData.source || '',
+        status: initialData.status || 'draft'
     });
+
+    useEffect(() => {
+        setFormData({
+            title: initialData.title || '',
+            post_content: initialData.post_content || '', 
+            summary: initialData.summary || '', 
+            image_url: initialData.image_url || '',
+            paleontologist: initialData.paleontologist || '',
+            location: initialData.location || '',
+            latitude: initialData.latitude || null,
+            longitude: initialData.longitude || null,
+            fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value, 
+            geological_period: initialData.geological_period || '',
+            discovery_date: initialData.discovery_date ? new Date(initialData.discovery_date).toISOString().split('T')[0] : '',
+            source: initialData.source || '',
+            status: initialData.status || 'draft'
+        });
+    }, [initialData]);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState('');
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isGeolocating, setIsGeolocating] = useState(false);
-    const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
+    const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file'); 
     const fileInputRef = useRef<HTMLInputElement>(null);
-
+    
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-
+        
         if (errors[name]) {
             setErrors(prev => {
                 const newErrors = { ...prev };
@@ -88,7 +106,7 @@ const CreatePostForm = () => {
             setServerError(error.message || 'Error al subir la imagen a Cloudinary');
         } finally {
             setIsUploadingImage(false);
-            e.target.value = '';
+            e.target.value = ''; 
         }
     };
 
@@ -111,13 +129,13 @@ const CreatePostForm = () => {
                     }
                 }
             );
-
+            
             if (!response.ok) {
                 throw new Error('Error al conectar con el servicio de geocodificación');
             }
 
             const data = await response.json();
-
+            
             if (data && data.length > 0) {
                 const { lat, lon } = data[0];
                 setFormData(prev => ({
@@ -127,7 +145,7 @@ const CreatePostForm = () => {
                 }));
                 setServerError('');
             } else {
-                setServerError('No se encontraron coordenadas para esa ubicación. Intenta ser más específico (ej: "Patagonia, Argentina")');
+                setServerError('No se encontraron coordenadas para esa ubicación. Intenta ser más específico.');
             }
         } catch (error: any) {
             console.error('Geocoding error:', error);
@@ -144,7 +162,7 @@ const CreatePostForm = () => {
         if (!formData.summary.trim()) newErrors.summary = 'El Subtítulo/Resumen es obligatorio.';
         if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido Detallado es obligatorio.';
         if (!formData.fossil_type) newErrors.fossil_type = 'Debes seleccionar el Tipo de Fósil.';
-
+        
         if (!formData.image_url && !isUploadingImage) newErrors.image_url = 'Debes incluir una imagen principal.';
 
         setErrors(newErrors);
@@ -154,39 +172,39 @@ const CreatePostForm = () => {
     const handleSubmit = async (e: React.FormEvent, statusOverride: 'draft' | 'published') => {
         e.preventDefault();
         setServerError('');
-
+    
         if (!validateForm()) {
-            setServerError('POR FAVOR, RELLENE TODOS LOS CAMPOS OBLIGATORIOS PARA COMPLETAR SU POST DE MANERA CORRECTA.');
+            setServerError('POR FAVOR, RELLENE TODOS LOS CAMPOS OBLIGATORIOS.');
             return;
         }
-
+    
         if (isSubmitting || isUploadingImage) return;
-
+    
         try {
             const dataToSubmit = {
                 title: formData.title,
-                summary: formData.summary,
+                summary: formData.summary, 
                 post_content: formData.post_content,
                 image_url: formData.image_url,
-                paleontologist: formData.paleontologist || null,
-                location: formData.location || null,
+                paleontologist: formData.paleontologist || undefined,
+                location: formData.location || undefined,
                 latitude: formData.latitude,
                 longitude: formData.longitude,
-                fossil_type: formData.fossil_type,
-                geological_period: formData.geological_period || null,
-                discovery_date: formData.discovery_date ? new Date(formData.discovery_date).toISOString() : null,
-                source: formData.source || null,
+                // ⬇️ AÑADE "as FossilType" para el type assertion
+                fossil_type: formData.fossil_type as FossilType,
+                geological_period: formData.geological_period || undefined,
+                discovery_date: formData.discovery_date ? new Date(formData.discovery_date).toISOString() : undefined,
+                source: formData.source || undefined,
                 status: statusOverride,
-                author_id: user?.id,
             };
-
-            const newPost = await createPost(dataToSubmit as any);
-
-            const redirectPath = statusOverride === 'published' ? `/posts/${newPost.id}` : '/profile';
+    
+            await updatePost(Number(postId), dataToSubmit);
+            
+            const redirectPath = statusOverride === 'published' ? `/posts/${postId}` : '/profile';
             navigate(redirectPath);
-
+    
         } catch (err: any) {
-            setServerError(postError || err.message || 'Error al guardar el post.');
+            setServerError(postError || err.message || 'Error al actualizar el post.'); 
         }
     };
 
@@ -194,8 +212,11 @@ const CreatePostForm = () => {
         <div className="container-custom mx-auto px-4 py-8 max-w-5xl">
             <div className="text-center mb-10">
                 <h1 className="text-3xl font-cinzel tracking-wider" style={{ color: 'var(--color-primary)' }}>
-                    Nuevo Descubrimiento
+                    Editar Descubrimiento
                 </h1>
+                <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+                    Modificando: {initialData.title}
+                </p>
             </div>
 
             {(serverError || postError) && (
@@ -203,13 +224,13 @@ const CreatePostForm = () => {
                     {serverError || postError}
                 </div>
             )}
-
+            
             <p className="text-sm italic mb-6 text-center" style={{ color: 'var(--color-danger)' }}>
                 * Campos obligatorios
             </p>
 
             <div className="space-y-6">
-
+                
                 <Input
                     id="title"
                     name="title"
@@ -221,12 +242,12 @@ const CreatePostForm = () => {
                     placeholder="Escribe el título principal..."
                     disabled={isSubmitting}
                     required
-                    inputClass="text-xl font-bold tracking-wider"
+                    inputClass="text-xl font-bold tracking-wider" 
                 />
 
                 <Input
                     id="summary"
-                    name="summary"
+                    name="summary" 
                     type="text"
                     label="SUBTÍTULO DEL POST *"
                     value={formData.summary}
@@ -236,23 +257,25 @@ const CreatePostForm = () => {
                     disabled={isSubmitting}
                     required
                 />
-
+                
                 <div className="p-6 rounded-lg relative" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color-dark)' }}>
-
+                    
                     <div className="flex gap-2 mb-4 justify-center">
                         <button
                             type="button"
                             onClick={() => setUploadMethod('url')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${uploadMethod === 'url' ? 'btn-primary-small' : 'btn-secondary-small'
-                                }`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                                uploadMethod === 'url' ? 'btn-primary-small' : 'btn-secondary-small' 
+                            }`}
                         >
                             <Link size={18} /> URL
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => { setUploadMethod('file'); fileInputRef.current?.click(); }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${uploadMethod === 'file' ? 'btn-primary-small' : 'btn-secondary-small'
-                                }`}
+                        <button 
+                            type="button" 
+                            onClick={() => { setUploadMethod('file'); fileInputRef.current?.click(); }} 
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                                uploadMethod === 'file' ? 'btn-primary-small' : 'btn-secondary-small' 
+                            }`}
                         >
                             <Upload size={18} /> Subir Archivo
                         </button>
@@ -260,16 +283,16 @@ const CreatePostForm = () => {
                     </div>
 
                     {uploadMethod === 'url' && (
-                        <Input
-                            id="image_url"
-                            name="image_url"
-                            type="url"
+                        <Input 
+                            id="image_url" 
+                            name="image_url" 
+                            type="url" 
                             label="URL de la Imagen"
                             labelHidden
-                            value={formData.image_url}
-                            onChange={handleChange}
-                            placeholder="Pega la URL de la imagen principal aquí..."
-                            disabled={isSubmitting || isUploadingImage}
+                            value={formData.image_url} 
+                            onChange={handleChange} 
+                            placeholder="Pega la URL de la imagen principal aquí..." 
+                            disabled={isSubmitting || isUploadingImage} 
                         />
                     )}
 
@@ -277,13 +300,13 @@ const CreatePostForm = () => {
                         <div className="text-center p-8 text-lg font-bold" style={{ color: 'var(--color-accent)' }}>Subiendo imagen...</div>
                     ) : formData.image_url ? (
                         <div className="mt-4 border-2 rounded-lg overflow-hidden" style={{ borderColor: 'var(--border-color)' }}>
-                            <img src={formData.image_url} alt="Vista previa" className="w-full" style={{ maxHeight: '350px', objectFit: 'cover' }} />
+                            <img src={formData.image_url} alt="Vista previa del descubrimiento" className="w-full" style={{ maxHeight: '350px', objectFit: 'cover' }} />
                         </div>
                     ) : (
                         <div className="mt-4 flex flex-col justify-center items-center rounded-lg p-10" style={{ backgroundColor: 'var(--bg-input-hover)', height: '280px' }}>
                             <img
                                 src="/Triceratops_Skull_in_Earthy_Brown.png"
-                                alt="Placeholder"
+                                alt="Cráneo de Triceratops de marcador de posición"
                                 className="opacity-80"
                                 style={{ width: '180px', height: '180px', objectFit: 'contain' }}
                             />
@@ -364,7 +387,7 @@ const CreatePostForm = () => {
                     onChange={handleChange}
                     disabled={isSubmitting}
                 />
-
+                
                 <div>
                     <label htmlFor="fossil_type" className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
                         TIPO DE FÓSIL *
@@ -392,14 +415,14 @@ const CreatePostForm = () => {
                         <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.fossil_type}</p>
                     )}
                 </div>
-
+                
                 <div>
                     <label htmlFor="post_content" className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
                         CONTENIDO DEL POST (Detallado) *
                     </label>
                     <textarea
                         id="post_content"
-                        name="post_content"
+                        name="post_content" 
                         value={formData.post_content}
                         onChange={handleChange}
                         placeholder="Escribe la descripción detallada, métodos de excavación, importancia del hallazgo, etc..."
@@ -481,27 +504,28 @@ const CreatePostForm = () => {
                         type="button"
                         onClick={() => navigate(-1)}
                         disabled={isSubmitting}
-                        className="btn btn-secondary-outline"
+                        className="btn btn-secondary-outline" 
                     >
                         Cancelar
                     </button>
-
+                    
                     <button
                         type="button"
                         onClick={(e) => handleSubmit(e, 'draft')}
                         disabled={isSubmitting || isUploadingImage}
-                        className="btn btn-tertiary"
+                        className="btn btn-tertiary" 
                     >
+                        <Save size={18} className="mr-2" />
                         {isSubmitting ? 'Guardando...' : 'Guardar Borrador'}
                     </button>
-
+                    
                     <button
                         type="button"
                         onClick={(e) => handleSubmit(e, 'published')}
                         disabled={isSubmitting || isUploadingImage}
                         className="btn btn-primary"
                     >
-                        {isSubmitting ? 'Publicando...' : 'Publicar Post'}
+                        {isSubmitting ? 'Actualizando...' : 'Actualizar Post'}
                     </button>
                 </div>
             </div>
@@ -509,4 +533,4 @@ const CreatePostForm = () => {
     );
 };
 
-export default CreatePostForm;
+export default EditPostForm;
