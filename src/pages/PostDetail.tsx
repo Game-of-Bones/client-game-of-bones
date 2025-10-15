@@ -141,7 +141,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
   if (isLoading || !post) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <div className="text-xl" style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}>
           {isLoading ? 'Cargando...' : 'Post no encontrado'}
         </div>
       </div>
@@ -149,76 +149,76 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
   }
 
   return (
-    <div className="min-h-screen" style={{ fontFamily: "'Playfair Display', serif" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-8" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         
-        <div className="text-right mb-4">
-          <span className="text-white text-lg">📍 {post.location}</span>
+        <div className="text-right mb-3 sm:mb-4">
+          <span className="text-base sm:text-lg md:text-xl" style={{ color: '#FFFFFF' }}>📍 {post.location}</span>
         </div>
 
-        <div className="mb-6 rounded-2xl overflow-hidden">
+        <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden">
           <img 
             src={post.image_url} 
             alt={post.title}
-            className="w-full h-[400px] object-cover"
+            className="w-full h-[250px] sm:h-[350px] md:h-[400px] lg:h-[500px] object-cover"
           />
         </div>
 
-        <h1 className="text-white text-4xl md:text-5xl font-bold mb-4">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2 sm:px-0" style={{ color: '#FFFFFF' }}>
           {post.title}
         </h1>
 
-        <p className="text-white text-lg md:text-xl italic mb-8 opacity-80">
+        <p className="text-base sm:text-lg md:text-xl italic mb-6 sm:mb-8 opacity-80 px-2 sm:px-0 leading-relaxed" style={{ color: '#FFFFFF' }}>
           {post.summary}
         </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
           
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-2 lg:order-1">
             <div className="lg:sticky lg:top-4">
-              <div className="relative">
+              <div className="relative px-2 sm:px-0">
                 <button
                   onClick={() => setMoreInfoOpen(!moreInfoOpen)}
-                  className="w-full py-3 px-6 rounded-full flex items-center justify-between text-white text-lg font-semibold transition-all hover:scale-105"
-                  style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)' }}
+                  className="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-full flex items-center justify-between text-base sm:text-lg font-semibold transition-all hover:scale-105 active:scale-95"
+                  style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)', color: '#FFFFFF' }}
                 >
-                  Más Información
+                  <span>Más Información</span>
                   <ChevronDown 
                     className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`} 
-                    size={20} 
+                    size={18} 
                   />
                 </button>
 
                 {moreInfoOpen && (
                   <div 
-                    className="mt-2 rounded-2xl p-4 space-y-3 text-white"
-                    style={{ backgroundColor: 'rgba(72, 169, 166, 0.5)' }}
+                    className="mt-2 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-2 sm:space-y-3 animate-slide-down"
+                    style={{ backgroundColor: 'rgba(72, 169, 166, 0.5)', color: '#FFFFFF' }}
                   >
                     <div>
-                      <p className="text-sm opacity-70">Fecha de Descubrimiento</p>
-                      <p className="font-semibold">{formatDate(post.discovery_date)}</p>
+                      <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Fecha de Descubrimiento</p>
+                      <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{formatDate(post.discovery_date)}</p>
                     </div>
                     <div>
-                      <p className="text-sm opacity-70">Paleontólogo</p>
-                      <p className="font-semibold">{post.paleontologist}</p>
+                      <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Paleontólogo</p>
+                      <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{post.paleontologist}</p>
                     </div>
                     <div>
-                      <p className="text-sm opacity-70">Periodo Geológico</p>
-                      <p className="font-semibold">{post.geological_period}</p>
+                      <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Periodo Geológico</p>
+                      <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{post.geological_period}</p>
                     </div>
                     <div>
-                      <p className="text-sm opacity-70">Tipo de Fósil</p>
-                      <p className="font-semibold">{fossilTypeLabels[post.fossil_type]}</p>
+                      <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Tipo de Fósil</p>
+                      <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{fossilTypeLabels[post.fossil_type]}</p>
                     </div>
                     {post.latitude && post.longitude && (
                       <>
                         <div>
-                          <p className="text-sm opacity-70">Latitud</p>
-                          <p className="font-semibold">{post.latitude.toFixed(6)}°</p>
+                          <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Latitud</p>
+                          <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{post.latitude.toFixed(6)}°</p>
                         </div>
                         <div>
-                          <p className="text-sm opacity-70">Longitud</p>
-                          <p className="font-semibold">{post.longitude.toFixed(6)}°</p>
+                          <p className="text-xs sm:text-sm opacity-70" style={{ color: '#FFFFFF' }}>Longitud</p>
+                          <p className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{post.longitude.toFixed(6)}°</p>
                         </div>
                       </>
                     )}
@@ -228,33 +228,33 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
             </div>
           </div>
 
-          <div className="lg:col-span-9">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4 mb-6">
+          <div className="lg:col-span-9 order-1 lg:order-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mb-4 sm:mb-6 px-2 sm:px-0">
               
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <button
                   onClick={() => setLikesOpen(!likesOpen)}
-                  className="flex items-center gap-2 py-2 px-4 rounded-full text-white transition-all hover:scale-105"
-                  style={{ backgroundColor: 'rgba(141, 170, 145, 0.5)' }}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 py-2 px-4 rounded-full transition-all hover:scale-105 active:scale-95"
+                  style={{ backgroundColor: 'rgba(141, 170, 145, 0.5)', color: '#FFFFFF' }}
                 >
-                  <Heart size={20} fill="white" />
+                  <Heart size={18} fill="white" />
                   <span className="font-semibold">{post.likes_count}</span>
                 </button>
 
                 {likesOpen && post.liked_by.length > 0 && (
                   <div 
-                    className="absolute right-0 mt-2 w-64 rounded-xl p-3 space-y-2 z-10"
+                    className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-64 rounded-xl p-3 space-y-2 z-10 animate-slide-down"
                     style={{ backgroundColor: 'rgba(141, 170, 145, 0.95)' }}
                   >
-                    <p className="text-white font-semibold mb-2">Les gusta a:</p>
+                    <p className="font-semibold mb-2 text-sm sm:text-base" style={{ color: '#FFFFFF' }}>Les gusta a:</p>
                     {post.liked_by.map(user => (
                       <div key={user.id} className="flex items-center gap-2">
                         <img 
                           src={user.avatar} 
                           alt={user.username}
-                          className="w-8 h-8 rounded-full"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full"
                         />
-                        <span className="text-white">{user.username}</span>
+                        <span className="text-sm sm:text-base" style={{ color: '#FFFFFF' }}>{user.username}</span>
                       </div>
                     ))}
                   </div>
@@ -262,25 +262,25 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
               </div>
 
               <div 
-                className="flex items-center gap-3 py-2 px-4 rounded-full"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 sm:gap-3 py-2 px-4 rounded-full"
                 style={{ backgroundColor: 'rgba(70, 46, 27, 0.6)' }}
               >
                 <img 
                   src={post.author.profile_image} 
                   alt={post.author.username}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                 />
-                <span className="text-white font-semibold">
+                <span className="font-semibold text-sm sm:text-base" style={{ color: '#FFFFFF' }}>
                   {post.author.username}
                 </span>
               </div>
             </div>
 
             <div 
-              className="rounded-2xl p-8 mb-8"
+              className="rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 mx-2 sm:mx-0"
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
-              <div className="text-white space-y-4 leading-relaxed text-lg">
+              <div className="space-y-3 sm:space-y-4 leading-relaxed text-base sm:text-lg" style={{ color: '#FFFFFF' }}>
                 {post.post_content.split('\n\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}
@@ -289,30 +289,30 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
           </div>
         </div>
 
-        <div className="mt-12">
-          <div className="flex items-center gap-3 mb-6">
-            <MessageCircle size={28} className="text-white" />
-            <h2 className="text-white text-3xl font-bold">Comentarios</h2>
+        <div className="mt-8 sm:mt-12 px-2 sm:px-0">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <MessageCircle size={24} className="sm:w-7 sm:h-7" style={{ color: '#FFFFFF' }} />
+            <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: '#FFFFFF' }}>Comentarios</h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {comments.map(comment => (
               <div 
                 key={comment.id}
-                className="rounded-xl p-6"
+                className="rounded-xl p-4 sm:p-6"
                 style={{ backgroundColor: 'rgba(139, 107, 77, 0.5)' }}
               >
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <img 
                     src={comment.user.avatar} 
                     alt={comment.user.username}
-                    className="w-10 h-10 rounded-full"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                   />
-                  <span className="text-white font-semibold text-lg">
+                  <span className="font-semibold text-base sm:text-lg" style={{ color: '#FFFFFF' }}>
                     {comment.user.username}
                   </span>
                 </div>
-                <p className="text-white text-lg leading-relaxed">
+                <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#FFFFFF' }}>
                   {comment.content}
                 </p>
               </div>
@@ -320,21 +320,21 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
           </div>
 
           <div 
-            className="mt-6 rounded-xl p-6"
+            className="mt-4 sm:mt-6 rounded-xl p-4 sm:p-6"
             style={{ backgroundColor: 'rgba(139, 107, 77, 0.3)' }}
           >
             <textarea 
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Escribe tu comentario..."
-              className="w-full bg-transparent text-white placeholder-gray-300 border-b border-white/30 py-3 px-2 focus:outline-none focus:border-white/60 transition-colors resize-none"
+              className="w-full bg-transparent border-b border-white/30 py-2 sm:py-3 px-2 focus:outline-none focus:border-white/60 transition-colors resize-none text-base sm:text-lg placeholder-gray-300"
               rows={3}
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
             />
             <button 
               onClick={handleSubmitComment}
-              className="mt-4 py-2 px-8 rounded-full text-white font-semibold transition-all hover:scale-105"
-              style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)' }}
+              className="mt-3 sm:mt-4 py-2 px-6 sm:px-8 rounded-full font-semibold transition-all hover:scale-105 active:scale-95 w-full sm:w-auto text-base sm:text-lg"
+              style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)', color: '#FFFFFF' }}
             >
               Publicar Comentario
             </button>
