@@ -1,5 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+// 💡 Nueva Importación: Necesaria para la navegación al hacer click en el pin
+import { useNavigate } from 'react-router-dom';
+
+// ===============================================
+// FUNCIÓN AUXILIAR: PROYECCIÓN 3D A 2D (Sin cambios)
+// ===============================================
+const getScreenCoordinates = (
+  position: THREE.Vector3,
+  camera: THREE.PerspectiveCamera,
+  renderer: THREE.WebGLRenderer,
+  container: HTMLDivElement
+) => {
+  // 1. Proyecta la posición 3D a coordenadas de clip
+  const vector = position.clone().project(camera);
+
+  // 2. Mapea las coordenadas de clip (-1 a 1) a coordenadas de pantalla (píxeles)
+  const x = (vector.x * 0.5 + 0.5) * container.clientWidth;
+  const y = (vector.y * -0.5 + 0.5) * container.clientHeight;
+
+  // Retorna la posición y un flag para saber si el punto está frente a la cámara
+  return { x, y, visible: vector.z < 1 };
+};
+
+// ===============================================
+// TIPOS (Sin cambios)
+// ===============================================
 
 interface Discovery {
   id: number;
@@ -16,90 +42,74 @@ interface MapComponentProps {
   discoveries?: Discovery[];
 }
 
+// ===============================================
+// COMPONENTE PRINCIPAL
+// ===============================================
+
 const MapComponent = ({ discoveries }: MapComponentProps) => {
+  // 💡 Hook de Navegación
+  const navigate = useNavigate();
+
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  // rendererRef se usa para la limpieza y la proyección 2D
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const globeRef = useRef<THREE.Mesh | null>(null);
   const pinsRef = useRef<Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }>>([]);
-  
+
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [hoveredDiscovery, setHoveredDiscovery] = useState<Discovery | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
+  // 💡 Referencia para evitar el parpadeo (no fuerza re-renderizado de React)
+  const lastHoveredRef = useRef<Discovery | null>(null);
+
+  // 💡 Estado y límites para el Zoom. Initial Zoom 4.0 para hacerlo más pequeño y centrado.
+  const MAX_ZOOM = 6;
+  const MIN_ZOOM = 1.5;
+  const INITIAL_ZOOM = 4.0;
+  const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM);
+
+  // Datos mock (sin cambios)
   const mockDiscoveries: Discovery[] = discoveries || [
-    {
-      id: 1,
-      title: "Joaquinraptor casali",
-      location: "La Pampa, Argentina",
-      latitude: -36.6167,
-      longitude: -64.2833,
-      image_url: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
-      geological_period: "Cretácico Superior",
-      fossil_type: "bones_teeth"
-    },
-    {
-      id: 2,
-      title: "Qunkasaura pintiquiniestra",
-      location: "Magallanes, Chile",
-      latitude: -51.7167,
-      longitude: -72.5000,
-      image_url: "https://images.unsplash.com/photo-1568454537842-d933259bb258?w=400",
-      geological_period: "Cretácico",
-      fossil_type: "bones_teeth"
-    },
-    {
-      id: 3,
-      title: "Tyrannosaurus Rex",
-      location: "Montana, USA",
-      latitude: 47.5,
-      longitude: -107.5,
-      image_url: "https://images.unsplash.com/photo-1597655601841-214a4cfe8b2c?w=400",
-      geological_period: "Cretácico Superior",
-      fossil_type: "bones_teeth"
-    },
-    {
-      id: 4,
-      title: "Spinosaurus aegyptiacus",
-      location: "Kem Kem, Morocco",
-      latitude: 31.5,
-      longitude: -4.0,
-      image_url: "https://images.unsplash.com/photo-1563089145-599997674d42?w=400",
-      geological_period: "Cretácico",
-      fossil_type: "bones_teeth"
-    },
-    {
-      id: 5,
-      title: "Velociraptor mongoliensis",
-      location: "Gobi Desert, Mongolia",
-      latitude: 43.5,
-      longitude: 104.0,
-      image_url: "https://images.unsplash.com/photo-1572300247897-34c4e4b5c7a1?w=400",
-      geological_period: "Cretácico Superior",
-      fossil_type: "bones_teeth"
-    }
+    { id: 1, title: "Joaquinraptor casali", location: "La Pampa, Argentina", latitude: -36.6167, longitude: -64.2833, image_url: "/assets/joaquinraptor.jpg", geological_period: "Cretácico Superior", fossil_type: "bones_teeth" },
+    { id: 2, title: "Qunkasaura pintiquiniestra", location: "Magallanes, Chile", latitude: -51.7167, longitude: -72.5000, image_url: "/assets/qunkasaura.jpg", geological_period: "Cretácico", fossil_type: "bones_teeth" },
+    { id: 3, title: "Tyrannotitan", location: "Chubut, Argentina", latitude: -43.3000, longitude: -65.1000, image_url: "/assets/tyrannotitan.jpg", geological_period: "Cretácico Inferior", fossil_type: "bones_teeth" },
   ];
 
-  useEffect(() => {
-    if (!containerRef.current) {
-      console.error('Container ref is null');
-      return;
-    }
+  // 💡 Función de Zoom (Actualiza el estado y la cámara)
+  const handleZoom = (direction: 'in' | 'out') => {
+    setZoomLevel(prevZoom => {
+      let newZoom = prevZoom;
+      if (direction === 'in') {
+        newZoom = Math.max(MIN_ZOOM, prevZoom - 0.5);
+      } else {
+        newZoom = Math.min(MAX_ZOOM, prevZoom + 0.5);
+      }
+      if (cameraRef.current) {
+        cameraRef.current.position.z = newZoom;
+        cameraRef.current.updateProjectionMatrix();
+      }
+      return newZoom;
+    });
+  };
 
-    console.log('Initializing Three.js scene...');
+  // ===============================================
+  // EFECTO PRINCIPAL DE THREE.JS
+  // ===============================================
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
 
     try {
-      // Scene
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0a0a);
       sceneRef.current = scene;
 
-      // Camera
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      
-      console.log(`Container size: ${width}x${height}`);
+      const width = container.clientWidth;
+      const height = container.clientHeight;
 
       if (width === 0 || height === 0) {
         setError('El contenedor no tiene dimensiones válidas');
@@ -107,73 +117,66 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       }
 
       const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-      camera.position.set(0, 0, 3);
+      // Usamos el zoom inicial
+      camera.position.set(0, 0, zoomLevel);
       cameraRef.current = camera;
 
-      // Renderer
-      const renderer = new THREE.WebGLRenderer({ 
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance'
-      });
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 0); // Fondo transparente
       rendererRef.current = renderer;
+      container.appendChild(renderer.domElement);
 
-      containerRef.current.appendChild(renderer.domElement);
-      console.log('Renderer added to DOM');
+      // ===============================================
+      // CARGA DE TEXTURAS Y GLOBE 
+      // ===============================================
+      const textureLoader = new THREE.TextureLoader();
+      // Asegúrate de que /public/earth_map.jpg sea tu mapa sepia
+      const earthTexture = textureLoader.load('/public/earth_map.jpg');
 
-      // GLOBE
+      // 💡 CORRECCIÓN 1: Configuración para mitigar el 'seam'
+      earthTexture.wrapS = THREE.RepeatWrapping;
+      earthTexture.minFilter = THREE.LinearMipmapLinearFilter; // Suaviza la unión
+      earthTexture.magFilter = THREE.LinearFilter;
+
       const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
-      const globeMaterial = new THREE.MeshPhongMaterial({
-        color: 0x8b7355,
-        emissive: 0x443322,
-        shininess: 10,
+
+      // 💡 CORRECCIÓN 2: Ajuste de color del material base para el 'océano' sepia (0x7A634E)
+      const globeMaterial = new THREE.MeshStandardMaterial({
+        map: earthTexture,
+        color: 0x7A634E,
+        roughness: 0.9,
+        metalness: 0.1,
       });
       const globe = new THREE.Mesh(globeGeometry, globeMaterial);
       globeRef.current = globe;
       scene.add(globe);
-      console.log('Globe added');
 
-      // OCEAN
-      const oceanGeometry = new THREE.SphereGeometry(0.995, 64, 64);
-      const oceanMaterial = new THREE.MeshPhongMaterial({
-        color: 0x3a6a7a,
-        transparent: true,
-        opacity: 0.7,
-      });
-      const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
-      scene.add(ocean);
-      console.log('Ocean added');
-
-      // LIGHTS
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      // LIGHTS (sin cambios)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
       scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
       directionalLight.position.set(5, 3, 5);
       scene.add(directionalLight);
 
       const pointLight = new THREE.PointLight(0xff8844, 0.5);
       pointLight.position.set(-5, -3, 5);
       scene.add(pointLight);
-      console.log('Lights added');
 
-      // PINS
+      // PINS (sin cambios)
       const pins: Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }> = [];
-
-      mockDiscoveries.forEach((discovery, index) => {
+      mockDiscoveries.forEach(discovery => {
+        // ... (Lógica de creación de pins)
         const phi = (90 - discovery.latitude) * (Math.PI / 180);
         const theta = (discovery.longitude + 180) * (Math.PI / 180);
         const radius = 1.04;
-
         const x = -(radius * Math.sin(phi) * Math.cos(theta));
         const y = radius * Math.cos(phi);
         const z = radius * Math.sin(phi) * Math.sin(theta);
 
-        // Pin
         const pinGeometry = new THREE.SphereGeometry(0.04, 16, 16);
-        const pinMaterial = new THREE.MeshStandardMaterial({ 
+        const pinMaterial = new THREE.MeshStandardMaterial({
           color: 0xff3333,
           emissive: 0xff0000,
           emissiveIntensity: 0.5,
@@ -183,7 +186,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         pin.userData = { discovery };
         scene.add(pin);
 
-        // Halo
         const haloGeometry = new THREE.SphereGeometry(0.05, 16, 16);
         const haloMaterial = new THREE.MeshBasicMaterial({
           color: 0xff3333,
@@ -195,21 +197,20 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         scene.add(halo);
 
         pins.push({ mesh: pin, discovery, halo });
-        console.log(`Pin ${index + 1} added at`, discovery.location);
       });
-
       pinsRef.current = pins;
 
-      // INTERACTION
+      // INTERACTION 
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       let isDragging = false;
       let previousMouse = { x: 0, y: 0 };
 
+      // 💡 CORRECCIÓN 3: Modificación en handleMouseMove para evitar el parpadeo
       const handleMouseMove = (event: MouseEvent) => {
-        if (!containerRef.current) return;
-        
-        const rect = containerRef.current.getBoundingClientRect();
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -220,48 +221,42 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
           if (globeRef.current) {
             globeRef.current.rotation.y += deltaX * 0.005;
             globeRef.current.rotation.x += deltaY * 0.005;
-            ocean.rotation.y += deltaX * 0.005;
-            ocean.rotation.x += deltaY * 0.005;
-
-            pinsRef.current.forEach(({ mesh, halo }) => {
-              const pos = mesh.position.clone();
-              pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * 0.005);
-              pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.005);
-              mesh.position.copy(pos);
-              halo.position.copy(pos);
-            });
           }
-
           previousMouse = { x: event.clientX, y: event.clientY };
         } else {
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObjects(pinsRef.current.map(p => p.mesh));
 
-          if (intersects.length > 0 && intersects[0].object.userData.discovery) {
-            setHoveredDiscovery(intersects[0].object.userData.discovery);
-            if (containerRef.current) containerRef.current.style.cursor = 'pointer';
-          } else {
-            setHoveredDiscovery(null);
-            if (containerRef.current) containerRef.current.style.cursor = 'grab';
+          const newHoveredDiscovery = intersects.length > 0 && intersects[0].object.userData.discovery
+            ? intersects[0].object.userData.discovery
+            : null;
+
+          // SOLO actualiza el estado de React si el pin ha cambiado
+          if (newHoveredDiscovery?.id !== lastHoveredRef.current?.id) {
+            setHoveredDiscovery(newHoveredDiscovery);
+            lastHoveredRef.current = newHoveredDiscovery;
           }
+          container.style.cursor = newHoveredDiscovery ? 'pointer' : 'grab';
         }
       };
 
       const handleMouseDown = (event: MouseEvent) => {
         isDragging = true;
         previousMouse = { x: event.clientX, y: event.clientY };
-        if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
+        container.style.cursor = 'grabbing';
       };
 
       const handleMouseUp = () => {
         isDragging = false;
-        if (containerRef.current) containerRef.current.style.cursor = 'grab';
+        container.style.cursor = 'grab';
       };
 
+
+      // 💡 CORRECCIÓN 4: handleClick para la navegación
       const handleClick = (event: MouseEvent) => {
-        if (!containerRef.current) return;
-        
-        const rect = containerRef.current.getBoundingClientRect();
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -269,17 +264,20 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         const intersects = raycaster.intersectObjects(pinsRef.current.map(p => p.mesh));
 
         if (intersects.length > 0 && intersects[0].object.userData.discovery) {
-          const disc = intersects[0].object.userData.discovery;
-          alert(`🦴 ${disc.title}\n📍 ${disc.location}\n\nNavegando a /posts/${disc.id}`);
+          const disc = intersects[0].object.userData.discovery as Discovery;
+          // Redirige al post detail
+          navigate(`/posts/${disc.id}`);
         }
       };
 
-      containerRef.current.addEventListener('mousemove', handleMouseMove);
-      containerRef.current.addEventListener('mousedown', handleMouseDown);
-      containerRef.current.addEventListener('mouseup', handleMouseUp);
-      containerRef.current.addEventListener('click', handleClick);
+      // Adjuntar listeners (se removerán en el cleanup)
+      container.addEventListener('mousemove', handleMouseMove);
+      container.addEventListener('mousedown', handleMouseDown);
+      container.addEventListener('mouseup', handleMouseUp);
+      container.addEventListener('click', handleClick);
 
-      // ANIMATION
+
+      // ANIMATION (Rotación reactivada)
       let animationId: number;
       let time = 0;
 
@@ -289,64 +287,39 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
 
         // Auto rotate
         if (!isDragging && globeRef.current) {
-          globeRef.current.rotation.y += 0.001;
-          ocean.rotation.y += 0.001;
-
-          pinsRef.current.forEach(({ mesh, halo }) => {
-            const pos = mesh.position.clone();
-            pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.001);
-            mesh.position.copy(pos);
-            halo.position.copy(pos);
-          });
+          const autoRotateSpeed = 0.001;
+          globeRef.current.rotation.y += autoRotateSpeed;
         }
 
         // Pulse halos
         pinsRef.current.forEach(({ halo }) => {
-          const scale = 1 + Math.sin(time) * 0.25;
+          const scale = 1 + Math.sin(time * 3) * 0.1;
           halo.scale.set(scale, scale, scale);
           const mat = halo.material as THREE.MeshBasicMaterial;
-          mat.opacity = 0.3 + Math.sin(time) * 0.1;
+          mat.opacity = 0.3 + Math.sin(time * 3) * 0.15;
         });
+
+        // ❌ Lógica de setPopupPosition ELIMINADA del loop de animación.
 
         renderer.render(scene, camera);
       };
 
       animate();
-      console.log('Animation started');
       setIsLoading(false);
 
-      // RESIZE
-      const handleResize = () => {
-        if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
-        
-        const newWidth = containerRef.current.clientWidth;
-        const newHeight = containerRef.current.clientHeight;
-        
-        cameraRef.current.aspect = newWidth / newHeight;
-        cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(newWidth, newHeight);
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      // CLEANUP
+      // ===============================================
+      // FUNCIÓN DE LIMPIEZA
+      // ===============================================
       return () => {
-        console.log('Cleaning up Three.js');
         cancelAnimationFrame(animationId);
-        window.removeEventListener('resize', handleResize);
-        
-        if (containerRef.current) {
-          containerRef.current.removeEventListener('mousemove', handleMouseMove);
-          containerRef.current.removeEventListener('mousedown', handleMouseDown);
-          containerRef.current.removeEventListener('mouseup', handleMouseUp);
-          containerRef.current.removeEventListener('click', handleClick);
-          
-          if (rendererRef.current?.domElement && containerRef.current.contains(rendererRef.current.domElement)) {
-            containerRef.current.removeChild(rendererRef.current.domElement);
-          }
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mousedown', handleMouseDown);
+        container.removeEventListener('mouseup', handleMouseUp);
+        container.removeEventListener('click', handleClick);
+        if (renderer.domElement) {
+          container.removeChild(renderer.domElement);
         }
-
-        rendererRef.current?.dispose();
+        renderer.dispose();
       };
 
     } catch (err) {
@@ -354,90 +327,169 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       setError('Error al cargar el mapa 3D');
       setIsLoading(false);
     }
-  }, [discoveries]);
+  }, [discoveries, zoomLevel, navigate]);
+  // ELIMINAMOS 'hoveredDiscovery' y 'popupPosition' de las dependencias para evitar re-renderizado excesivo
+
+  // 💡 NUEVO EFECTO: Calcula la posición 2D del popup SOLO cuando cambia el pin o el zoom
+  useEffect(() => {
+    if (!hoveredDiscovery || !cameraRef.current || !rendererRef.current || !containerRef.current) {
+      setPopupPosition(null);
+      return;
+    }
+
+    const currentPin = pinsRef.current.find(p => p.discovery.id === hoveredDiscovery.id);
+
+    if (currentPin) {
+      const screenCoords = getScreenCoordinates(
+        currentPin.mesh.position.clone(),
+        cameraRef.current,
+        rendererRef.current,
+        containerRef.current
+      );
+
+      if (screenCoords.visible) {
+        setPopupPosition(screenCoords);
+      } else {
+        setPopupPosition(null);
+      }
+    }
+  }, [hoveredDiscovery, zoomLevel]); // Se dispara al cambiar el pin o al hacer zoom
+
+  // ===============================================
+  // RENDERIZADO JSX (CENTRADOS Y BOTONES DE ZOOM)
+  // ===============================================
 
   if (error) {
-    return (
-      <div className="w-full h-[700px] flex items-center justify-center bg-red-900 rounded-lg">
-        <div className="text-center text-white p-8">
-          <p className="text-xl font-bold mb-2">⚠️ Error</p>
-          <p>{error}</p>
-          <p className="text-sm mt-4">Revisa la consola para más detalles</p>
-        </div>
-      </div>
-    );
+    return <div className="p-4 text-center text-red-500 bg-red-100 rounded-lg">Error: {error}</div>;
   }
 
   return (
-    <div 
-      className="relative w-full rounded-lg overflow-hidden shadow-2xl border-2 border-amber-800"
-      style={{ height: '700px', minHeight: '700px' }}
-    >
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-500 mx-auto mb-4"></div>
-            <p className="text-amber-300 text-lg">Cargando globo 3D...</p>
-          </div>
-        </div>
-      )}
-
-      <div 
-        ref={containerRef} 
-        className="w-full h-full bg-neutral-900"
-        style={{ cursor: 'grab' }}
-      />
-
-      {hoveredDiscovery && (
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-2xl p-4 max-w-md pointer-events-none z-30 border-2 border-red-500">
-          <div className="flex gap-3">
-            {hoveredDiscovery.image_url && (
-              <img 
-                src={hoveredDiscovery.image_url} 
-                alt={hoveredDiscovery.title}
-                className="w-20 h-20 object-cover rounded"
-              />
-            )}
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1 text-sm">
-                {hoveredDiscovery.title}
-              </h3>
-              <p className="text-xs text-gray-600 mb-1">
-                📍 {hoveredDiscovery.location}
-              </p>
-              {hoveredDiscovery.geological_period && (
-                <p className="text-xs text-gray-500">
-                  🦕 {hoveredDiscovery.geological_period}
-                </p>
-              )}
-              <p className="text-xs text-red-600 mt-2 font-semibold">
-                Click para detalles →
-              </p>
+    // Contenedor externo para centrar el mapa en la página
+    <div className="flex justify-center w-full my-8">
+      <div
+        // Contenedor principal del mapa, ajusta su tamaño máximo aquí (max-w-4xl para centrarlo y hacerlo más pequeño)
+        className="relative overflow-hidden w-full max-w-4xl"
+        style={{ height: '700px', minHeight: '700px', backgroundColor: 'transparent' }}
+      >
+        {isLoading && (
+          <div
+            className="absolute inset-0 flex items-center justify-center z-50"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          >
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4"
+                style={{ borderColor: 'var(--color-amber)' }}
+              ></div>
+              <p className="text-lg" style={{ color: 'var(--text-primary)' }}>Cargando globo 3D...</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white px-4 py-3 rounded-lg text-sm z-20 backdrop-blur-sm">
-        <p className="font-semibold mb-2">🌍 Mapa Interactivo</p>
-        <p className="text-xs">• Arrastra para rotar el globo</p>
-        <p className="text-xs">• Hover sobre los pins</p>
-        <p className="text-xs">• Click para ver detalles</p>
-        <p className="text-xs mt-2 text-amber-400">
-          📍 <strong>{mockDiscoveries.length}</strong> descubrimientos
-        </p>
-      </div>
+        <div
+          ref={containerRef}
+          className="w-full h-full"
+          style={{ cursor: 'grab' }}
+        />
 
-      <div className="absolute top-4 right-4 bg-black bg-opacity-80 text-white px-4 py-3 rounded-lg text-xs z-20 backdrop-blur-sm">
-        <p className="font-semibold mb-2">Leyenda</p>
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-3 h-3 rounded-full bg-red-500 shadow-lg"></div>
-          <span>Descubrimiento</span>
+        {/* =============================================== */}
+        {/* BOTONES DE ZOOM (CÓDIGO MODIFICADO) */}
+        {/* =============================================== */}
+        <div className="absolute top-4 right-20 z-20 flex flex-col gap-2">
+          <button
+            onClick={() => handleZoom('in')}
+            className="btn w-10 h-10 rounded-full text-xl flex items-center justify-center"
+            style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-md)' }}
+            disabled={zoomLevel <= MIN_ZOOM}
+          >
+            +
+          </button>
+          <button
+            onClick={() => handleZoom('out')}
+            className="btn w-10 h-10 rounded-full text-xl flex items-center justify-center"
+            style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-md)' }}
+            disabled={zoomLevel >= MAX_ZOOM}
+          >
+            -
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-700"></div>
-          <span>Tierra</span>
+
+
+        {/* =============================================== */}
+        {/* POPUP DINÁMICO HTML/CSS */}
+        {/* =============================================== */}
+        {hoveredDiscovery && popupPosition && (
+          <div
+            className="absolute rounded-lg shadow-2xl p-2 max-w-sm pointer-events-none z-30"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-color)',
+              borderWidth: '2px',
+              left: `${popupPosition.x}px`,
+              top: `${popupPosition.y}px`,
+              transform: 'translate(-50%, -100%) translateY(-10px)',
+            }}
+          >
+            <div className="flex flex-col gap-1 w-40">
+              {hoveredDiscovery.image_url && (
+                <img
+                  src={hoveredDiscovery.image_url}
+                  alt={hoveredDiscovery.title}
+                  className="w-full h-24 object-cover rounded-md mb-1"
+                />
+              )}
+              <h3 className="font-bold text-xs text-center" style={{ color: 'var(--text-primary)' }}>
+                {hoveredDiscovery.title}
+              </h3>
+            </div>
+          </div>
+        )}
+
+        {/* =============================================== */}
+        {/* Leyenda y Controles */}
+        {/* =============================================== */}
+        <div
+          className="absolute top-4 left-4 px-4 py-3 rounded-lg text-sm z-20 backdrop-blur-sm"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-primary)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          <p className="font-semibold mb-2">🌍 Mapa Interactivo</p>
+          <p className="text-xs">
+            <span style={{ color: 'var(--text-secondary)' }}>• Arrastra para rotar el globo</span>
+          </p>
+          <p className="text-xs">
+            <span style={{ color: 'var(--text-secondary)' }}>• Hover sobre los pins</span>
+          </p>
+          <p className="text-xs">
+            <span style={{ color: 'var(--text-secondary)' }}>• Click para ver detalles</span>
+          </p>
+          <p className="text-xs mt-2" style={{ color: 'var(--color-amber)' }}>
+            📍 <strong>{mockDiscoveries.length}</strong> descubrimientos
+          </p>
         </div>
+
+        <div
+          className="absolute top-4 right-40 px-4 py-3 rounded-lg text-xs z-20 backdrop-blur-sm"
+          style={{ 
+              backgroundColor: 'var(--bg-card)', 
+              color: 'var(--text-primary)',
+              boxShadow: 'var(--shadow-md)',
+          }}
+      >
+          <p className="font-semibold mb-2">Leyenda</p>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: 'var(--color-coral)' }}></div>
+            <span>Descubrimiento</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* 💡 Ajuste de color para la "Tierra" que se vea bien sobre el sepia */}
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A1887A' }}></div>
+            <span>Tierra</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );
