@@ -8,19 +8,22 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
-import Profile from '../pages/Profile'; // ← AÑADIDO
+import PostList from '../pages/PostList';
+import PostDetail from '../pages/PostDetail';
+import Creators from '../pages/Creators';
+import Profile from '../pages/Profile';
 
 // Páginas de admin
+import CreatePost from '../pages/CreatePost';
 import EditPost from '../pages/EditPost';
+import UserManagement from '../pages/UserManagement';
+
+// Página 404
+import NotFound from '../pages/NotFound';
 
 // HOCs de protección
-import ProtectedRoute from '../components/auth/ProtectedRoute'; // ← AÑADIDO
+import ProtectedRoute from '../pages/ProtectedRoute';
 import AdminRoute from '../components/common/AdminRoute';
-
-// NotFound temporal
-function NotFound() {
-  return <div className="p-8">404 - Not Found</div>;
-}
 
 export const router = createBrowserRouter([
   // ============================================
@@ -48,9 +51,19 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <NotFound />,
     children: [
+      // 🏠 HOME - Página principal
       { index: true, element: <Home /> },
 
-      // 🔒 Rutas protegidas (requieren autenticación) ← AÑADIDO
+      // 📝 POSTS - Lista de posts (enlazado con "POSTS" en Navbar)
+      { path: 'posts', element: <PostList /> },
+
+      // 📄 POST DETAIL - Detalle de un post individual
+      { path: 'posts/:id', element: <PostDetail /> },
+
+      // 👥 CREATORS - Sobre nosotros (enlazado con "ABOUT" en Navbar)
+      { path: 'creators', element: <Creators /> },
+
+      // 🔒 RUTAS PROTEGIDAS (requieren autenticación)
       {
         element: <ProtectedRoute />,
         children: [
@@ -58,18 +71,18 @@ export const router = createBrowserRouter([
         ]
       },
 
-      // 🔒 Rutas de administración
+      // 🔒 RUTAS DE ADMINISTRACIÓN (requieren rol admin)
       {
         path: 'admin',
         children: [
-          // {
-          //   path: 'posts/new',
-          //   element: (
-          //     <AdminRoute>
-          //       <CreatePost />
-          //     </AdminRoute>
-          //   )
-          // },
+          {
+            path: 'posts/new',
+            element: (
+              <AdminRoute>
+                <CreatePost />
+              </AdminRoute>
+            )
+          },
           {
             path: 'posts/:id/edit',
             element: (
@@ -78,22 +91,18 @@ export const router = createBrowserRouter([
               </AdminRoute>
             )
           },
-          // {
-          //   path: 'users',
-          //   element: (
-          //     <AdminRoute>
-          //       <UserManagement />
-          //     </AdminRoute>
-          //   )
-          // }
+          {
+            path: 'users',
+            element: (
+              <AdminRoute>
+                <UserManagement />
+              </AdminRoute>
+            )
+          }
         ]
       },
 
-      // 🔒 Rutas futuras (descomenta cuando las tengas):
-      // { path: 'posts', element: <PostList /> },
-      // { path: 'posts/:id', element: <PostDetail /> },
-
-      // ⚠️ Página 404
+      // ⚠️ Página 404 - Cualquier ruta no encontrada
       { path: '*', element: <NotFound /> },
     ],
   },
