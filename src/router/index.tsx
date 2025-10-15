@@ -9,6 +9,12 @@ import Register from '../pages/Register';
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
 
+// Páginas de admin
+import EditPost from '../pages/EditPost';
+
+// HOCs de protección
+import AdminRoute from '../components/common/AdminRoute'; // Asegúrate de tener este componente
+
 // NotFound temporal
 function NotFound() {
   return <div className="p-8">404 - Not Found</div>;
@@ -42,6 +48,37 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
 
+      // 🔒 Rutas de administración
+      {
+        path: 'admin',
+        children: [
+          // {
+          //   path: 'posts/new',
+          //   element: (
+          //     <AdminRoute>
+          //       <CreatePost />
+          //     </AdminRoute>
+          //   )
+          // },
+          {
+            path: 'posts/:id/edit',
+            element: (
+              <AdminRoute>
+                <EditPost />
+              </AdminRoute>
+            )
+          },
+          // {
+          //   path: 'users',
+          //   element: (
+          //     <AdminRoute>
+          //       <UserManagement />
+          //     </AdminRoute>
+          //   )
+          // }
+        ]
+      },
+
       // 🔒 Rutas futuras (descomenta cuando las tengas):
       // { path: 'posts', element: <PostList /> },
       // { path: 'posts/:id', element: <PostDetail /> },
@@ -52,35 +89,6 @@ export const router = createBrowserRouter([
       //       <Profile />
       //     </ProtectedRoute>
       //   ),
-      // },
-      // {
-      //   path: 'admin',
-      //   children: [
-      //     {
-      //       path: 'posts/new',
-      //       element: (
-      //         <AdminRoute>
-      //           <CreatePost />
-      //         </AdminRoute>
-      //       )
-      //     },
-      //     {
-      //       path: 'posts/:id/edit',
-      //       element: (
-      //         <AdminRoute>
-      //           <EditPost />
-      //         </AdminRoute>
-      //       )
-      //     },
-      //     {
-      //       path: 'users',
-      //       element: (
-      //         <AdminRoute>
-      //           <UserManagement />
-      //         </AdminRoute>
-      //       )
-      //     }
-      //   ]
       // },
 
       { path: '*', element: <NotFound /> },
