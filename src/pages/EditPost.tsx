@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { usePostStore } from '../stores/postStore';
 import { uploadToCloudinary } from '../utils/cloudinaryUpload';
 import { Camera, Upload, Link as LinkIcon } from 'lucide-react';
+import Input from '../components/ui/Input';
 
 type FossilType = 'bones_teeth' | 'shell_exoskeletons' | 'plant_impressions' | 'tracks_traces' | 'amber_insects';
 
@@ -24,6 +25,7 @@ const EditPost = () => {
     fossil_type: FossilType;
     geological_period: string;
     source: string;
+    status: 'draft' | 'published';
   }>({
     title: '',
     summary: '',
@@ -33,7 +35,8 @@ const EditPost = () => {
     paleontologist: '',
     fossil_type: 'bones_teeth',
     geological_period: '',
-    source: ''
+    source: '',
+    status: 'draft'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,7 +73,8 @@ const EditPost = () => {
         paleontologist: currentPost.paleontologist || '',
         fossil_type: (currentPost.fossil_type as FossilType) || 'bones_teeth',
         geological_period: currentPost.geological_period || '',
-        source: currentPost.source || ''
+        source: currentPost.source || '',
+        status: currentPost.status || 'draft'
       });
     }
   }, [currentPost]);
@@ -246,32 +250,21 @@ const EditPost = () => {
       {/* Formulario */}
       <form onSubmit={handleSubmit}>
         <div className="card space-y-6">
-          {/* Título */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Título del Descubrimiento *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Título del descubrimiento"
-              disabled={isSubmitting}
-              className="input"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                borderColor: errors.title ? 'var(--color-danger)' : 'var(--border-color)'
-              }}
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.title}</p>
-            )}
-          </div>
+          {/* Título - Usando Input component */}
+          <Input
+            id="title"
+            name="title"
+            type="text"
+            label="Título del Descubrimiento"
+            value={formData.title}
+            onChange={handleChange}
+            error={errors.title}
+            placeholder="Título del descubrimiento"
+            disabled={isSubmitting}
+            required
+          />
 
-          {/* Resumen */}
+          {/* Resumen - Mantiene textarea manual porque Input no lo soporta */}
           <div>
             <label htmlFor="summary" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Resumen *
@@ -299,6 +292,7 @@ const EditPost = () => {
 
           {/* Tipo de Fósil y Período */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Select mantiene su estilo porque Input no soporta select */}
             <div>
               <label htmlFor="fossil_type" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                 Tipo de Fósil *
@@ -324,93 +318,56 @@ const EditPost = () => {
               </select>
             </div>
 
-            <div>
-              <label htmlFor="geological_period" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Período Geológico
-              </label>
-              <input
-                type="text"
-                id="geological_period"
-                name="geological_period"
-                value={formData.geological_period}
-                onChange={handleChange}
-                placeholder="Ej: Cretácico Superior"
-                disabled={isSubmitting}
-                className="input"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-              />
-            </div>
+            {/* Período Geológico - Usando Input */}
+            <Input
+              id="geological_period"
+              name="geological_period"
+              type="text"
+              label="Período Geológico"
+              value={formData.geological_period}
+              onChange={handleChange}
+              placeholder="Ej: Cretácico Superior"
+              disabled={isSubmitting}
+            />
           </div>
 
           {/* Fecha y Ubicación */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="discovery_date" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Fecha de Descubrimiento
-              </label>
-              <input
-                type="date"
-                id="discovery_date"
-                name="discovery_date"
-                value={formData.discovery_date}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="input"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="location" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Ubicación
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Ej: Montana, USA"
-                disabled={isSubmitting}
-                className="input"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Paleontólogo */}
-          <div>
-            <label htmlFor="paleontologist" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Paleontólogo
-            </label>
-            <input
-              type="text"
-              id="paleontologist"
-              name="paleontologist"
-              value={formData.paleontologist}
+            {/* Fecha de Descubrimiento - Usando Input */}
+            <Input
+              id="discovery_date"
+              name="discovery_date"
+              type="date"
+              label="Fecha de Descubrimiento"
+              value={formData.discovery_date}
               onChange={handleChange}
-              placeholder="Nombre del paleontólogo"
               disabled={isSubmitting}
-              className="input"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                borderColor: 'var(--border-color)'
-              }}
+            />
+
+            {/* Ubicación - Usando Input */}
+            <Input
+              id="location"
+              name="location"
+              type="text"
+              label="Ubicación"
+              value={formData.location}
+              onChange={handleChange}
+              placeholder="Ej: Montana, USA"
+              disabled={isSubmitting}
             />
           </div>
+
+          {/* Paleontólogo - Usando Input */}
+          <Input
+            id="paleontologist"
+            name="paleontologist"
+            type="text"
+            label="Paleontólogo"
+            value={formData.paleontologist}
+            onChange={handleChange}
+            placeholder="Nombre del paleontólogo"
+            disabled={isSubmitting}
+          />
 
           {/* Imagen con múltiples opciones */}
           <div>
@@ -490,22 +447,16 @@ const EditPost = () => {
               className="hidden"
             />
 
-            {/* Campo URL */}
+            {/* Campo URL - Usando Input cuando el método es URL */}
             {uploadMethod === 'url' && (
-              <input
-                type="url"
+              <Input
                 id="image_url"
                 name="image_url"
+                type="url"
                 value={formData.image_url}
                 onChange={handleChange}
                 placeholder="https://ejemplo.com/imagen.jpg"
                 disabled={isSubmitting}
-                className="input"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
               />
             )}
 
@@ -551,26 +502,70 @@ const EditPost = () => {
             )}
           </div>
 
-          {/* Fuente */}
+          {/* Fuente - Usando Input */}
+          <Input
+            id="source"
+            name="source"
+            type="url"
+            label="Fuente"
+            value={formData.source}
+            onChange={handleChange}
+            placeholder="https://enlace-a-articulo-cientifico.com"
+            disabled={isSubmitting}
+          />
+
+          {/* ⭐ NUEVO: Estado de Publicación (Draft/Published) */}
           <div>
-            <label htmlFor="source" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Fuente
+            <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Estado de Publicación *
             </label>
-            <input
-              type="url"
-              id="source"
-              name="source"
-              value={formData.source}
-              onChange={handleChange}
-              placeholder="https://enlace-a-articulo-cientifico.com"
-              disabled={isSubmitting}
-              className="input"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                borderColor: 'var(--border-color)'
-              }}
-            />
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  value="draft"
+                  checked={formData.status === 'draft'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
+                />
+                <span 
+                  className="text-base transition-colors"
+                  style={{ 
+                    color: formData.status === 'draft' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontWeight: formData.status === 'draft' ? '600' : '400'
+                  }}
+                >
+                  📝 Borrador
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  value="published"
+                  checked={formData.status === 'published'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
+                />
+                <span 
+                  className="text-base transition-colors"
+                  style={{ 
+                    color: formData.status === 'published' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontWeight: formData.status === 'published' ? '600' : '400'
+                  }}
+                >
+                  ✅ Publicado
+                </span>
+              </label>
+            </div>
+            <p className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+              {formData.status === 'draft' 
+                ? '⚠️ Los borradores no son visibles en la página principal' 
+                : '✓ Este descubrimiento será visible públicamente'}
+            </p>
           </div>
         </div>
 
