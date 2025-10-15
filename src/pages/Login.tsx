@@ -109,14 +109,14 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)] py-12 px-4">
+      <div className="max-w-md w-full space-y-8 p-8 sm:p-10 bg-[var(--bg-card)] rounded-xl shadow-lg">
         {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold">Iniciar Sesión</h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-[var(--text-secondary)]">
             ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-blue-600 hover:underline">
+            <Link to="/register" className="font-medium text-[var(--color-coral)] hover:text-[var(--color-teal)] hover:underline">
               Regístrate aquí
             </Link>
           </p>
@@ -126,7 +126,7 @@ const Login = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {/* Mostrar error general del formulario si existe */}
           {errors.form && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 text-[var(--color-danger)] px-4 py-3 rounded-lg">
               {errors.form}
             </div>
           )}
@@ -134,7 +134,7 @@ const Login = () => {
           <div className="space-y-4">
             {/* Campo Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
+              <label htmlFor="email" className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
                 Email
               </label>
               <input
@@ -145,11 +145,11 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
+                className={`input ${errors.email ? 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:outline-[var(--color-danger)]' : ''}`}
                 placeholder="tu@email.com"
               />
               {errors.email && (
-                <p className="text-red-600 text-sm mt-1">
+                <p className="text-[var(--color-danger)] text-sm mt-1">
                   {errors.email}
                 </p>
               )}
@@ -157,7 +157,7 @@ const Login = () => {
 
             {/* Campo Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
+              <label htmlFor="password" className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
                 Contraseña
               </label>
               <input
@@ -168,11 +168,11 @@ const Login = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
+                className={`input ${errors.password ? 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:outline-[var(--color-danger)]' : ''}`}
                 placeholder="••••••••"
               />
               {errors.password && (
-                <p className="text-red-600 text-sm mt-1">
+                <p className="text-[var(--color-danger)] text-sm mt-1">
                   {errors.password}
                 </p>
               )}
@@ -186,16 +186,16 @@ const Login = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[var(--color-coral)] focus:ring-[var(--color-coral)] border-[var(--border-color)] rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-[var(--text-secondary)]">
                 Recordarme
               </label>
             </div>
 
             {/* TODO: Implementar funcionalidad de "Olvidé mi contraseña" */}
             <div className="text-sm">
-              <a href="#" className="text-blue-600 hover:underline">
+              <a href="#" className="font-medium text-[var(--color-coral)] hover:text-[var(--color-teal)] hover:underline">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
@@ -205,7 +205,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="btn btn-primary w-full disabled:bg-[var(--bg-hover)] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed"
           >
             {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
