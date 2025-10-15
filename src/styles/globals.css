@@ -173,18 +173,11 @@ input:focus-visible {
   box-shadow: var(--shadow-md);
 }
 
-<<<<<<< HEAD
-  .btn-primary {
-    background-color: var(--color-coral);
-    color: var(--text-inverse); /* FIX: Usar variable CSS en lugar de 'white' */
-  }
-=======
 .btn-secondary {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
->>>>>>> ca8abdfdbbffb0e31bc98c678d707f505258e511
 
 .btn-secondary:hover {
   background-color: var(--bg-hover);
