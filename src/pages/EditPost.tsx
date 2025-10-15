@@ -1,596 +1,348 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
-import { usePostStore } from '../stores/postStore';
-import { uploadToCloudinary } from '../utils/cloudinaryUpload';
-import { Camera, Upload, Link as LinkIcon } from 'lucide-react';
-import Input from '../components/ui/Input';
+import { useState, useEffect } from 'react';
+import { Heart, MessageCircle, ChevronDown } from 'lucide-react';
 
-type FossilType = 'bones_teeth' | 'shell_exoskeletons' | 'plant_impressions' | 'tracks_traces' | 'amber_insects';
-
-const EditPost = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  
-  const user = useAuthStore((state) => state.user);
-  const { currentPost, isLoading, error, fetchPostById, updatePost } = usePostStore();
-
-  const [formData, setFormData] = useState<{
-    title: string;
-    summary: string;
-    image_url: string;
-    discovery_date: string;
-    location: string;
-    paleontologist: string;
-    fossil_type: FossilType;
-    geological_period: string;
-    source: string;
-    status: 'draft' | 'published';
-  }>({
-    title: '',
-    summary: '',
-    image_url: '',
-    discovery_date: '',
-    location: '',
-    paleontologist: '',
-    fossil_type: 'bones_teeth',
-    geological_period: '',
-    source: '',
-    status: 'draft'
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [uploadMethod, setUploadMethod] = useState<'url' | 'file' | 'camera'>('url');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  const fossilTypes = [
-    { value: 'bones_teeth', label: 'Huesos y Dientes' },
-    { value: 'shell_exoskeletons', label: 'Conchas y Exoesqueletos' },
-    { value: 'plant_impressions', label: 'Impresiones de Plantas' },
-    { value: 'tracks_traces', label: 'Huellas y Rastros' },
-    { value: 'amber_insects', label: 'Insectos en Ámbar' }
-  ];
-
-  useEffect(() => {
-    if (id) {
-      fetchPostById(parseInt(id));
-    }
-  }, [id, fetchPostById]);
-
-  useEffect(() => {
-    if (currentPost) {
-      setFormData({
-        title: currentPost.title || '',
-        summary: currentPost.summary || '',
-        image_url: currentPost.image_url || '',
-        discovery_date: currentPost.discovery_date || '',
-        location: currentPost.location || '',
-        paleontologist: currentPost.paleontologist || '',
-        fossil_type: (currentPost.fossil_type as FossilType) || 'bones_teeth',
-        geological_period: currentPost.geological_period || '',
-        source: currentPost.source || '',
-        status: currentPost.status || 'draft'
-      });
-    }
-  }, [currentPost]);
-
-  // Limpiar stream de cámara al desmontar
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [stream]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+interface Post {
+  id: string;
+  title: string;
+  summary: string;
+  post_content: string;
+  image_url: string;
+  location: string;
+  discovery_date: string;
+  paleontologist: string;
+  geological_period: string;
+  fossil_type: 'bones_teeth' | 'shell_exoskeletons' | 'plant_impressions' | 'tracks_traces' | 'amber_insects';
+  latitude: number | null;
+  longitude: number | null;
+  author: {
+    id: string;
+    username: string;
+    profile_image: string;
   };
+  likes_count: number;
+  liked_by: Array<{ id: string; username: string; avatar: string }>;
+}
 
-  // Manejar subida desde archivo local
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+interface Comment {
+  id: string;
+  user: { username: string; avatar: string };
+  content: string;
+  created_at: string;
+}
 
-    setIsUploadingImage(true);
+const PostDetail = () => {
+  const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [moreInfoOpen, setMoreInfoOpen] = useState(false);
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [newComment, setNewComment] = useState('');
+
+  useEffect(() => {
+    fetchPost();
+    fetchComments();
+  }, []);
+
+  const fetchPost = async () => {
+    setIsLoading(true);
     try {
-      const imageUrl = await uploadToCloudinary(file);
-      setFormData(prev => ({ ...prev, image_url: imageUrl }));
-      setServerError('');
-    } catch (error: any) {
-      setServerError(error.message || 'Error al subir la imagen');
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  // Iniciar cámara
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-    } catch (error) {
-      setServerError('No se pudo acceder a la cámara');
-    }
-  };
-
-  // Capturar foto desde cámara
-  const capturePhoto = async () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx?.drawImage(videoRef.current, 0, 0);
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      setIsUploadingImage(true);
-      try {
-        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-        const imageUrl = await uploadToCloudinary(file);
-        setFormData(prev => ({ ...prev, image_url: imageUrl }));
-        
-        // Detener cámara
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-          setStream(null);
-        }
-        setUploadMethod('url');
-      } catch (error: any) {
-        setServerError(error.message || 'Error al subir la imagen');
-      } finally {
-        setIsUploadingImage(false);
-      }
-    }, 'image/jpeg', 0.9);
-  };
+      const mockPost: Post = {
+        id: '1',
+        title: 'Descubrimiento de Tyrannosaurus Rex en Montana',
+        summary: 'Un espécimen excepcionalmente bien conservado revela nuevos secretos sobre el depredador más temido del Cretácico',
+        post_content: `En las áridas llanuras de Montana, un equipo de paleontólogos ha desenterrado uno de los ejemplares de Tyrannosaurus Rex más completos jamás encontrados.
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+El fósil, apodado "Sue II" en honor al famoso espécimen anterior, se encuentra en un estado de preservación extraordinario. Los huesos muestran detalles que rara vez sobreviven al proceso de fosilización.
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'El título es obligatorio';
-    } else if (formData.title.length > 255) {
-      newErrors.title = 'El título no puede tener más de 255 caracteres';
-    }
+El Dr. Marcus Thompson, líder de la expedición, explica que este hallazgo es extraordinario no solo por su completitud, sino por lo que nos puede enseñar sobre el comportamiento social de estos animales.
 
-    if (!formData.summary.trim()) {
-      newErrors.summary = 'El resumen es obligatorio';
-    }
-
-    if (!formData.fossil_type) {
-      newErrors.fossil_type = 'Debes seleccionar un tipo de fósil';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setServerError('');
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await updatePost(parseInt(id!), formData);
-      navigate(`/posts/${id}`);
-    } catch (err: any) {
-      setServerError(err.message || 'Error al actualizar el descubrimiento');
+El análisis preliminar indica que el ejemplar era un adulto joven, de aproximadamente 20 años de edad al momento de su muerte. Los sedimentos circundantes sugieren que el animal murió cerca de un antiguo lecho de río.`,
+        image_url: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?w=800',
+        location: 'Montana, Estados Unidos',
+        discovery_date: '2023-07-15',
+        paleontologist: 'Dr. Marcus Thompson',
+        geological_period: 'Cretácico Superior',
+        fossil_type: 'bones_teeth',
+        latitude: 46.8797,
+        longitude: -110.3626,
+        author: {
+          id: 'author1',
+          username: 'paleontologist_master',
+          profile_image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
+        },
+        likes_count: 24,
+        liked_by: [
+          { id: '1', username: 'fossil_hunter', avatar: 'https://i.pravatar.cc/150?img=1' },
+          { id: '2', username: 'dino_enthusiast', avatar: 'https://i.pravatar.cc/150?img=2' },
+          { id: '3', username: 'science_lover', avatar: 'https://i.pravatar.cc/150?img=3' }
+        ]
+      };
+      
+      setPost(mockPost);
+    } catch (error) {
+      console.error('Error:', error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  const fetchComments = async () => {
+    const mockComments: Comment[] = [
+      {
+        id: '1',
+        user: { username: 'fossil_hunter', avatar: 'https://i.pravatar.cc/150?img=1' },
+        content: '¡Increíble descubrimiento! Me encantaría visitar el sitio algún día.',
+        created_at: '2024-01-15T10:30:00Z'
+      },
+      {
+        id: '2',
+        user: { username: 'dino_enthusiast', avatar: 'https://i.pravatar.cc/150?img=2' },
+        content: 'La preservación es asombrosa. ¿Cuándo publicarán el estudio completo?',
+        created_at: '2024-01-15T14:22:00Z'
+      }
+    ];
+    
+    setComments(mockComments);
+  };
+
+  const handleSubmitComment = () => {
+    if (!newComment.trim()) return;
+    
+    const comment: Comment = {
+      id: Date.now().toString(),
+      user: { username: 'current_user', avatar: 'https://i.pravatar.cc/150?img=10' },
+      content: newComment,
+      created_at: new Date().toISOString()
+    };
+    
+    setComments([...comments, comment]);
+    setNewComment('');
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const fossilTypeLabels = {
+    bones_teeth: 'Huesos y Dientes',
+    shell_exoskeletons: 'Conchas y Exoesqueletos',
+    plant_impressions: 'Impresiones de Plantas',
+    tracks_traces: 'Huellas y Rastros',
+    amber_insects: 'Insectos en Ámbar'
+  };
+
+  if (isLoading || !post) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#AA7B5C] mx-auto mb-4"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Cargando descubrimiento...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user?.role !== 'admin') {
-    return (
-      <div className="container-custom section-padding">
-        <div className="card text-center" style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}>
-          <p className="text-lg font-semibold">No tienes permisos para editar descubrimientos</p>
+        <div className="text-xl text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+          {isLoading ? 'Cargando...' : 'Post no encontrado'}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-custom section-padding">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: 'var(--text-primary)' }}>
-          Editar Descubrimiento
+    <div className="min-h-screen" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div className="text-right mb-4">
+          <span className="text-white text-lg">📍 {post.location}</span>
+        </div>
+
+        <div className="mb-6 rounded-2xl overflow-hidden">
+          <img 
+            src={post.image_url} 
+            alt={post.title}
+            className="w-full h-[400px] object-cover"
+          />
+        </div>
+
+        <h1 className="text-white text-4xl md:text-5xl font-bold mb-4">
+          {post.title}
         </h1>
-      </div>
 
-      {/* Error general */}
-      {(serverError || error) && (
-        <div className="card mb-6" style={{ backgroundColor: '#FEE2E2', borderColor: 'var(--color-danger)' }}>
-          <p style={{ color: 'var(--color-danger)' }}>{serverError || error}</p>
-        </div>
-      )}
+        <p className="text-white text-lg md:text-xl italic mb-8 opacity-80">
+          {post.summary}
+        </p>
 
-      {/* Formulario */}
-      <form onSubmit={handleSubmit}>
-        <div className="card space-y-6">
-          {/* Título - Usando Input component */}
-          <Input
-            id="title"
-            name="title"
-            type="text"
-            label="Título del Descubrimiento"
-            value={formData.title}
-            onChange={handleChange}
-            error={errors.title}
-            placeholder="Título del descubrimiento"
-            disabled={isSubmitting}
-            required
-          />
-
-          {/* Resumen - Mantiene textarea manual porque Input no lo soporta */}
-          <div>
-            <label htmlFor="summary" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Resumen *
-            </label>
-            <textarea
-              id="summary"
-              name="summary"
-              value={formData.summary}
-              onChange={handleChange}
-              placeholder="Descripción detallada del descubrimiento"
-              rows={6}
-              disabled={isSubmitting}
-              className="input"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                borderColor: errors.summary ? 'var(--color-danger)' : 'var(--border-color)',
-                resize: 'vertical'
-              }}
-            />
-            {errors.summary && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.summary}</p>
-            )}
-          </div>
-
-          {/* Tipo de Fósil y Período */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Select mantiene su estilo porque Input no soporta select */}
-            <div>
-              <label htmlFor="fossil_type" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Tipo de Fósil *
-              </label>
-              <select
-                id="fossil_type"
-                name="fossil_type"
-                value={formData.fossil_type}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className="input"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-              >
-                {fossilTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Período Geológico - Usando Input */}
-            <Input
-              id="geological_period"
-              name="geological_period"
-              type="text"
-              label="Período Geológico"
-              value={formData.geological_period}
-              onChange={handleChange}
-              placeholder="Ej: Cretácico Superior"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* Fecha y Ubicación */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Fecha de Descubrimiento - Usando Input */}
-            <Input
-              id="discovery_date"
-              name="discovery_date"
-              type="date"
-              label="Fecha de Descubrimiento"
-              value={formData.discovery_date}
-              onChange={handleChange}
-              disabled={isSubmitting}
-            />
-
-            {/* Ubicación - Usando Input */}
-            <Input
-              id="location"
-              name="location"
-              type="text"
-              label="Ubicación"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Ej: Montana, USA"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* Paleontólogo - Usando Input */}
-          <Input
-            id="paleontologist"
-            name="paleontologist"
-            type="text"
-            label="Paleontólogo"
-            value={formData.paleontologist}
-            onChange={handleChange}
-            placeholder="Nombre del paleontólogo"
-            disabled={isSubmitting}
-          />
-
-          {/* Imagen con múltiples opciones */}
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Imagen del Descubrimiento
-            </label>
-
-            {/* Botones de método */}
-            <div className="flex gap-2 mb-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setUploadMethod('url');
-                  if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    setStream(null);
-                  }
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  uploadMethod === 'url' 
-                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
-                    : 'bg-transparent border-[var(--border-color)]'
-                }`}
-                style={{ color: uploadMethod === 'url' ? 'white' : 'var(--text-primary)' }}
-              >
-                <LinkIcon size={18} />
-                URL
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUploadMethod('file');
-                  fileInputRef.current?.click();
-                  if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    setStream(null);
-                  }
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  uploadMethod === 'file' 
-                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
-                    : 'bg-transparent border-[var(--border-color)]'
-                }`}
-                style={{ color: uploadMethod === 'file' ? 'white' : 'var(--text-primary)' }}
-                disabled={isUploadingImage}
-              >
-                <Upload size={18} />
-                Subir Archivo
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUploadMethod('camera');
-                  startCamera();
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  uploadMethod === 'camera' 
-                    ? 'bg-[#AA7B5C] text-white border-[#AA7B5C]' 
-                    : 'bg-transparent border-[var(--border-color)]'
-                }`}
-                style={{ color: uploadMethod === 'camera' ? 'white' : 'var(--text-primary)' }}
-                disabled={isUploadingImage}
-              >
-                <Camera size={18} />
-                Cámara
-              </button>
-            </div>
-
-            {/* Input oculto para archivos */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-
-            {/* Campo URL - Usando Input cuando el método es URL */}
-            {uploadMethod === 'url' && (
-              <Input
-                id="image_url"
-                name="image_url"
-                type="url"
-                value={formData.image_url}
-                onChange={handleChange}
-                placeholder="https://ejemplo.com/imagen.jpg"
-                disabled={isSubmitting}
-              />
-            )}
-
-            {/* Vista previa de cámara */}
-            {uploadMethod === 'camera' && stream && (
-              <div className="space-y-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg"
-                  style={{ maxHeight: '400px', objectFit: 'cover' }}
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+          
+          <div className="lg:col-span-3">
+            <div className="lg:sticky lg:top-4">
+              <div className="relative">
                 <button
-                  type="button"
-                  onClick={capturePhoto}
-                  className="btn btn-primary w-full"
-                  disabled={isUploadingImage}
+                  onClick={() => setMoreInfoOpen(!moreInfoOpen)}
+                  className="w-full py-3 px-6 rounded-full flex items-center justify-between text-white text-lg font-semibold transition-all hover:scale-105"
+                  style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)' }}
                 >
-                  {isUploadingImage ? 'Subiendo...' : 'Capturar Foto'}
+                  Más Información
+                  <ChevronDown 
+                    className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`} 
+                    size={20} 
+                  />
                 </button>
+
+                {moreInfoOpen && (
+                  <div 
+                    className="mt-2 rounded-2xl p-4 space-y-3 text-white"
+                    style={{ backgroundColor: 'rgba(72, 169, 166, 0.5)' }}
+                  >
+                    <div>
+                      <p className="text-sm opacity-70">Fecha de Descubrimiento</p>
+                      <p className="font-semibold">{formatDate(post.discovery_date)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm opacity-70">Paleontólogo</p>
+                      <p className="font-semibold">{post.paleontologist}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm opacity-70">Periodo Geológico</p>
+                      <p className="font-semibold">{post.geological_period}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm opacity-70">Tipo de Fósil</p>
+                      <p className="font-semibold">{fossilTypeLabels[post.fossil_type]}</p>
+                    </div>
+                    {post.latitude && post.longitude && (
+                      <>
+                        <div>
+                          <p className="text-sm opacity-70">Latitud</p>
+                          <p className="font-semibold">{post.latitude.toFixed(6)}°</p>
+                        </div>
+                        <div>
+                          <p className="text-sm opacity-70">Longitud</p>
+                          <p className="font-semibold">{post.longitude.toFixed(6)}°</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-
-            {/* Estado de carga */}
-            {isUploadingImage && (
-              <div className="mt-2 text-center" style={{ color: 'var(--text-secondary)' }}>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#AA7B5C] mx-auto mb-2"></div>
-                Subiendo imagen...
-              </div>
-            )}
-
-            {/* Vista previa */}
-            {formData.image_url && !stream && (
-              <div className="mt-4">
-                <img
-                  src={formData.image_url}
-                  alt="Vista previa"
-                  className="w-full rounded-lg"
-                  style={{ maxHeight: '300px', objectFit: 'cover' }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Fuente - Usando Input */}
-          <Input
-            id="source"
-            name="source"
-            type="url"
-            label="Fuente"
-            value={formData.source}
-            onChange={handleChange}
-            placeholder="https://enlace-a-articulo-cientifico.com"
-            disabled={isSubmitting}
-          />
-
-          {/* ⭐ NUEVO: Estado de Publicación (Draft/Published) */}
-          <div>
-            <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-              Estado de Publicación *
-            </label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="status"
-                  value="draft"
-                  checked={formData.status === 'draft'}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
-                />
-                <span 
-                  className="text-base transition-colors"
-                  style={{ 
-                    color: formData.status === 'draft' ? 'var(--text-primary)' : 'var(--text-muted)',
-                    fontWeight: formData.status === 'draft' ? '600' : '400'
-                  }}
-                >
-                  📝 Borrador
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="status"
-                  value="published"
-                  checked={formData.status === 'published'}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className="w-4 h-4 accent-[#AA7B5C] cursor-pointer"
-                />
-                <span 
-                  className="text-base transition-colors"
-                  style={{ 
-                    color: formData.status === 'published' ? 'var(--text-primary)' : 'var(--text-muted)',
-                    fontWeight: formData.status === 'published' ? '600' : '400'
-                  }}
-                >
-                  ✅ Publicado
-                </span>
-              </label>
             </div>
-            <p className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-              {formData.status === 'draft' 
-                ? '⚠️ Los borradores no son visibles en la página principal' 
-                : '✓ Este descubrimiento será visible públicamente'}
-            </p>
+          </div>
+
+          <div className="lg:col-span-9">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4 mb-6">
+              
+              <div className="relative">
+                <button
+                  onClick={() => setLikesOpen(!likesOpen)}
+                  className="flex items-center gap-2 py-2 px-4 rounded-full text-white transition-all hover:scale-105"
+                  style={{ backgroundColor: 'rgba(141, 170, 145, 0.5)' }}
+                >
+                  <Heart size={20} fill="white" />
+                  <span className="font-semibold">{post.likes_count}</span>
+                </button>
+
+                {likesOpen && post.liked_by.length > 0 && (
+                  <div 
+                    className="absolute right-0 mt-2 w-64 rounded-xl p-3 space-y-2 z-10"
+                    style={{ backgroundColor: 'rgba(141, 170, 145, 0.95)' }}
+                  >
+                    <p className="text-white font-semibold mb-2">Les gusta a:</p>
+                    {post.liked_by.map(user => (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <img 
+                          src={user.avatar} 
+                          alt={user.username}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <span className="text-white">{user.username}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div 
+                className="flex items-center gap-3 py-2 px-4 rounded-full"
+                style={{ backgroundColor: 'rgba(70, 46, 27, 0.6)' }}
+              >
+                <img 
+                  src={post.author.profile_image} 
+                  alt={post.author.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <span className="text-white font-semibold">
+                  {post.author.username}
+                </span>
+              </div>
+            </div>
+
+            <div 
+              className="rounded-2xl p-8 mb-8"
+              style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
+            >
+              <div className="text-white space-y-4 leading-relaxed text-lg">
+                {post.post_content.split('\n\n').map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Botones */}
-        <div className="mt-6 flex gap-4">
-          <button
-            type="button"
-            onClick={() => navigate(`/posts/${id}`)}
-            disabled={isSubmitting}
-            className="btn btn-secondary flex-1"
-          >
-            Cancelar
-          </button>
+        <div className="mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <MessageCircle size={28} className="text-white" />
+            <h2 className="text-white text-3xl font-bold">Comentarios</h2>
+          </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || isUploadingImage}
-            className="btn btn-primary flex-1"
+          <div className="space-y-4">
+            {comments.map(comment => (
+              <div 
+                key={comment.id}
+                className="rounded-xl p-6"
+                style={{ backgroundColor: 'rgba(139, 107, 77, 0.5)' }}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <img 
+                    src={comment.user.avatar} 
+                    alt={comment.user.username}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <span className="text-white font-semibold text-lg">
+                    {comment.user.username}
+                  </span>
+                </div>
+                <p className="text-white text-lg leading-relaxed">
+                  {comment.content}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div 
+            className="mt-6 rounded-xl p-6"
+            style={{ backgroundColor: 'rgba(139, 107, 77, 0.3)' }}
           >
-            {isSubmitting ? 'Guardando cambios...' : 'Guardar Cambios'}
-          </button>
+            <textarea 
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Escribe tu comentario..."
+              className="w-full bg-transparent text-white placeholder-gray-300 border-b border-white/30 py-3 px-2 focus:outline-none focus:border-white/60 transition-colors resize-none"
+              rows={3}
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            />
+            <button 
+              onClick={handleSubmitComment}
+              className="mt-4 py-2 px-8 rounded-full text-white font-semibold transition-all hover:scale-105"
+              style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)' }}
+            >
+              Publicar Comentario
+            </button>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
 
-export default EditPost;
+export default PostDetail;
