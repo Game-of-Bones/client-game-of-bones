@@ -13,10 +13,29 @@
  * - Destacar la ruta activa
  */
 
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ui/ThemeToggles';
+import { useAuth } from '../hooks/useAuth';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 
 const Navbar = () => {
+  const { isAuthenticated, logout, user } = useAuth();
+  const navigate = useNavigate();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // Esta función se llama al confirmar el cierre de sesión en el modal
+  const confirmLogout = () => {
+    logout();
+    navigate('/login');
+    setIsLogoutModalOpen(false); // Cierra el modal
+  };
+
+  // Esta función solo abre el modal
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
   return (
     <nav className="bg-primary-800 border-b border-primary-700 sticky top-0 z-50">
       <div className="container-custom">
@@ -40,16 +59,37 @@ const Navbar = () => {
             {/* Separador visual */}
             <div className="h-6 w-px bg-primary-600 mx-2" />
 
-            {/* Rutas de Autenticación */}
-            <NavLink to="/login">Login</NavLink>
-            <NavLink to="/register">Registro</NavLink>
+            {isAuthenticated ? (
+              <>
+                {/* Rutas para usuarios autenticados */}
+                <NavLink to="/profile">Perfil de {user?.username}</NavLink>
 
-            {/* TODO: Mostrar solo si está autenticado */}
-            {/* <NavLink to="/profile">Perfil</NavLink> */}
+                {/* TODO: Mostrar solo si es admin */}
+                {user?.role === 'admin' && (
+                  <>
+                    <NavLink to="/admin/posts/new">Crear Post</NavLink>
+                    <NavLink to="/admin/users">Usuarios</NavLink>
+                  </>
+                )}
 
-            {/* TODO: Mostrar solo si es admin */}
-            {/* <NavLink to="/admin/posts/new">Crear Post</NavLink>
-            <NavLink to="/admin/users">Usuarios</NavLink> */}
+                <button
+                  onClick={handleLogoutClick}
+                  className="
+                    px-3 py-2 text-sm font-medium text-primary-100 rounded-lg
+                    transition-colors duration-200 hover:bg-primary-700 hover:text-accent-coral
+                    focus:outline-none focus:ring-2 focus:ring-accent-coral
+                    focus:ring-offset-2 focus:ring-offset-primary-800"
+                >
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Rutas para usuarios no autenticados */}
+                <NavLink to="/login">Login</NavLink>
+                <NavLink to="/register">Registro</NavLink>
+              </>
+            )}
 
             {/* Separador visual */}
             <div className="h-6 w-px bg-primary-600 mx-2" />
@@ -59,6 +99,16 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de Logout */}
+      <ConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        title="Cerrar Sesión"
+        message="¿Estás seguro de que quieres cerrar sesión?"
+        confirmText="Cerrar Sesión"
+      />
     </nav>
   );
 };

@@ -1,4 +1,12 @@
 {
+<<<<<<< HEAD
+  "hash": "d484e271",
+  "configHash": "1599bc64",
+  "lockfileHash": "a0cf2d59",
+  "browserHash": "2d2df290",
+  "optimized": {},
+  "chunks": {}
+=======
   "hash": "dcadf688",
   "configHash": "168bf7e2",
   "lockfileHash": "b3cf0692",
@@ -52,4 +60,5 @@
       "file": "chunk-G3PMV62Z.js"
     }
   }
+>>>>>>> 1ca55dd5fb3d051a72f2b85d30f4c5b6c5e19455
 }
