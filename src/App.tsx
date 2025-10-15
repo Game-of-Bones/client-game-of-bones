@@ -1,7 +1,8 @@
 import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './layout/navbar';
-import Footer from './layout/Footer';  // 👈 AÑADE ESTA LÍNEA
+import Footer from './layout/footer';  
+
 
 const Layout = () => {
   return (

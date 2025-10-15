@@ -8,22 +8,23 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
+import Profile from '../pages/Profile'; 
 import PostList from '../pages/PostList';
 import PostDetail from '../pages/PostDetail';
-import Creators from '../pages/Creators';
-import Profile from '../pages/Profile';
 
 // Páginas de admin
 import CreatePost from '../pages/CreatePost';
 import EditPost from '../pages/EditPost';
 import UserManagement from '../pages/UserManagement';
 
-// Página 404
-import NotFound from '../pages/NotFound';
-
 // HOCs de protección
-import ProtectedRoute from '../pages/ProtectedRoute';
+import ProtectedRoute from '../components/auth/ProtectedRoute'; 
 import AdminRoute from '../components/common/AdminRoute';
+
+// NotFound temporal
+function NotFound() {
+  return <div className="p-8">404 - Not Found</div>;
+}
 
 export const router = createBrowserRouter([
   // ============================================
@@ -51,19 +52,21 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <NotFound />,
     children: [
-      // 🏠 HOME - Página principal
       { index: true, element: <Home /> },
 
-      // 📝 POSTS - Lista de posts (enlazado con "POSTS" en Navbar)
+      // 📚 RUTAS DE POSTS (SIN PROTECCIÓN TEMPORAL PARA TESTING)
       { path: 'posts', element: <PostList /> },
-
-      // 📄 POST DETAIL - Detalle de un post individual
+      
+      // ✏️ CREAR POST (temporal sin protección)
+      { path: 'posts/new', element: <CreatePost /> },
+      
+      // ✏️ EDITAR POST (temporal sin protección) - DEBE IR ANTES DE posts/:id
+      { path: 'posts/:id/edit', element: <EditPost /> },
+      
+      // 📄 DETALLE DE POST - DEBE IR AL FINAL
       { path: 'posts/:id', element: <PostDetail /> },
 
-      // 👥 CREATORS - Sobre nosotros (enlazado con "ABOUT" en Navbar)
-      { path: 'creators', element: <Creators /> },
-
-      // 🔒 RUTAS PROTEGIDAS (requieren autenticación)
+      // 🔒 Rutas protegidas (requieren autenticación)
       {
         element: <ProtectedRoute />,
         children: [
@@ -71,27 +74,13 @@ export const router = createBrowserRouter([
         ]
       },
 
-      // 🔒 RUTAS DE ADMINISTRACIÓN (requieren rol admin)
+      // 👑 RUTAS DE ADMINISTRACIÓN (COMENTADAS TEMPORALMENTE)
+      // Cuando quieras activar la protección, descomenta esto:
+      /*
       {
         path: 'admin',
         children: [
-          {
-            path: 'posts/new',
-            element: (
-              <AdminRoute>
-                <CreatePost />
-              </AdminRoute>
-            )
-          },
-          {
-            path: 'posts/:id/edit',
-            element: (
-              <AdminRoute>
-                <EditPost />
-              </AdminRoute>
-            )
-          },
-          {
+          { 
             path: 'users',
             element: (
               <AdminRoute>
@@ -101,8 +90,9 @@ export const router = createBrowserRouter([
           }
         ]
       },
+      */
 
-      // ⚠️ Página 404 - Cualquier ruta no encontrada
+      // ⚠️ Página 404
       { path: '*', element: <NotFound /> },
     ],
   },
