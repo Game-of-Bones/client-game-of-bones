@@ -1,25 +1,17 @@
 // Página de inicio de sesión
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import LoginForm from '../components/ui/LoginForm';
 
-
-//Login - Página de inicio de sesión
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { login } = useAuth();
 
-  useEffect(() => {
-    // Si el estado de autenticación aún está cargando, no hacer nada.
-    if (isAuthLoading) {
-      return;
-    }
-    // Si el usuario ya está autenticado, redirigirlo a la página de inicio.
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, isAuthLoading, navigate]);
+  // Obtener la ubicación para la redirección inteligente
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -81,13 +73,16 @@ const Login = () => {
       return;
     }
 
+    console.log('📧 Datos enviados:', formData);
     setIsLoading(true);
+    setErrors({}); // Limpiar errores previos
 
     try {
-      await login(formData); // Llama a la función login del contexto
-      navigate('/posts'); // Redirige a la página de posts tras un login exitoso
-
+      await login(formData);
+      // Solo después de un login exitoso, navegar
+      navigate(from, { replace: true });
     } catch (err: any) {
+      console.error('❌ Error completo:', err); 
       // Manejar diferentes tipos de errores
       if (err.response?.status === 401) {
         setErrors({ form: 'Email o contraseña incorrectos.' });
@@ -96,120 +91,40 @@ const Login = () => {
       } else {
         setErrors({ form: err.message || 'Error al iniciar sesión.' });
       }
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Solo poner en false si hay error
     }
+    // NO hay finally - si el login es exitoso, la navegación ocurre inmediatamente
   };
 
-  // Muestra un estado de carga mientras se verifica la autenticación inicial
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">Verificando autenticación...</div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold">Iniciar Sesión</h2>
-          <p className="mt-2 text-gray-600">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-blue-600 hover:underline">
-              Regístrate aquí
-            </Link>
-          </p>
-        </div>
+    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        <img
+          alt="Game of Bones Logo"
+          src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+          className="mx-auto h-10 w-auto"
+        />
+        <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-theme-primary">
+          Iniciar Sesión
+        </h2>
+      </div>
 
+      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm card p-8">
         {/* Formulario */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Mostrar error general del formulario si existe */}
-          {errors.form && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {errors.form}
-            </div>
-          )}
+        <LoginForm
+          formData={formData}
+          isLoading={isLoading}
+          errors={errors}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+        />
 
-          <div className="space-y-4">
-            {/* Campo Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
-                placeholder="tu@email.com"
-              />
-              {errors.email && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Campo Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.password}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Checkbox "Recordarme" y "Olvidé mi contraseña" */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                Recordarme
-              </label>
-            </div>
-
-            {/* TODO: Implementar funcionalidad de "Olvidé mi contraseña" */}
-            <div className="text-sm">
-              <a href="#" className="text-blue-600 hover:underline">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
-          </div>
-
-          {/* Botón Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+        <p className="mt-10 text-center text-sm text-theme-secondary">
+          ¿No tienes cuenta?{' '}
+          <Link to="/register" className="font-semibold text-accent-coral hover:text-accent-teal">
+            Regístrate aquí
+          </Link>
+        </p>
       </div>
     </div>
   );
