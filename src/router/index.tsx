@@ -93,6 +93,7 @@ export const router = createBrowserRouter([
       // { path: 'posts', element: <PostList /> },
       // { path: 'posts/:id', element: <PostDetail /> },
 
+      // ⚠️ Página 404
       { path: '*', element: <NotFound /> },
     ],
   },
