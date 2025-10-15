@@ -1,0 +1,306 @@
+/* ========================================
+   GAME OF BONES - GLOBAL STYLES (Tailwind v4)
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+/* ========================================
+   VARIABLES CSS - SISTEMA DE TEMAS
+   ======================================== */
+
+:root {
+  /* === MODO CLARO === */
+  --bg-primary: linear-gradient(to bottom, #F5E6CC 0%, #AC7142 73%);
+  --bg-secondary: #F5EBC8;
+  --bg-card: #FFFFFF;
+  --bg-hover: #E8D9B8;
+
+  --text-primary: #2D1F13;
+  --text-secondary: #6F4E35;
+  --text-muted: #8B6543;
+  --text-inverse: #FAF2E5;
+
+  --border-color: #C0B39A;
+  --border-light: #E8D9B8;
+
+  --color-coral: #F76C5E;
+  --color-teal: #6DA49C;
+  --color-sage: #8BA4A6;
+  --color-amber: #D4A574;
+  --color-danger: #dc2626;  /* red-600 */
+  --color-danger-hover: #b91c1c;  /* red-700 */
+
+  --shadow-sm: 0 1px 2px rgba(45, 31, 19, 0.05);
+  --shadow-md: 0 4px 6px rgba(45, 31, 19, 0.1);
+  --shadow-lg: 0 10px 15px rgba(45, 31, 19, 0.1);
+  --shadow-xl: 0 20px 25px rgba(45, 31, 19, 0.15);
+}
+
+/* === MODO OSCURO === */
+[data-theme="dark"] {
+  --bg-primary: #1A110B;
+  --bg-secondary: #2D1F13;
+  --bg-card: #3A2819;
+  --bg-hover: #4A3322;
+
+  --text-primary: #FAF2E5;
+  --text-secondary: #E8D9B8;
+  --text-muted: #C0B39A;
+  --text-inverse: #2D1F13;
+
+  --border-color: #6F4E35;
+  --border-light: #4A3322;
+
+  --color-coral: #FF8A7F;
+  --color-teal: #7DB5AD;
+  --color-sage: #9BB5B7;
+  --color-amber: #E5B685;
+--color-danger: #ef4444; /* red-500 */
+  --color-danger-hover: #dc2626; /* red-600 */
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+@layer base {
+  * {
+    border-color: var(--border-color);
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Playfair Display', serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  img {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    height: auto;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  a {
+    color: var(--color-coral);
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: var(--color-teal);
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 2px;
+  }
+}
+
+/* ========================================
+   COMPONENTES BASE
+   ======================================== */
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background-color: var(--color-coral);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-secondary {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--bg-hover);
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .input:focus {
+    outline: 2px solid var(--color-coral);
+    border-color: var(--color-coral);
+  }
+
+  .card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .card-horizontal {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+  }
+
+  .card-horizontal img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+  }
+}
+
+/* ========================================
+   UTILIDADES PERSONALIZADAS
+   ======================================== */
+
+@layer utilities {
+  .container-custom {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .section-padding {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .flex-align {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(135deg, #AA7B5C 0%, #4A8B6A 100%);
+    background-clip: text;              /* :white_check_mark: estándar */
+    color: transparent;
+  }
+}
+
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background-color: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 6px;
+  border: 2px solid var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-on-scroll {
+  animation: slideUp 0.6s ease-out;
+}
+
+/* ========================================
+   RESPONSIVE HELPERS
+   ======================================== */
+
+.hide-mobile { display: none; }
+@media (min-width: 768px) { .hide-mobile { display: block; } }
+.hide-desktop { display: block; }
+@media (min-width: 768px) { .hide-desktop { display: none; } }
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
