@@ -1,101 +1,38 @@
-import { createContext, useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type {
-  AuthContextType,
-  AuthState,
-  LoginCredentials,
-  RegisterData,
-} from '../types/auth.types';
-import authService from '../services/authService';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { useAuthStore } from '../stores/authStore';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+/**
+ * AuthProvider ahora actúa como un inicializador.
+ * Su única responsabilidad es llamar a `checkAuth` del store de Zustand
+ * una sola vez cuando la aplicación se monta.
+ *
+ * Ya no provee un contexto, ya que el estado es global gracias a Zustand.
+ */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
-
-  const checkAuth = async () => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      return;
-    }
-
-    try {
-      const user = await authService.verifyToken();
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch {
-      localStorage.removeItem('token');
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-    }
-  };
-
-  const login = async (credentials: LoginCredentials) => {
-    const { user, token } = await authService.login(credentials);
-    localStorage.setItem('token', token);
-    setState({
-      user,
-      token,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-  };
-
-  const register = async (data: RegisterData) => {
-    const { user, token } = await authService.register(data);
-    localStorage.setItem('token', token);
-    setState({
-      user,
-      token,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-  };
-
-  const logout = () => {
-    authService.logout();
-    setState({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
-  };
+  // Usamos `useRef` para asegurarnos de que la verificación se ejecute solo una vez.
+  const didCheckAuth = useRef(false);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  if (state.isLoading) {
+    if (!didCheckAuth.current) {
+      didCheckAuth.current = true;
+      checkAuth();
+    }
+  }, [checkAuth]);
+  
+  // Mantenemos una pantalla de carga inicial mientras se verifica el token.
+  if (isLoading) {
     return <div>Cargando autenticación...</div>;
   }
 
-  return (
-    <AuthContext.Provider
-      value={{ ...state, login, register, logout, checkAuth }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <>{children}</>;
 };
 
-export default AuthContext;
+// Ya no exportamos el contexto, ya que no se usará directamente.
+// Los componentes usarán un hook `useAuth` que consumirá el store de Zustand.
