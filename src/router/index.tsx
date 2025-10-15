@@ -8,12 +8,14 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
+import Profile from '../pages/Profile'; // ← AÑADIDO
 
 // Páginas de admin
 import EditPost from '../pages/EditPost';
 
 // HOCs de protección
-import AdminRoute from '../components/common/AdminRoute'; // Asegúrate de tener este componente
+import ProtectedRoute from '../components/auth/ProtectedRoute'; // ← AÑADIDO
+import AdminRoute from '../components/common/AdminRoute';
 
 // NotFound temporal
 function NotFound() {
@@ -47,6 +49,14 @@ export const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       { index: true, element: <Home /> },
+
+      // 🔒 Rutas protegidas (requieren autenticación) ← AÑADIDO
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: 'profile', element: <Profile /> },
+        ]
+      },
 
       // 🔒 Rutas de administración
       {
@@ -82,14 +92,6 @@ export const router = createBrowserRouter([
       // 🔒 Rutas futuras (descomenta cuando las tengas):
       // { path: 'posts', element: <PostList /> },
       // { path: 'posts/:id', element: <PostDetail /> },
-      // {
-      //   path: 'profile',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Profile />
-      //     </ProtectedRoute>
-      //   ),
-      // },
 
       { path: '*', element: <NotFound /> },
     ],
