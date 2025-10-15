@@ -1,41 +1,47 @@
 // Home.tsx
 import { Link } from 'react-router-dom';
 import MapComponent from '../components/ui/MapComponent';
-import Navbar from '../components/ui/Navbar'; // Ajusta la ruta según tu estructura de carpetas
-
+import Navbar from '../components/ui/Navbar';
 
 const Home = () => {
   return (
     <>
-      {/* NAVBAR */}
-      <Navbar theme="dark" /> {/* Pasa user={user} si manejas autenticación */}
+      <Navbar theme="dark" />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <section className="text-center py-12 bg-gray-100 rounded-lg mb-8">
+        {/* Hero Section - SIN bg-gray-100 */}
+        <section className="text-center py-12 rounded-lg mb-8 backdrop-blur-sm bg-white/10 border border-white/20">
           <h1 className="text-4xl font-bold mb-4">
             Bienvenido a Game of Bones
           </h1>
-          <p className="text-xl text-gray-600 mb-6">
+          <p className="text-xl mb-6" style={{ color: 'var(--text-secondary)' }}>
             Comparte y descubre historias épicas
           </p>
           <div className="space-x-4">
             <Link
               to="/posts"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="inline-block px-6 py-3 rounded transition"
+              style={{ 
+                backgroundColor: 'var(--color-teal)',
+                color: 'var(--text-inverse)'
+              }}
             >
               Ver Posts
             </Link>
             <Link
               to="/register"
-              className="inline-block px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              className="inline-block px-6 py-3 rounded transition"
+              style={{ 
+                backgroundColor: 'var(--color-coral)',
+                color: 'var(--text-inverse)'
+              }}
             >
               Únete Ahora
             </Link>
           </div>
         </section>
 
-        {/* 🗺️ MAPA DE DESCUBRIMIENTOS */}
+        {/* Mapa */}
         <section className="mb-8" style={{ minHeight: '800px' }}>
           <h2 className="text-3xl font-bold mb-4 text-center">
             Mapa de Descubrimientos
@@ -43,23 +49,23 @@ const Home = () => {
           <MapComponent />
         </section>
 
-        {/* Sección de Features */}
+        {/* Features - Con backdrop blur para efecto glassmorphism */}
         <section className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="p-6 border rounded-lg text-center">
+          <div className="p-6 rounded-lg text-center backdrop-blur-sm bg-white/10 border border-white/20">
             <h3 className="text-xl font-semibold mb-2">📝 Crea Posts</h3>
-            <p className="text-gray-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Comparte tus historias con la comunidad
             </p>
           </div>
-          <div className="p-6 border rounded-lg text-center">
+          <div className="p-6 rounded-lg text-center backdrop-blur-sm bg-white/10 border border-white/20">
             <h3 className="text-xl font-semibold mb-2">💬 Comenta</h3>
-            <p className="text-gray-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Participa en discusiones interesantes
             </p>
           </div>
-          <div className="p-6 border rounded-lg text-center">
+          <div className="p-6 rounded-lg text-center backdrop-blur-sm bg-white/10 border border-white/20">
             <h3 className="text-xl font-semibold mb-2">⭐ Explora</h3>
-            <p className="text-gray-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Descubre contenido increíble
             </p>
           </div>
