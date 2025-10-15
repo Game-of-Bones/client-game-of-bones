@@ -8,6 +8,7 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
+import PostDetail from '../pages/PostDetail';
 
 // NotFound temporal
 function NotFound() {
@@ -42,9 +43,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
 
+      // 🦴 Página de detalle de post
+      { path: 'posts/:id', element: <PostDetail /> },
+
       // 🔒 Rutas futuras (descomenta cuando las tengas):
       // { path: 'posts', element: <PostList /> },
-      // { path: 'posts/:id', element: <PostDetail /> },
       // {
       //   path: 'profile',
       //   element: (
@@ -83,6 +86,7 @@ export const router = createBrowserRouter([
       //   ]
       // },
 
+      // ⚠️ Página 404
       { path: '*', element: <NotFound /> },
     ],
   },

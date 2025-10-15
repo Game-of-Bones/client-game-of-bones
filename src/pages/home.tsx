@@ -6,7 +6,6 @@ import Navbar from '../components/ui/Navbar';
 const Home = () => {
   return (
     <>
-      <Navbar theme="dark" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section - SIN bg-gray-100 */}
