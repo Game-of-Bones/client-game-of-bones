@@ -8,23 +8,22 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
+import PostList from '../pages/PostList';
+import PostDetail from '../pages/PostDetail';
+import Creators from '../pages/Creators';
 import Profile from '../pages/Profile';
-import PostList from '../pages/PostList'; 
-import PostDetail from '../pages/PostDetail'; 
 
 // Páginas de admin
-import CreatePost from '../pages/CreatePost'; 
+import CreatePost from '../pages/CreatePost';
 import EditPost from '../pages/EditPost';
-import UserManagement from '../pages/UserManagement'; 
+import UserManagement from '../pages/UserManagement';
+
+// Página 404
+import NotFound from '../pages/NotFound';
 
 // HOCs de protección
-import ProtectedRoute from '../components/auth/ProtectedRoute';
+import ProtectedRoute from '../pages/ProtectedRoute';
 import AdminRoute from '../components/common/AdminRoute';
-
-// NotFound temporal
-function NotFound() {
-  return <div className="p-8">404 - Not Found</div>;
-}
 
 export const router = createBrowserRouter([
   // ============================================
@@ -52,46 +51,75 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <NotFound />,
     children: [
+      // 🏠 HOME - Página principal
       { index: true, element: <Home /> },
 
-      // 📚 RUTAS PÚBLICAS DE POSTS (TEMPORALMENTE AQUÍ PARA DISEÑO)
+      // 📝 POSTS - Lista de posts (enlazado con "POSTS" en Navbar)
       { path: 'posts', element: <PostList /> },
-      { path: 'posts/new', element: <CreatePost /> }, // 👈 MOVIDA AQUÍ TEMPORALMENTE
-      { path: 'posts/:id', element: <PostDetail /> }, // RUTA GENÉRICA (DEBE IR ÚLTIMA)
 
+      // 📄 POST DETAIL - Detalle de un post individual
+      { path: 'posts/:id', element: <PostDetail /> },
 
-      // 🔒 Rutas protegidas (requieren autenticación)
+      // 👥 CREATORS - Sobre nosotros (enlazado con "ABOUT" en Navbar)
+      { path: 'creators', element: <Creators /> },
+
+      // 🔒 RUTAS PROTEGIDAS (requieren autenticación)
       {
         element: <ProtectedRoute />,
         children: [
           { path: 'profile', element: <Profile /> },
 
-          // 👑 RUTAS DE ADMINISTRACIÓN (Se mantienen las rutas protegidas que sí necesitan permisos)
+// 🔒 RUTAS PROTEGIDAS (requieren autenticación)
+{
+  element: <ProtectedRoute />,
+  children: [
+    { path: 'profile', element: <Profile /> },
+
+    // 🔒 RUTAS DE ADMINISTRACIÓN (requieren rol admin)
+    {
+      path: 'admin',
+      children: [
+        {
+          path: 'posts/new',
+          element: (
+            <AdminRoute>
+              <CreatePost />
+            </AdminRoute>
+          )
+        },
+        { // RUTA DE EDICIÓN (ESPECÍFICA: posts/:id/edit)
+          path: 'posts/:id/edit',
+          element: (
+            <AdminRoute>
+              <EditPost />
+            </AdminRoute>
+          )
+        },
+        { // RUTA DE GESTIÓN DE USUARIOS
+          path: 'users',
+          element: (
+            <AdminRoute>
+              <UserManagement />
+            </AdminRoute>
+          )
+        }
+      ]
+    }
+  ]
+},
+
           {
-            path: 'admin',
-            children: [
-              { // RUTA DE EDICIÓN (ESPECÍFICA: posts/:id/edit)
-                path: 'posts/:id/edit',
-                element: (
-                  <AdminRoute>
-                    <EditPost />
-                  </AdminRoute>
-                )
-              },
-              { // RUTA DE GESTIÓN DE USUARIOS
-                path: 'users',
-                element: (
-                  <AdminRoute>
-                    <UserManagement />
-                  </AdminRoute>
-                )
-              }
-            ]
-          },
+            path: 'users',
+            element: (
+              <AdminRoute>
+                <UserManagement />
+              </AdminRoute>
+            )
+          }
         ]
       },
 
-      // ⚠️ Página 404
+      // ⚠️ Página 404 - Cualquier ruta no encontrada
       { path: '*', element: <NotFound /> },
     ],
   },
