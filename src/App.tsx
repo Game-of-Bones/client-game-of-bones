@@ -1,7 +1,8 @@
 import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './layout/navbar';
-import Footer from './layout/footer';
+import Footer from './layout/Footer';  // 👈 AÑADE ESTA LÍNEA
+
 const Layout = () => {
   return (
     <ThemeProvider defaultTheme="light">
@@ -12,7 +13,7 @@ const Layout = () => {
           <Outlet />
         </main>
         
-        <Footer />  {/* ← Nuevo footer */}
+        <Footer />  {/* 👈 REEMPLAZA el footer antiguo con esta línea */}
       </div>
     </ThemeProvider>
   );
