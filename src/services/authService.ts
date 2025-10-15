@@ -16,6 +16,13 @@ const MOCK_USERS = [
     password: 'user123',
     role: 'user' as const,
   },
+  {
+    id: 3,
+    username: 'maria',
+    email: 'maria@test.com',
+    password: 'maria123',
+    role: 'user' as const,
+  },
 ];
 
 // Simular delay de red
@@ -35,7 +42,7 @@ class AuthService {
       throw new Error('Credenciales inválidas');
     }
 
-    const { password: __password, ...user  } = foundUser;
+    const { password: __password, ...user } = foundUser;
     const token = `mock-token-${user.id}-${Date.now()}`;
 
     return { user, token };
