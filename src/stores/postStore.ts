@@ -23,7 +23,7 @@ interface PostActions {
   clearCurrentPost: () => void;
 }
 
-export const usePostStore = create<PostState & PostActions>((set, get) => ({
+export const usePostStore = create<PostState & PostActions>((set) => ({
   // ========================================
   // ESTADO INICIAL
   // ========================================
