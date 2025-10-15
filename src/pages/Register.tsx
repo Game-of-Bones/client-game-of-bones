@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/authStore';
  * 
  * Página de registro con diseño exacto del Figma.
  * Split-screen: Fósil izquierda, formulario derecha.
+ * Respeta el tema claro/oscuro global.
  */
 
 const Register = () => {
@@ -111,9 +112,9 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-88px)] flex">
+    <div className="h-[calc(100vh-88px)] flex overflow-hidden">
       {/* LADO IZQUIERDO - IMAGEN FÓSIL */}
-      <div className="hidden lg:block lg:w-1/2 relative">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         <img 
           src="/shell_fossil.jpg" 
           alt="Fósil de concha" 
@@ -121,37 +122,40 @@ const Register = () => {
         />
       </div>
 
-      {/* LADO DERECHO - FORMULARIO */}
-      <div
-        className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12"
-        style={{ backgroundColor: '#5D4A3A' }}
-      >
+      {/* LADO DERECHO - FORMULARIO CON FONDO TRANSPARENTE */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className="w-full max-w-md">
-          {/* LOGO */}
-          <div className="flex justify-center mb-10">
+          {/* LOGO - Clickeable para ir al home - TAMAÑO GRANDE */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="flex justify-center mb-6 w-full transition-all duration-300 hover:scale-105 focus:outline-none cursor-pointer"
+            aria-label="Ir a página principal"
+            style={{ outline: 'none', border: 'none' }}
+          >
             <img
               src="/gob_logo.png"
               alt="Game of Bones"
-              className="h-24 w-auto object-contain"
+              className="w-72 h-auto object-contain pointer-events-none"
+              style={{ maxWidth: '300px' }}
             />
-          </div>
+          </button>
 
           {/* HEADER */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1
-              className="text-lg sm:text-xl mb-3"
+              className="text-base sm:text-lg mb-2 uppercase"
               style={{ 
                 color: '#C9A875',
                 fontFamily: 'Cinzel, serif',
                 letterSpacing: '0.08em',
                 lineHeight: '1.5',
-                textTransform: 'uppercase',
               }}
             >
               Rellena los datos para crear tu perfil
             </h1>
             <p
-              className="text-sm uppercase mb-4"
+              className="text-xs uppercase mb-3"
               style={{ 
                 color: '#E8D9B8',
                 fontFamily: 'Cinzel, serif',
@@ -160,29 +164,31 @@ const Register = () => {
             >
               Registro
             </p>
-            {/* Línea horizontal */}
+            {/* Línea horizontal decorativa */}
             <div 
               className="w-full max-w-sm mx-auto"
               style={{
                 height: '1px',
-                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                backgroundColor: 'rgba(201, 168, 117, 0.3)',
               }}
             />
           </div>
 
           {/* FORMULARIO */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-2.5">
             {/* Error del backend */}
             {error && (
               <div
-                className="px-4 py-3 rounded border text-center"
+                className="px-4 py-2.5 rounded-lg border text-center"
                 style={{
                   backgroundColor: 'rgba(239, 68, 68, 0.1)',
                   borderColor: '#EF4444',
                   color: '#FEE2E2',
                 }}
               >
-                <p className="text-sm">{error}</p>
+                <p className="text-xs" style={{ fontFamily: 'Cinzel, serif' }}>
+                  {error}
+                </p>
               </div>
             )}
 
@@ -190,7 +196,7 @@ const Register = () => {
             <div>
               <label
                 htmlFor="username"
-                className="block text-xs mb-2 uppercase"
+                className="block text-xs mb-1 uppercase"
                 style={{ 
                   color: '#C9A875',
                   fontFamily: 'Cinzel, serif',
@@ -205,7 +211,7 @@ const Register = () => {
                 type="text"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                className="w-full px-4 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#C9A875] transition-all text-sm"
                 style={{ 
                   backgroundColor: '#8B7355',
                   borderColor: validationErrors.username ? '#EF4444' : 'transparent',
@@ -213,19 +219,20 @@ const Register = () => {
                   fontFamily: 'Cinzel, serif',
                 }}
                 autoComplete="username"
+                placeholder="Tu nombre de usuario"
               />
               {validationErrors.username && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5', fontFamily: 'Cinzel, serif' }}>
                   {validationErrors.username}
                 </p>
               )}
             </div>
 
-            {/* NOMBRE DE PERFIL */}
+            {/* NOMBRE DE PERFIL (read-only, espejo del username) */}
             <div>
               <label
                 htmlFor="username-display"
-                className="block text-xs mb-2 uppercase"
+                className="block text-xs mb-1 uppercase"
                 style={{ 
                   color: '#C9A875',
                   fontFamily: 'Cinzel, serif',
@@ -239,13 +246,14 @@ const Register = () => {
                 type="text"
                 value={formData.username || ''}
                 readOnly
-                className="w-full px-4 py-2.5 rounded border cursor-not-allowed opacity-70"
+                className="w-full px-4 py-1.5 rounded-lg border cursor-not-allowed opacity-70 text-sm"
                 style={{ 
                   backgroundColor: '#6B5B4A',
                   borderColor: 'transparent',
                   color: '#9CA3AF',
                   fontFamily: 'Cinzel, serif',
                 }}
+                placeholder="Se generará automáticamente"
               />
             </div>
 
@@ -253,7 +261,7 @@ const Register = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs mb-2 uppercase"
+                className="block text-xs mb-1 uppercase"
                 style={{ 
                   color: '#C9A875',
                   fontFamily: 'Cinzel, serif',
@@ -268,7 +276,7 @@ const Register = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#C9A875] transition-all text-sm"
                 style={{ 
                   backgroundColor: '#8B7355',
                   borderColor: validationErrors.email ? '#EF4444' : 'transparent',
@@ -276,9 +284,10 @@ const Register = () => {
                   fontFamily: 'Cinzel, serif',
                 }}
                 autoComplete="email"
+                placeholder="tu@email.com"
               />
               {validationErrors.email && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5', fontFamily: 'Cinzel, serif' }}>
                   {validationErrors.email}
                 </p>
               )}
@@ -288,7 +297,7 @@ const Register = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs mb-2 uppercase"
+                className="block text-xs mb-1 uppercase"
                 style={{ 
                   color: '#C9A875',
                   fontFamily: 'Cinzel, serif',
@@ -303,7 +312,7 @@ const Register = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#C9A875] transition-all text-sm"
                 style={{ 
                   backgroundColor: '#8B7355',
                   borderColor: validationErrors.password ? '#EF4444' : 'transparent',
@@ -311,9 +320,10 @@ const Register = () => {
                   fontFamily: 'Cinzel, serif',
                 }}
                 autoComplete="new-password"
+                placeholder="Mínimo 6 caracteres"
               />
               {validationErrors.password && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5', fontFamily: 'Cinzel, serif' }}>
                   {validationErrors.password}
                 </p>
               )}
@@ -323,7 +333,7 @@ const Register = () => {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-xs mb-2 uppercase"
+                className="block text-xs mb-1 uppercase"
                 style={{ 
                   color: '#C9A875',
                   fontFamily: 'Cinzel, serif',
@@ -338,7 +348,7 @@ const Register = () => {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
+                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#C9A875] transition-all text-sm"
                 style={{ 
                   backgroundColor: '#8B7355',
                   borderColor: validationErrors.confirmPassword ? '#EF4444' : 'transparent',
@@ -346,47 +356,50 @@ const Register = () => {
                   fontFamily: 'Cinzel, serif',
                 }}
                 autoComplete="new-password"
+                placeholder="Repite tu contraseña"
               />
               {validationErrors.confirmPassword && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
+                <p className="mt-1 text-xs" style={{ color: '#FCA5A5', fontFamily: 'Cinzel, serif' }}>
                   {validationErrors.confirmPassword}
                 </p>
               )}
             </div>
 
-            {/* BOTÓN */}
-            <div className="pt-6">
+            {/* BOTÓN DE REGISTRO */}
+            <div className="pt-3">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full"
+                className="w-full py-2 text-xs font-semibold tracking-widest uppercase transition-all"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                }}
               >
                 {isLoading ? 'REGISTRANDO...' : 'REGISTRAR'}
               </Button>
             </div>
 
-            {/* ENLACE A LOGIN */}
-            <div className="text-center pt-4">
-              <p
-                className="text-sm"
+            {/* ENLACE A LOGIN - TODA LA FRASE ES CLICKEABLE */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#C9A875] rounded px-2 py-1"
                 style={{ 
                   color: '#E8D9B8',
                   fontFamily: 'Cinzel, serif',
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#C9A875';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#E8D9B8';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
-                ¿Estás ya registrado?{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="underline hover:text-[#C9A875] transition-colors"
-                  style={{ 
-                    color: '#D4A574',
-                    fontFamily: 'Cinzel, serif',
-                  }}
-                >
-                  ¡Inicia sesión aquí!
-                </button>
-              </p>
+                ¿Estás ya registrado? <span style={{ color: '#D4A574', textDecoration: 'underline' }}>¡Inicia sesión aquí!</span>
+              </button>
             </div>
           </form>
         </div>
