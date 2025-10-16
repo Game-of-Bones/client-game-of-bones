@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-// 💡 Nueva Importación: Necesaria para la navegación al hacer click en el pin
 import { useNavigate } from 'react-router-dom';
-
 // ===============================================
-// FUNCIÓN AUXILIAR: PROYECCIÓN 3D A 2D (Sin cambios)
+// FUNCIÓN AUXILIAR: PROYECCIÓN 3D A 2D
 // ===============================================
 const getScreenCoordinates = (
   position: THREE.Vector3,
@@ -12,21 +10,14 @@ const getScreenCoordinates = (
   renderer: THREE.WebGLRenderer,
   container: HTMLDivElement
 ) => {
-  // 1. Proyecta la posición 3D a coordenadas de clip
   const vector = position.clone().project(camera);
-
-  // 2. Mapea las coordenadas de clip (-1 a 1) a coordenadas de pantalla (píxeles)
   const x = (vector.x * 0.5 + 0.5) * container.clientWidth;
   const y = (vector.y * -0.5 + 0.5) * container.clientHeight;
-
-  // Retorna la posición y un flag para saber si el punto está frente a la cámara
   return { x, y, visible: vector.z < 1 };
 };
-
 // ===============================================
-// TIPOS (Sin cambios)
+// TIPOS
 // ===============================================
-
 interface Discovery {
   id: number;
   title: string;
@@ -37,49 +28,34 @@ interface Discovery {
   geological_period?: string;
   fossil_type: string;
 }
-
 interface MapComponentProps {
   discoveries?: Discovery[];
 }
-
 // ===============================================
 // COMPONENTE PRINCIPAL
 // ===============================================
-
 const MapComponent = ({ discoveries }: MapComponentProps) => {
-  // 💡 Hook de Navegación
   const navigate = useNavigate();
-
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  // rendererRef se usa para la limpieza y la proyección 2D
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const globeRef = useRef<THREE.Mesh | null>(null);
   const pinsRef = useRef<Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }>>([]);
-
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [hoveredDiscovery, setHoveredDiscovery] = useState<Discovery | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-
-  // 💡 Referencia para evitar el parpadeo (no fuerza re-renderizado de React)
   const lastHoveredRef = useRef<Discovery | null>(null);
-
-  // 💡 Estado y límites para el Zoom. Initial Zoom 4.0 para hacerlo más pequeño y centrado.
   const MAX_ZOOM = 6;
   const MIN_ZOOM = 1.5;
   const INITIAL_ZOOM = 4.0;
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM);
-
-  // Datos mock (sin cambios)
   const mockDiscoveries: Discovery[] = discoveries || [
     { id: 1, title: "Joaquinraptor casali", location: "La Pampa, Argentina", latitude: -36.6167, longitude: -64.2833, image_url: "/assets/joaquinraptor.jpg", geological_period: "Cretácico Superior", fossil_type: "bones_teeth" },
     { id: 2, title: "Qunkasaura pintiquiniestra", location: "Magallanes, Chile", latitude: -51.7167, longitude: -72.5000, image_url: "/assets/qunkasaura.jpg", geological_period: "Cretácico", fossil_type: "bones_teeth" },
     { id: 3, title: "Tyrannotitan", location: "Chubut, Argentina", latitude: -43.3000, longitude: -65.1000, image_url: "/assets/tyrannotitan.jpg", geological_period: "Cretácico Inferior", fossil_type: "bones_teeth" },
   ];
-
-  // 💡 Función de Zoom (Actualiza el estado y la cámara)
   const handleZoom = (direction: 'in' | 'out') => {
     setZoomLevel(prevZoom => {
       let newZoom = prevZoom;
@@ -95,13 +71,11 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       return newZoom;
     });
   };
-
   // ===============================================
   // EFECTO PRINCIPAL DE THREE.JS
   // ===============================================
   useEffect(() => {
     if (!containerRef.current) return;
-
     const container = containerRef.current;
 
     try {
@@ -117,32 +91,24 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       }
 
       const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-      // Usamos el zoom inicial
       camera.position.set(0, 0, zoomLevel);
       cameraRef.current = camera;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setClearColor(0x000000, 0); // Fondo transparente
+      renderer.setClearColor(0x000000, 0);
       rendererRef.current = renderer;
       container.appendChild(renderer.domElement);
 
-      // ===============================================
-      // CARGA DE TEXTURAS Y GLOBE 
-      // ===============================================
       const textureLoader = new THREE.TextureLoader();
-      // Asegúrate de que /public/earth_map.jpg sea tu mapa sepia
       const earthTexture = textureLoader.load('/public/earth_map.jpg');
 
-      // 💡 CORRECCIÓN 1: Configuración para mitigar el 'seam'
       earthTexture.wrapS = THREE.RepeatWrapping;
-      earthTexture.minFilter = THREE.LinearMipmapLinearFilter; // Suaviza la unión
+      earthTexture.minFilter = THREE.LinearMipmapLinearFilter;
       earthTexture.magFilter = THREE.LinearFilter;
 
       const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
-
-      // 💡 CORRECCIÓN 2: Ajuste de color del material base para el 'océano' sepia (0x7A634E)
       const globeMaterial = new THREE.MeshStandardMaterial({
         map: earthTexture,
         color: 0x7A634E,
@@ -153,7 +119,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       globeRef.current = globe;
       scene.add(globe);
 
-      // LIGHTS (sin cambios)
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
       scene.add(ambientLight);
       const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -164,10 +129,8 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       pointLight.position.set(-5, -3, 5);
       scene.add(pointLight);
 
-      // PINS (sin cambios)
       const pins: Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }> = [];
       mockDiscoveries.forEach(discovery => {
-        // ... (Lógica de creación de pins)
         const phi = (90 - discovery.latitude) * (Math.PI / 180);
         const theta = (discovery.longitude + 180) * (Math.PI / 180);
         const radius = 1.04;
@@ -200,13 +163,11 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       });
       pinsRef.current = pins;
 
-      // INTERACTION 
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       let isDragging = false;
       let previousMouse = { x: 0, y: 0 };
 
-      // 💡 CORRECCIÓN 3: Modificación en handleMouseMove para evitar el parpadeo
       const handleMouseMove = (event: MouseEvent) => {
         if (!container) return;
 
@@ -231,7 +192,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
             ? intersects[0].object.userData.discovery
             : null;
 
-          // SOLO actualiza el estado de React si el pin ha cambiado
           if (newHoveredDiscovery?.id !== lastHoveredRef.current?.id) {
             setHoveredDiscovery(newHoveredDiscovery);
             lastHoveredRef.current = newHoveredDiscovery;
@@ -251,8 +211,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         container.style.cursor = 'grab';
       };
 
-
-      // 💡 CORRECCIÓN 4: handleClick para la navegación
       const handleClick = (event: MouseEvent) => {
         if (!container) return;
 
@@ -265,19 +223,15 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
 
         if (intersects.length > 0 && intersects[0].object.userData.discovery) {
           const disc = intersects[0].object.userData.discovery as Discovery;
-          // Redirige al post detail
           navigate(`/posts/${disc.id}`);
         }
       };
 
-      // Adjuntar listeners (se removerán en el cleanup)
       container.addEventListener('mousemove', handleMouseMove);
       container.addEventListener('mousedown', handleMouseDown);
       container.addEventListener('mouseup', handleMouseUp);
       container.addEventListener('click', handleClick);
 
-
-      // ANIMATION (Rotación reactivada)
       let animationId: number;
       let time = 0;
 
@@ -285,13 +239,11 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         animationId = requestAnimationFrame(animate);
         time += 0.02;
 
-        // Auto rotate
         if (!isDragging && globeRef.current) {
           const autoRotateSpeed = 0.001;
           globeRef.current.rotation.y += autoRotateSpeed;
         }
 
-        // Pulse halos
         pinsRef.current.forEach(({ halo }) => {
           const scale = 1 + Math.sin(time * 3) * 0.1;
           halo.scale.set(scale, scale, scale);
@@ -299,17 +251,12 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
           mat.opacity = 0.3 + Math.sin(time * 3) * 0.15;
         });
 
-        // ❌ Lógica de setPopupPosition ELIMINADA del loop de animación.
-
         renderer.render(scene, camera);
       };
 
       animate();
       setIsLoading(false);
 
-      // ===============================================
-      // FUNCIÓN DE LIMPIEZA
-      // ===============================================
       return () => {
         cancelAnimationFrame(animationId);
         container.removeEventListener('mousemove', handleMouseMove);
@@ -328,15 +275,11 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       setIsLoading(false);
     }
   }, [discoveries, zoomLevel, navigate]);
-  // ELIMINAMOS 'hoveredDiscovery' y 'popupPosition' de las dependencias para evitar re-renderizado excesivo
-
-  // 💡 NUEVO EFECTO: Calcula la posición 2D del popup SOLO cuando cambia el pin o el zoom
   useEffect(() => {
     if (!hoveredDiscovery || !cameraRef.current || !rendererRef.current || !containerRef.current) {
       setPopupPosition(null);
       return;
     }
-
     const currentPin = pinsRef.current.find(p => p.discovery.id === hoveredDiscovery.id);
 
     if (currentPin) {
@@ -353,21 +296,24 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         setPopupPosition(null);
       }
     }
-  }, [hoveredDiscovery, zoomLevel]); // Se dispara al cambiar el pin o al hacer zoom
-
+  }, [hoveredDiscovery, zoomLevel]);
   // ===============================================
-  // RENDERIZADO JSX (CENTRADOS Y BOTONES DE ZOOM)
+  // RENDERIZADO JSX CON ESTILOS GLOBALES
   // ===============================================
-
   if (error) {
-    return <div className="p-4 text-center text-red-500 bg-red-100 rounded-lg">Error: {error}</div>;
+    return (
+      <div className="p-4 text-center rounded-lg" style={{
+        backgroundColor: 'var(--color-danger)',
+        color: 'var(--text-inverse)',
+        fontFamily: "'Playfair Display', serif"
+      }}>
+        Error: {error}
+      </div>
+    );
   }
-
   return (
-    // Contenedor externo para centrar el mapa en la página
     <div className="flex justify-center w-full my-8">
       <div
-        // Contenedor principal del mapa, ajusta su tamaño máximo aquí (max-w-4xl para centrarlo y hacerlo más pequeño)
         className="relative overflow-hidden w-full max-w-4xl"
         style={{ height: '700px', minHeight: '700px', backgroundColor: 'transparent' }}
       >
@@ -377,28 +323,41 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           >
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4"
+              <div
+                className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4"
                 style={{ borderColor: 'var(--color-amber)' }}
               ></div>
-              <p className="text-lg" style={{ color: 'var(--text-primary)' }}>Cargando globo 3D...</p>
+              <p
+                className="text-lg"
+                style={{
+                  color: 'var(--text-primary)',
+                  fontFamily: "'Playfair Display', serif"
+                }}
+              >
+                Cargando globo 3D...
+              </p>
             </div>
           </div>
         )}
-
         <div
           ref={containerRef}
           className="w-full h-full"
           style={{ cursor: 'grab' }}
         />
 
-        {/* =============================================== */}
-        {/* BOTONES DE ZOOM (CÓDIGO MODIFICADO) */}
-        {/* =============================================== */}
+        {/* BOTONES DE ZOOM CON ESTILOS GLOBALES */}
         <div className="absolute top-4 right-20 z-20 flex flex-col gap-2">
           <button
             onClick={() => handleZoom('in')}
             className="btn w-10 h-10 rounded-full text-xl flex items-center justify-center"
-            style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-md)' }}
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              boxShadow: 'var(--shadow-md)',
+              fontFamily: "'Cinzel', serif",
+              border: '1px solid var(--border-color)',
+              transition: 'all 0.2s ease'
+            }}
             disabled={zoomLevel <= MIN_ZOOM}
           >
             +
@@ -406,17 +365,21 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
           <button
             onClick={() => handleZoom('out')}
             className="btn w-10 h-10 rounded-full text-xl flex items-center justify-center"
-            style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-md)' }}
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              boxShadow: 'var(--shadow-md)',
+              fontFamily: "'Cinzel', serif",
+              border: '1px solid var(--border-color)',
+              transition: 'all 0.2s ease'
+            }}
             disabled={zoomLevel >= MAX_ZOOM}
           >
             -
           </button>
         </div>
 
-
-        {/* =============================================== */}
-        {/* POPUP DINÁMICO HTML/CSS */}
-        {/* =============================================== */}
+        {/* POPUP CON ESTILOS GLOBALES */}
         {hoveredDiscovery && popupPosition && (
           <div
             className="absolute rounded-lg shadow-2xl p-2 max-w-sm pointer-events-none z-30"
@@ -427,6 +390,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
               left: `${popupPosition.x}px`,
               top: `${popupPosition.y}px`,
               transform: 'translate(-50%, -100%) translateY(-10px)',
+              boxShadow: 'var(--shadow-xl)'
             }}
           >
             <div className="flex flex-col gap-1 w-40">
@@ -437,55 +401,85 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
                   className="w-full h-24 object-cover rounded-md mb-1"
                 />
               )}
-              <h3 className="font-bold text-xs text-center" style={{ color: 'var(--text-primary)' }}>
+              <h3
+                className="font-bold text-xs text-center"
+                style={{
+                  color: 'var(--text-primary)',
+                  fontFamily: "'Playfair Display', serif"
+                }}
+              >
                 {hoveredDiscovery.title}
               </h3>
             </div>
           </div>
         )}
 
-        {/* =============================================== */}
-        {/* Leyenda y Controles */}
-        {/* =============================================== */}
+        {/* LEYENDA CON ESTILOS GLOBALES */}
         <div
           className="absolute top-4 left-4 px-4 py-3 rounded-lg text-sm z-20 backdrop-blur-sm"
           style={{
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-md)',
+            border: '1px solid var(--border-light)',
+            fontFamily: "'Playfair Display', serif"
           }}
         >
-          <p className="font-semibold mb-2">🌍 Mapa Interactivo</p>
-          <p className="text-xs">
-            <span style={{ color: 'var(--text-secondary)' }}>• Arrastra para rotar el globo</span>
+          <p
+            className="font-semibold mb-2"
+            style={{ fontFamily: "'Cinzel', serif" }}
+          >
+            🌍 Mapa Interactivo
           </p>
-          <p className="text-xs">
-            <span style={{ color: 'var(--text-secondary)' }}>• Hover sobre los pins</span>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            • Arrastra para rotar el globo
           </p>
-          <p className="text-xs">
-            <span style={{ color: 'var(--text-secondary)' }}>• Click para ver detalles</span>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            • Hover sobre los pins
           </p>
-          <p className="text-xs mt-2" style={{ color: 'var(--color-amber)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            • Click para ver detalles
+          </p>
+          <p
+            className="text-xs mt-2"
+            style={{
+              color: 'var(--color-amber)',
+              fontFamily: "'Cinzel', serif"
+            }}
+          >
             📍 <strong>{mockDiscoveries.length}</strong> descubrimientos
           </p>
         </div>
 
+        {/* LEYENDA DE COLORES CON ESTILOS GLOBALES */}
         <div
           className="absolute top-4 right-40 px-4 py-3 rounded-lg text-xs z-20 backdrop-blur-sm"
-          style={{ 
-              backgroundColor: 'var(--bg-card)', 
-              color: 'var(--text-primary)',
-              boxShadow: 'var(--shadow-md)',
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-primary)',
+            boxShadow: 'var(--shadow-md)',
+            border: '1px solid var(--border-light)',
+            fontFamily: "'Playfair Display', serif"
           }}
-      >
-          <p className="font-semibold mb-2">Leyenda</p>
+        >
+          <p
+            className="font-semibold mb-2"
+            style={{ fontFamily: "'Cinzel', serif" }}
+          >
+            Leyenda
+          </p>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: 'var(--color-coral)' }}></div>
+            <div
+              className="w-3 h-3 rounded-full shadow-lg"
+              style={{ backgroundColor: 'var(--color-coral)' }}
+            ></div>
             <span>Descubrimiento</span>
           </div>
           <div className="flex items-center gap-2">
-            {/* 💡 Ajuste de color para la "Tierra" que se vea bien sobre el sepia */}
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A1887A' }}></div>
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: '#A1887A' }}
+            ></div>
             <span>Tierra</span>
           </div>
         </div>
@@ -494,5 +488,4 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
     </div>
   );
 };
-
 export default MapComponent;
