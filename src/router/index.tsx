@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from '../App';
 import AuthLayout from '../layout/AuthLayout';
 
+
 // Páginas de autenticación (sin Navbar, con Footer)
 import Login from '../pages/Login';
 import Register from '../pages/Register';

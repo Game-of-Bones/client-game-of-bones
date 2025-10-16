@@ -5,10 +5,15 @@ export type FossilType =
   | 'tracks_traces'
   | 'amber_insects';
 
+/**
+ * Estado del post en el sistema.
+ * 'draft' → aún no publicado.
+ * 'published' → visible para todos.
+ */
 export type PostStatus = 'draft' | 'published';
 
 /**
- * Post completo tal como viene del backend
+ * Estructura completa de un post recibido desde el backend.
  */
 export interface Post {
   id: number;
@@ -38,7 +43,8 @@ export interface Post {
 }
 
 /**
- * Datos para crear un nuevo post
+ * Datos requeridos para crear un nuevo post.
+ * No incluye campos que el backend asigna automáticamente (id, fechas, etc).
  */
 export interface CreatePostData {
   title: string;
@@ -76,9 +82,7 @@ export interface UpdatePostData {
   source?: string;
 }
 
-/**
- * Opciones de tipos de fósil para selectores
- */
+
 export const FOSSIL_TYPE_OPTIONS = [
   { value: 'bones_teeth' as FossilType, label: 'Huesos y Dientes' },
   { value: 'shell_exoskeletons' as FossilType, label: 'Conchas y Exoesqueletos' },
