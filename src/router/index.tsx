@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from '../App';
 import AuthLayout from '../layout/AuthLayout';
 
+
 // Páginas de autenticación (sin Navbar, con Footer)
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -22,9 +23,7 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import AdminRoute from '../components/common/AdminRoute';
 
 // NotFound temporal
-function NotFound() {
-  return <div className="p-8">404 - Not Found</div>;
-}
+import NotFound from '../pages/NotFound';
 
 export const router = createBrowserRouter([
   // ============================================
