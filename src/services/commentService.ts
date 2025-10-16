@@ -1,32 +1,76 @@
-// Asumimos que tienes un tipo Comment definido en algún lugar central
-// import type { Comment } from '../types/comment.types';
+import apiClient from './api/interceptors';
+import type { Comment, CreateCommentData, UpdateCommentData } from '../types/comment.types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// ============================================
+// TIPOS DE RESPUESTA
+// ============================================
 
-class CommentService {
-  private getHeaders(): HeadersInit {
-    const token = localStorage.getItem('token');
-    const headers: HeadersInit = {};
-    if (token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
-  }
-
-  /**
-   * Eliminar un comentario por su ID
-   */
-  async deleteComment(id: number | string): Promise<void> {
-    const response = await fetch(`${API_URL}/comments/${id}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error al eliminar el comentario');
-    }
-  }
+interface CommentsResponse {
+  success: boolean;
+  data: {
+    comments: Comment[];
+    count: number;
+  };
 }
 
-export default new CommentService();
+interface CommentResponse {
+  success: boolean;
+  message: string;
+  data: Comment;
+}
+
+// ============================================
+// FUNCIONES DEL SERVICIO
+// ============================================
+
+export const getCommentsByPost = async (postId: number): Promise<Comment[]> => {
+  try {
+    const response = await apiClient.get<CommentsResponse>(`/api/posts/${postId}/comments`);
+    return response.data.data.comments;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Error al obtener comentarios';
+    throw new Error(message);
+  }
+};
+
+export const createComment = async (postId: number, data: CreateCommentData): Promise<Comment> => {
+  try {
+    const response = await apiClient.post<CommentResponse>(
+      `/api/posts/${postId}/comments`,
+      data
+    );
+    return response.data.data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Error al crear comentario';
+    throw new Error(message);
+  }
+};
+
+export const updateComment = async (id: number, data: UpdateCommentData): Promise<Comment> => {
+  try {
+    const response = await apiClient.put<CommentResponse>(`/api/comments/${id}`, data);
+    return response.data.data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Error al actualizar comentario';
+    throw new Error(message);
+  }
+};
+
+export const deleteComment = async (id: number): Promise<void> => {
+  try {
+    await apiClient.delete(`/api/comments/${id}`);
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Error al eliminar comentario';
+    throw new Error(message);
+  }
+};
+
+export const getCommentsByUser = async (userId: number): Promise<Comment[]> => {
+  try {
+    const response = await apiClient.get<CommentsResponse>(`/api/users/${userId}/comments`);
+    return response.data.data.comments;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Error al obtener comentarios';
+    throw new Error(message);
+  }
+};
