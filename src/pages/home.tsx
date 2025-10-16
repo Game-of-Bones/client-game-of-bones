@@ -1,12 +1,12 @@
 // Home.tsx
 import { Link } from 'react-router-dom';
 import MapComponent from '../components/ui/MapComponent';
-import Navbar from '../components/ui/Navbar';
+import RecentPostsCarousel from '../components/ui/RecentPostsCarousel';
+
 
 const Home = () => {
   return (
     <>
-      <Navbar theme="dark" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section - SIN bg-gray-100 */}
@@ -48,6 +48,8 @@ const Home = () => {
           </h2>
           <MapComponent />
         </section>
+
+        <RecentPostsCarousel />
 
         {/* Features - Con backdrop blur para efecto glassmorphism */}
         <section className="grid md:grid-cols-3 gap-6 mb-8">

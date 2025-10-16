@@ -1,5 +1,3 @@
-// src/types/post.types.ts
-
 export type FossilType = 
   | 'bones_teeth'
   | 'shell_exoskeletons'
@@ -16,9 +14,12 @@ export interface Post {
   id: number;
   title: string;
   summary: string;
+  post_content: string; // ✅ AÑADIDO
   image_url?: string;
   discovery_date?: string;
   location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
   paleontologist?: string;
   fossil_type: FossilType;
   geological_period?: string;
@@ -42,26 +43,32 @@ export interface Post {
 export interface CreatePostData {
   title: string;
   summary: string;
+  post_content: string; // ✅ AÑADIDO
   image_url?: string;
   discovery_date?: string;
   location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
   paleontologist?: string;
   fossil_type: FossilType;
   geological_period?: string;
   status: PostStatus;
   source?: string;
+  author_id: number; // ✅ AÑADIDO (necesario para crear)
 }
 
 /**
  * Datos para actualizar un post existente
- * Todos los campos son opcionales excepto los que siempre deben estar
  */
 export interface UpdatePostData {
   title?: string;
   summary?: string;
+  post_content?: string; // ✅ AÑADIDO
   image_url?: string;
-  discovery_date?: string;
+  discovery_date?: string | null;
   location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
   paleontologist?: string;
   fossil_type?: FossilType;
   geological_period?: string;

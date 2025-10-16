@@ -8,13 +8,17 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
-import Profile from '../pages/Profile'; // ← AÑADIDO
+import Profile from '../pages/Profile'; 
+import PostList from '../pages/PostList';
+import PostDetail from '../pages/PostDetail';
 
 // Páginas de admin
+import CreatePost from '../pages/CreatePost';
 import EditPost from '../pages/EditPost';
+import UserManagement from '../pages/UserManagement';
 
 // HOCs de protección
-import ProtectedRoute from '../components/auth/ProtectedRoute'; // ← AÑADIDO
+import ProtectedRoute from '../components/auth/ProtectedRoute'; 
 import AdminRoute from '../components/common/AdminRoute';
 
 // NotFound temporal
@@ -50,7 +54,19 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
 
-      // 🔒 Rutas protegidas (requieren autenticación) ← AÑADIDO
+      // 📚 RUTAS DE POSTS (SIN PROTECCIÓN TEMPORAL PARA TESTING)
+      { path: 'posts', element: <PostList /> },
+      
+      // ✏️ CREAR POST (temporal sin protección)
+      { path: 'posts/new', element: <CreatePost /> },
+      
+      // ✏️ EDITAR POST (temporal sin protección) - DEBE IR ANTES DE posts/:id
+      { path: 'posts/:id/edit', element: <EditPost /> },
+      
+      // 📄 DETALLE DE POST - DEBE IR AL FINAL
+      { path: 'posts/:id', element: <PostDetail /> },
+
+      // 🔒 Rutas protegidas (requieren autenticación)
       {
         element: <ProtectedRoute />,
         children: [
@@ -58,41 +74,25 @@ export const router = createBrowserRouter([
         ]
       },
 
-      // 🔒 Rutas de administración
+      // 👑 RUTAS DE ADMINISTRACIÓN (COMENTADAS TEMPORALMENTE)
+      // Cuando quieras activar la protección, descomenta esto:
+      /*
       {
         path: 'admin',
         children: [
-          // {
-          //   path: 'posts/new',
-          //   element: (
-          //     <AdminRoute>
-          //       <CreatePost />
-          //     </AdminRoute>
-          //   )
-          // },
-          {
-            path: 'posts/:id/edit',
+          { 
+            path: 'users',
             element: (
               <AdminRoute>
-                <EditPost />
+                <UserManagement />
               </AdminRoute>
             )
-          },
-          // {
-          //   path: 'users',
-          //   element: (
-          //     <AdminRoute>
-          //       <UserManagement />
-          //     </AdminRoute>
-          //   )
-          // }
+          }
         ]
       },
+      */
 
-      // 🔒 Rutas futuras (descomenta cuando las tengas):
-      // { path: 'posts', element: <PostList /> },
-      // { path: 'posts/:id', element: <PostDetail /> },
-
+      // ⚠️ Página 404
       { path: '*', element: <NotFound /> },
     ],
   },

@@ -1,191 +1,202 @@
-/**
- * Navbar - Componente de navegación principal
- * 
- * Características:
- * - Navegación responsive
- * - Theme toggle integrado
- * - Enlaces con estados hover
- * - Logo con link a home
- * 
- * TODO:
- * - Implementar lógica de autenticación para mostrar/ocultar enlaces
- * - Agregar menú móvil (hamburger)
- * - Destacar la ruta activa
- */
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { User, Menu, X } from "lucide-react";
+import { ThemeToggleCompact } from "../components/ui/ThemeToggles";
+import { useTheme } from "../context/ThemeContext";
 
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import ThemeToggle from '../components/ui/ThemeToggles';
-import { useAuth } from '../hooks/useAuth';
-import ConfirmationModal from '../components/ui/ConfirmationModal';
+interface UserProfile {
+  name: string;
+  image: string;
+}
 
-const Navbar = () => {
-  const { isAuthenticated, logout, user } = useAuth();
+interface NavbarProps {
+  user?: UserProfile;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const navigate = useNavigate();
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-
-  // Esta función se llama al confirmar el cierre de sesión en el modal
-  const confirmLogout = () => {
-    logout();
-    navigate('/login');
-    setIsLogoutModalOpen(false); // Cierra el modal
-  };
-
-  // Esta función solo abre el modal
-  const handleLogoutClick = () => {
-    setIsLogoutModalOpen(true);
-  };
+  const { theme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Color de letra según el tema
+  const menuColor = theme === "dark" ? "#98b189" : "#462e1b";
 
   return (
-    <nav className="bg-primary-800 border-b border-primary-700 sticky top-0 z-50">
-      <div className="container-custom">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* Logo/Título principal */}
-          <Link 
-            to="/" 
-            className="text-xl font-serif font-bold text-primary-50 hover:text-accent-coral transition-colors"
-          >
-            Game of Bones 🦴
-          </Link>
+    <header className="w-full bg-transparent" style={{ fontFamily: "'Cinzel', serif" }}>
+      {/* Contenedor con márgenes laterales */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Contenedor principal: espacio entre izquierda (logo+menu) y derecha (user) */}
+        <div className="flex items-center justify-between py-3">
 
-          {/* Enlaces de navegación */}
-          <div className="flex items-center space-x-1">
-            
-            {/* Rutas Públicas */}
-            <NavLink to="/">Home</NavLink>
-            <NavLink to="/posts">Posts</NavLink>
+          {/* ---------- IZQUIERDA: logo + hamburger (mobile) ---------- */}
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
+              <img
+                src="/gob_logo.png"
+                alt="Game of Bones Logo"
+                className="object-contain h-80 sm:h-80 md:h-90 lg:h-96 xl:h-[500px] w-auto"
+              />
+            </Link>
 
-            {/* Separador visual */}
-            <div className="h-6 w-px bg-primary-600 mx-2" />
+            {/* Botón hamburger - solo visible en mobile */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 hover:opacity-70 transition-opacity"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X size={24} style={{ color: menuColor }} />
+              ) : (
+                <Menu size={24} style={{ color: menuColor }} />
+              )}
+            </button>
+          </div>
 
-            {isAuthenticated ? (
-              <>
-                {/* Rutas para usuarios autenticados */}
-                <NavLink to="/profile">Perfil de {user?.username}</NavLink>
+          {/* ---------- CENTRO: Nav desktop (oculto en mobile) ---------- */}
+          <nav className="hidden lg:flex items-center gap-6 text-base xl:text-lg uppercase tracking-wider">
+            <Link
+              to="/"
+              className="hover:opacity-70 transition-opacity whitespace-nowrap"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              HOME
+            </Link>
 
-                {/* TODO: Mostrar solo si es admin */}
-                {user?.role === 'admin' && (
-                  <>
-                    <NavLink to="/admin/posts/new">Crear Post</NavLink>
-                    <NavLink to="/admin/users">Usuarios</NavLink>
-                  </>
-                )}
+            <Link
+              to="/creators"
+              className="hover:opacity-70 transition-opacity whitespace-nowrap"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              ABOUT
+            </Link>
 
-                <button
-                  onClick={handleLogoutClick}
-                  className="
-                    px-3 py-2 text-sm font-medium text-primary-100 rounded-lg
-                    transition-colors duration-200 hover:bg-primary-700 hover:text-accent-coral
-                    focus:outline-none focus:ring-2 focus:ring-accent-coral
-                    focus:ring-offset-2 focus:ring-offset-primary-800"
-                >
-                  Cerrar Sesión
-                </button>
-              </>
+            <Link
+              to="/posts"
+              className="hover:opacity-70 transition-opacity whitespace-nowrap"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              POSTS
+            </Link>
+
+            <div>
+              <ThemeToggleCompact />
+            </div>
+          </nav>
+
+          {/* ---------- DERECHA: usuario / login ---------- */}
+          <div className="hidden lg:flex items-center">
+            {!user ? (
+              <Link 
+                to="/login" 
+                className="flex items-center gap-2 hover:opacity-75 transition-opacity text-base xl:text-lg uppercase tracking-wider whitespace-nowrap" 
+                style={{ color: menuColor, fontWeight: 500 }}
+              >
+                <User size={20} strokeWidth={1.5} />
+                <span>INICIAR SESIÓN</span>
+              </Link>
             ) : (
-              <>
-                {/* Rutas para usuarios no autenticados */}
-                <NavLink to="/login">Login</NavLink>
-                <NavLink to="/register">Registro</NavLink>
-              </>
+              <button 
+                onClick={() => navigate("/profile")} 
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src={user.image} 
+                  alt={user.name} 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2" 
+                  style={{ borderColor: menuColor }} 
+                />
+                <span className="hidden xl:inline" style={{ color: menuColor, fontWeight: 500 }}>
+                  {user.name}
+                </span>
+              </button>
             )}
-
-            {/* Separador visual */}
-            <div className="h-6 w-px bg-primary-600 mx-2" />
-
-            {/* Theme Toggle */}
-            <ThemeToggle size={20} />
           </div>
         </div>
+
+        {/* Línea decorativa con márgenes laterales */}
+        <div 
+          className="w-full" 
+          style={{ height: "1px", backgroundColor: menuColor, opacity: 0.6 }} 
+        />
       </div>
 
-      {/* Modal de confirmación de Logout */}
-      <ConfirmationModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={confirmLogout}
-        title="Cerrar Sesión"
-        message="¿Estás seguro de que quieres cerrar sesión?"
-        confirmText="Cerrar Sesión"
-      />
-    </nav>
+      {/* ---------- MENÚ MOBILE (slidedown) ---------- */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-transparent animate-slide-down">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4">
+            {/* Links */}
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 hover:opacity-70 transition-opacity uppercase tracking-wider text-center"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              HOME
+            </Link>
+
+            <Link
+              to="/creators"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 hover:opacity-70 transition-opacity uppercase tracking-wider text-center"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              ABOUT
+            </Link>
+
+            <Link
+              to="/posts"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 hover:opacity-70 transition-opacity uppercase tracking-wider text-center"
+              style={{ color: menuColor, fontWeight: 500 }}
+            >
+              POSTS
+            </Link>
+
+            {/* Separador */}
+            <div 
+              className="w-full my-2" 
+              style={{ height: "1px", backgroundColor: menuColor, opacity: 0.3 }} 
+            />
+
+            {/* Theme toggle y user */}
+            <div className="flex items-center justify-center gap-4">
+              <ThemeToggleCompact />
+              
+              {!user ? (
+                <Link 
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 hover:opacity-75 transition-opacity uppercase tracking-wider" 
+                  style={{ color: menuColor, fontWeight: 500 }}
+                >
+                  <User size={20} strokeWidth={1.5} />
+                  <span>INICIAR SESIÓN</span>
+                </Link>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/profile");
+                  }} 
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                >
+                  <img 
+                    src={user.image} 
+                    alt={user.name} 
+                    className="w-8 h-8 rounded-full object-cover border-2" 
+                    style={{ borderColor: menuColor }} 
+                  />
+                  <span style={{ color: menuColor, fontWeight: 500 }}>
+                    {user.name}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 
 export default Navbar;
-
-// ========================================
-// COMPONENTE AUXILIAR: NavLink
-// ========================================
-
-interface NavLinkProps {
-  to: string;
-  children: React.ReactNode;
-}
-
-/**
- * NavLink - Componente de enlace estilizado para el navbar
- * Reutilizable con estilos consistentes
- */
-function NavLink({ to, children }: NavLinkProps) {
-  return (
-    <Link
-      to={to}
-      className="
-        px-3 py-2
-        text-sm font-medium
-        text-primary-100
-        rounded-lg
-        transition-colors duration-200
-        hover:bg-primary-700
-        hover:text-accent-coral
-        focus:outline-none
-        focus:ring-2
-        focus:ring-accent-coral
-        focus:ring-offset-2
-        focus:ring-offset-primary-800
-      "
-    >
-      {children}
-    </Link>
-  );
-}
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Autenticación:
- *    Usar un hook useAuth() para mostrar/ocultar enlaces:
- *    
- *    const { isAuthenticated, user } = useAuth();
- *    
- *    {isAuthenticated && <NavLink to="/profile">Perfil</NavLink>}
- *    {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
- * 
- * 2. Active Link:
- *    Usar useLocation() para destacar la ruta activa:
- *    
- *    const location = useLocation();
- *    const isActive = location.pathname === to;
- *    
- *    className={`... ${isActive ? 'bg-primary-700 text-accent-coral' : ''}`}
- * 
- * 3. Mobile Menu:
- *    Agregar menú hamburger para móviles:
- *    
- *    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
- *    
- *    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
- *      <Menu size={24} />
- *    </button>
- * 
- * 4. User Dropdown:
- *    Menú desplegable con avatar y opciones de usuario:
- *    
- *    <UserDropdown>
- *      <DropdownItem to="/profile">Perfil</DropdownItem>
- *      <DropdownItem to="/settings">Configuración</DropdownItem>
- *      <DropdownItem onClick={logout}>Cerrar sesión</DropdownItem>
- *    </UserDropdown>
- */

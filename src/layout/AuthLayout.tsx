@@ -1,13 +1,14 @@
 import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from '../context/ThemeContext';
 import ThemeToggle from '../components/ui/ThemeToggles';
+import Footer from './Footer';  // 👈 AÑADE ESTA LÍNEA
 
 /**
  * AuthLayout - Layout para páginas de autenticación (Login/Register)
  * 
  * Características:
  * - Sin Navbar
- * - Con Footer
+ * - Con Footer consistente
  * - Botón de cambio de tema flotante
  */
 const AuthLayout = () => {
@@ -24,17 +25,8 @@ const AuthLayout = () => {
           <Outlet />
         </main>
 
-        {/* Footer */}
-        <footer className="bg-gray-800 text-white py-6">
-          <div className="container mx-auto px-4 text-center">
-            <p className="text-sm">
-              © 2024 Game of Bones - Blog de Paleontología
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              Hecho con 🦴 y React
-            </p>
-          </div>
-        </footer>
+        {/* Footer consistente en toda la web */}
+        <Footer />  {/* 👈 REEMPLAZA todo el footer antiguo con esta línea */}
       </div>
     </ThemeProvider>
   );
