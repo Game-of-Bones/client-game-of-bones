@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from '../App';
 import AuthLayout from '../layout/AuthLayout';
 
-
 // Páginas de autenticación (sin Navbar, con Footer)
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -12,6 +11,7 @@ import Home from '../pages/home';
 import Profile from '../pages/Profile'; 
 import PostList from '../pages/PostList';
 import PostDetail from '../pages/PostDetail';
+import Creators from '../pages/Creators'; // ⬅️ NUEVA IMPORTACIÓN
 
 // Páginas de admin
 import CreatePost from '../pages/CreatePost';
@@ -52,6 +52,9 @@ export const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       { index: true, element: <Home /> },
+
+      // 👥 PÁGINA ABOUT/CREATORS - ⬅️ NUEVA RUTA
+      { path: 'creators', element: <Creators /> },
 
       // 📚 RUTAS DE POSTS (SIN PROTECCIÓN TEMPORAL PARA TESTING)
       { path: 'posts', element: <PostList /> },
