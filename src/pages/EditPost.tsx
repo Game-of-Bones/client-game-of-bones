@@ -1,4 +1,3 @@
-// src/pages/EditPost.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import EditPostForm from '../components/forms/EditPostForm';
