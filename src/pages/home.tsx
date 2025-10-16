@@ -1,7 +1,6 @@
 // Home.tsx
 import { Link } from 'react-router-dom';
 import MapComponent from '../components/ui/MapComponent';
-import Navbar from '../components/ui/Navbar';
 import RecentPostsCarousel from '../components/ui/RecentPostsCarousel';
 
 
