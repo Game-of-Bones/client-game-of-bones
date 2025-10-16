@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from '../context/ThemeContext';
 import ThemeToggle from '../components/ui/ThemeToggles';
-import Footer from './Footer';  // 👈 AÑADE ESTA LÍNEA
+import Footer from './footer';  // 👈 AÑADE ESTA LÍNEA
 
 /**
  * AuthLayout - Layout para páginas de autenticación (Login/Register)
