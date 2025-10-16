@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, ChevronDown } from 'lucide-react';
-
+import { useParams } from 'react-router-dom'
 interface Post {
   id: string;
   title: string;
@@ -37,7 +37,7 @@ const PostDetail = () => {
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
-
+  const { id } = useParams()
   useEffect(() => {
     fetchPost();
     fetchComments();
@@ -47,39 +47,9 @@ const PostDetail = () => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockPost: Post = {
-        id: '1',
-        title: 'Descubrimiento de Tyrannosaurus Rex en Montana',
-        summary: 'Un espécimen excepcionalmente bien conservado revela nuevos secretos sobre el depredador más temido del Cretácico',
-        post_content: `En las áridas llanuras de Montana, un equipo de paleontólogos ha desenterrado uno de los ejemplares de Tyrannosaurus Rex más completos jamás encontrados.
 
-El fósil, apodado "Sue II" en honor al famoso espécimen anterior, se encuentra en un estado de preservación extraordinario. Los huesos muestran detalles que rara vez sobreviven al proceso de fosilización.
 
-El Dr. Marcus Thompson, líder de la expedición, explica que este hallazgo es extraordinario no solo por su completitud, sino por lo que nos puede enseñar sobre el comportamiento social de estos animales.
 
-El análisis preliminar indica que el ejemplar era un adulto joven, de aproximadamente 20 años de edad al momento de su muerte. Los sedimentos circundantes sugieren que el animal murió cerca de un antiguo lecho de río.`,
-        image_url: '/public/montana.jpg',
-        location: 'Montana, Estados Unidos',
-        discovery_date: '2023-07-15',
-        paleontologist: 'Dr. Marcus Thompson',
-        geological_period: 'Cretácico Superior',
-        fossil_type: 'bones_teeth',
-        latitude: 46.8797,
-        longitude: -110.3626,
-        author: {
-          id: 'author1',
-          username: 'paleontologist_master',
-          profile_image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
-        },
-        likes_count: 24,
-        liked_by: [
-          { id: '1', username: 'fossil_hunter', avatar: 'https://i.pravatar.cc/150?img=1' },
-          { id: '2', username: 'dino_enthusiast', avatar: 'https://i.pravatar.cc/150?img=2' },
-          { id: '3', username: 'science_lover', avatar: 'https://i.pravatar.cc/150?img=3' }
-        ]
-      };
-      
       setPost(mockPost);
     } catch (error) {
       console.error('Error:', error);
@@ -103,20 +73,20 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
         created_at: '2024-01-15T14:22:00Z'
       }
     ];
-    
+
     setComments(mockComments);
   };
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    
+
     const comment: Comment = {
       id: Date.now().toString(),
       user: { username: 'current_user', avatar: 'https://i.pravatar.cc/150?img=10' },
       content: newComment,
       created_at: new Date().toISOString()
     };
-    
+
     setComments([...comments, comment]);
     setNewComment('');
   };
@@ -151,14 +121,14 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
   return (
     <div className="min-h-screen pb-8" style={{ fontFamily: "'Playfair Display', serif" }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        
+
         <div className="text-right mb-3 sm:mb-4">
           <span className="text-base sm:text-lg md:text-xl" style={{ color: '#FFFFFF' }}>📍 {post.location}</span>
         </div>
 
         <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden">
-          <img 
-            src={post.image_url} 
+          <img
+            src={post.image_url}
             alt={post.title}
             className="w-full h-[250px] sm:h-[350px] md:h-[400px] lg:h-[500px] object-cover"
           />
@@ -173,7 +143,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          
+
           <div className="lg:col-span-3 order-2 lg:order-1">
             <div className="lg:sticky lg:top-4">
               <div className="relative px-2 sm:px-0">
@@ -183,14 +153,14 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
                   style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)', color: '#FFFFFF' }}
                 >
                   <span>Más Información</span>
-                  <ChevronDown 
-                    className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`} 
-                    size={18} 
+                  <ChevronDown
+                    className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`}
+                    size={18}
                   />
                 </button>
 
                 {moreInfoOpen && (
-                  <div 
+                  <div
                     className="mt-2 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-2 sm:space-y-3 animate-slide-down"
                     style={{ backgroundColor: 'rgba(72, 169, 166, 0.5)', color: '#FFFFFF' }}
                   >
@@ -230,7 +200,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
 
           <div className="lg:col-span-9 order-1 lg:order-2">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mb-4 sm:mb-6 px-2 sm:px-0">
-              
+
               <div className="relative w-full sm:w-auto">
                 <button
                   onClick={() => setLikesOpen(!likesOpen)}
@@ -242,15 +212,15 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
                 </button>
 
                 {likesOpen && post.liked_by.length > 0 && (
-                  <div 
+                  <div
                     className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-64 rounded-xl p-3 space-y-2 z-10 animate-slide-down"
                     style={{ backgroundColor: 'rgba(141, 170, 145, 0.95)' }}
                   >
                     <p className="font-semibold mb-2 text-sm sm:text-base" style={{ color: '#FFFFFF' }}>Les gusta a:</p>
                     {post.liked_by.map(user => (
                       <div key={user.id} className="flex items-center gap-2">
-                        <img 
-                          src={user.avatar} 
+                        <img
+                          src={user.avatar}
                           alt={user.username}
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-full"
                         />
@@ -261,12 +231,12 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
                 )}
               </div>
 
-              <div 
+              <div
                 className="w-full sm:w-auto flex items-center justify-center gap-2 sm:gap-3 py-2 px-4 rounded-full"
                 style={{ backgroundColor: 'rgba(70, 46, 27, 0.6)' }}
               >
-                <img 
-                  src={post.author.profile_image} 
+                <img
+                  src={post.author.profile_image}
                   alt={post.author.username}
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                 />
@@ -276,7 +246,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
               </div>
             </div>
 
-            <div 
+            <div
               className="rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 mx-2 sm:mx-0"
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
@@ -297,14 +267,14 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
 
           <div className="space-y-3 sm:space-y-4">
             {comments.map(comment => (
-              <div 
+              <div
                 key={comment.id}
                 className="rounded-xl p-4 sm:p-6"
                 style={{ backgroundColor: 'rgba(139, 107, 77, 0.5)' }}
               >
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <img 
-                    src={comment.user.avatar} 
+                  <img
+                    src={comment.user.avatar}
                     alt={comment.user.username}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                   />
@@ -319,11 +289,11 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
             ))}
           </div>
 
-          <div 
+          <div
             className="mt-4 sm:mt-6 rounded-xl p-4 sm:p-6"
             style={{ backgroundColor: 'rgba(139, 107, 77, 0.3)' }}
           >
-            <textarea 
+            <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Escribe tu comentario..."
@@ -331,7 +301,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
               rows={3}
               style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
             />
-            <button 
+            <button
               onClick={handleSubmitComment}
               className="mt-3 sm:mt-4 py-2 px-6 sm:px-8 rounded-full font-semibold transition-all hover:scale-105 active:scale-95 w-full sm:w-auto text-base sm:text-lg"
               style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)', color: '#FFFFFF' }}

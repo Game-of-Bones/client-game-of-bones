@@ -2,34 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// TODO: Importar servicios cuando estén disponibles
-// import { getPosts } from '../services/postService';
-
-/**
- * PostList - Página de listado de posts
- * 
- * Funcionalidad:
- * - Mostrar todos los posts publicados (status: 'published')
- * - Filtrado por fossil_type
- * - Búsqueda por título/contenido
- * - Ordenamiento (recientes, más antiguos, por período geológico)
- * - Paginación
- * - Vista de tarjetas con preview
- */
+import postService from '../services/postService';
 
 // Tipos basados en el modelo Post del backend
 interface Post {
   id: number;
   title: string;
   summary: string;
-  post_content: string;
   image_url?: string | null;
   discovery_date?: Date | null;
   location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   paleontologist?: string | null;
   fossil_type: 'bones_teeth' | 'shell_exoskeletons' | 'plant_impressions' | 'tracks_traces' | 'amber_insects';
   geological_period?: string | null;
-  author_id: number;
+  user_id: number; // ← Cambiado de author_id
   status: 'draft' | 'published';
   source?: string | null;
   createdAt: Date;
@@ -37,7 +25,8 @@ interface Post {
   author?: {
     id: number;
     username: string;
-    // ... otros campos del User
+    email: string;
+    avatar_url?: string;
   };
 }
 
@@ -68,47 +57,48 @@ const PostList = () => {
       setError('');
 
       try {
-        // TODO: Implementar cuando el servicio esté listo
-        // const params = new URLSearchParams({
-        //   page: currentPage.toString(),
-        //   limit: postsPerPage.toString(),
-        //   status: 'published',
-        //   ...(filters.fossilType !== 'all' && { fossil_type: filters.fossilType }),
-        //   ...(filters.search && { search: filters.search }),
-        //   sort: filters.sortBy
-        // });
-        // const response = await getPosts(params);
-        // setPosts(response.data);
-        // setTotalPages(response.totalPages);
+        // ✅ CONECTADO AL BACKEND
+        const allPosts = await postService.getAllPosts();
 
-        // MOCK temporal - ELIMINAR cuando el servicio esté listo
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const mockPosts: Post[] = [
-          {
-            id: 1,
-            title: "Descubrimiento del Tyrannosaurus Rex",
-            summary: "Uno de los hallazgos más importantes en paleontología",
-            post_content: "Contenido completo del post...",
-            image_url: "https://via.placeholder.com/400x200",
-            discovery_date: new Date('1990-08-12'),
-            location: "Hell Creek Formation, Montana",
-            paleontologist: "Barnum Brown",
-            fossil_type: "bones_teeth",
-            geological_period: "Cretácico Superior",
-            author_id: 1,
-            status: "published",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            author: { id: 1, username: "paleofan" }
-          },
-          // ... más posts mock
-        ];
-        
-        setPosts(mockPosts);
-        setTotalPages(3);
+        console.log('📡 Posts del backend:', allPosts);
+
+        // Filtrar por tipo de fósil si no es "all"
+        let filteredPosts = allPosts;
+        if (filters.fossilType !== 'all') {
+          filteredPosts = filteredPosts.filter(p => p.fossil_type === filters.fossilType);
+        }
+
+        // Filtrar por búsqueda
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredPosts = filteredPosts.filter(p =>
+            p.title.toLowerCase().includes(searchLower) ||
+            p.summary.toLowerCase().includes(searchLower) ||
+            p.location?.toLowerCase().includes(searchLower) ||
+            p.paleontologist?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        // Ordenar
+        filteredPosts.sort((a, b) => {
+          if (filters.sortBy === 'newest') {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          } else if (filters.sortBy === 'oldest') {
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          } else { // period
+            return (a.geological_period || '').localeCompare(b.geological_period || '');
+          }
+        });
+
+        // Paginación manual
+        const startIndex = (currentPage - 1) * postsPerPage;
+        const paginatedPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
+
+        setPosts(paginatedPosts);
+        setTotalPages(Math.ceil(filteredPosts.length / postsPerPage));
 
       } catch (err: any) {
+        console.error('❌ Error cargando posts:', err);
         setError(err.message || 'Error al cargar los posts');
       } finally {
         setLoading(false);
@@ -146,7 +136,7 @@ const PostList = () => {
       {/* Header con título y búsqueda */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Explora Descubrimientos Fósiles</h1>
-        
+
         {/* Barra de búsqueda */}
         <div className="max-w-2xl">
           <input
@@ -226,7 +216,7 @@ const PostList = () => {
                       className="w-full h-48 object-cover"
                     />
                   )}
-                  
+
                   {/* Contenido */}
                   <div className="p-4">
                     {/* Badges */}
@@ -299,11 +289,11 @@ const PostList = () => {
               >
                 Anterior
               </button>
-              
+
               <span className="px-4 py-2">
                 Página {currentPage} de {totalPages}
               </span>
-              
+
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
@@ -320,59 +310,3 @@ const PostList = () => {
 };
 
 export default PostList;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Endpoint del backend (GET /api/posts):
- *    Query params:
- *    - page: número de página
- *    - limit: posts por página
- *    - status: 'published' (solo mostrar publicados)
- *    - fossil_type: filtrar por tipo
- *    - search: búsqueda en título/contenido/location/paleontologist
- *    - sort: 'newest', 'oldest', 'period'
- *    
- *    Respuesta esperada:
- *    {
- *      data: Post[],
- *      page: number,
- *      totalPages: number,
- *      totalPosts: number
- *    }
- * 
- * 2. Servicio de posts (src/services/postService.ts):
- *    export const getPosts = async (params: URLSearchParams) => {
- *      const response = await fetch(`/api/posts?${params}`);
- *      if (!response.ok) throw new Error('Failed to fetch posts');
- *      return response.json();
- *    };
- * 
- * 3. Mejoras de UX:
- *    - Debounce en el buscador (esperar 500ms después de que deje de escribir)
- *    - Scroll to top al cambiar de página
- *    - Skeleton loading más bonito
- *    - Animaciones de entrada con Framer Motion
- * 
- * 4. Filtros avanzados:
- *    - Rango de fechas de descubrimiento
- *    - Filtro por período geológico
- *    - Filtro por continente/país
- * 
- * 5. Vista alternativa:
- *    - Botón para cambiar entre vista de grid y vista de lista
- *    - Vista de mapa mostrando ubicaciones
- * 
- * 6. Favoritos:
- *    - Permitir marcar posts como favoritos (requiere autenticación)
- *    - Botón de corazón en cada tarjeta
- * 
- * 7. Compartir:
- *    - Botones para compartir en redes sociales
- *    - Copy link to clipboard
- * 
- * 8. Performance:
- *    - Implementar infinite scroll como alternativa a paginación
- *    - Lazy loading de imágenes
- *    - Cache de resultados de búsqueda
- */

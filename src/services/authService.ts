@@ -1,100 +1,129 @@
 import type { LoginCredentials, RegisterData, User } from '../types/auth.types';
 
-// Usuarios de prueba
-const MOCK_USERS = [
-  {
-    id: 1,
-    username: 'admin',
-    email: 'admin@gameofbones.com',
-    password: 'admin123',
-    role: 'admin' as const,
-  },
-  {
-    id: 2,
-    username: 'user',
-    email: 'user@gameofbones.com',
-    password: 'user123',
-    role: 'user' as const,
-  },
-  {
-    id: 3,
-    username: 'maria',
-    email: 'maria@test.com',
-    password: 'maria123',
-    role: 'user' as const,
-  },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Simular delay de red
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+/**
+ * SERVICIO DE AUTENTICACIÓN - Game of Bones
+ * Conectado al backend
+ */
 class AuthService {
+  /**
+   * Iniciar sesión
+   */
   async login(
     credentials: LoginCredentials
   ): Promise<{ user: User; token: string }> {
-    await delay(800); // Simular petición al servidor
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
 
-    const foundUser = MOCK_USERS.find(
-      (u) => u.email === credentials.email && u.password === credentials.password
-    );
-
-    if (!foundUser) {
-      throw new Error('Credenciales inválidas');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al iniciar sesión');
     }
 
-    const { password: __password, ...user } = foundUser;
-    const token = `mock-token-${user.id}-${Date.now()}`;
+    const result = await response.json();
+
+    // Backend devuelve: { success, message, data: { user, token } }
+    const { user, token } = result.data;
+
+    // Guardar en localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
 
     return { user, token };
   }
 
+  /**
+   * Registrar nuevo usuario
+   */
   async register(
     data: RegisterData
   ): Promise<{ user: User; token: string }> {
-    await delay(800);
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-    // Verificar si el email ya existe
-    const emailExists = MOCK_USERS.some((u) => u.email === data.email);
-    if (emailExists) {
-      throw new Error('El email ya está registrado');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al registrarse');
     }
 
-    // Crear nuevo usuario mock
-    const newUser: User = {
-      id: MOCK_USERS.length + 1,
-      username: data.username,
-      email: data.email,
-      role: 'user',
-    };
+    const result = await response.json();
 
-    const token = `mock-token-${newUser.id}-${Date.now()}`;
+    // Backend devuelve: { success, message, data: { user, token } }
+    const { user, token } = result.data;
 
-    return { user: newUser, token };
+    // Guardar en localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    return { user, token };
   }
 
+  /**
+   * Verificar token actual
+   * Lee el usuario guardado en localStorage
+   */
   async verifyToken(): Promise<User> {
-    await delay(500);
-
     const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
 
-    if (!token || !token.startsWith('mock-token-')) {
-      throw new Error('Token inválido');
+    if (!token || !userStr) {
+      throw new Error('No hay sesión activa');
     }
 
-    // Extraer ID del token mock
-    const userId = parseInt(token.split('-')[2]);
-    const foundUser = MOCK_USERS.find((u) => u.id === userId);
+    try {
+      const user = JSON.parse(userStr);
 
-    if (!foundUser) {
-      throw new Error('Usuario no encontrado');
+      // Opcional: Verificar el token con el backend
+      // const response = await fetch(`${API_URL}/auth/verify`, {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      // if (!response.ok) throw new Error('Token inválido');
+
+      return user;
+    } catch (error) {
+      this.logout();
+      throw new Error('Sesión inválida');
     }
-
-    const { password: __password, ...user } = foundUser;
-    return user;
   }
 
+  /**
+   * Cerrar sesión
+   */
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  /**
+   * Obtener usuario actual
+   */
+  getCurrentUser(): User | null {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Verificar si está autenticado
+   */
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('token');
   }
 }
 

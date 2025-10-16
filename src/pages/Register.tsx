@@ -6,17 +6,17 @@ import { useAuthStore } from '../stores/authStore';
 
 /**
  * REGISTER PAGE - Game of Bones
- * 
+ *
  * Página de registro con diseño exacto del Figma.
  * Split-screen: Fósil izquierda, formulario derecha.
  * Respeta el tema claro/oscuro global.
- * 
+ *
  * ACTUALIZADO: Usa el componente Input del sistema de diseño
  */
 
 const Register = () => {
   const navigate = useNavigate();
-  
+
   const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const Register = () => {
     if (isAuthenticated) {
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate]); //CERRAR SESIÓN
 
   useEffect(() => {
     return () => {
@@ -127,9 +127,9 @@ const Register = () => {
     <div className="h-[calc(100vh-88px)] flex overflow-hidden">
       {/* LADO IZQUIERDO - IMAGEN FÓSIL */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <img 
-          src="/shell_fossil.jpg" 
-          alt="Fósil de concha" 
+        <img
+          src="/shell_fossil.jpg"
+          alt="Fósil de concha"
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
@@ -157,7 +157,7 @@ const Register = () => {
           <div className="text-center mb-6">
             <h1
               className="text-base sm:text-lg mb-2 uppercase"
-              style={{ 
+              style={{
                 color: '#C9A875',
                 fontFamily: 'Cinzel, serif',
                 letterSpacing: '0.08em',
@@ -168,7 +168,7 @@ const Register = () => {
             </h1>
             <p
               className="text-xs uppercase mb-3"
-              style={{ 
+              style={{
                 color: '#E8D9B8',
                 fontFamily: 'Cinzel, serif',
                 letterSpacing: '0.25em',
@@ -177,7 +177,7 @@ const Register = () => {
               Registro
             </p>
             {/* Línea horizontal decorativa */}
-            <div 
+            <div
               className="w-full max-w-sm mx-auto"
               style={{
                 height: '1px',
@@ -214,7 +214,7 @@ const Register = () => {
                 letter-spacing: 0.15em !important;
                 margin-bottom: 0.25rem !important;
               }
-              
+
               .register-input-wrapper input {
                 background-color: #8B7355 !important;
                 border-color: transparent !important;
@@ -223,28 +223,28 @@ const Register = () => {
                 font-size: 0.875rem !important;
                 padding: 0.5rem 1rem !important;
               }
-              
+
               .register-input-wrapper input::placeholder {
                 color: rgba(255, 255, 255, 0.6) !important;
               }
-              
+
               .register-input-wrapper input:focus {
                 ring-color: #C9A875 !important;
                 border-color: #C9A875 !important;
               }
-              
+
               .register-input-wrapper p[role="alert"] {
                 color: #FCA5A5 !important;
                 font-family: 'Cinzel', serif !important;
                 font-size: 0.75rem !important;
               }
-              
+
               /* Modo oscuro - ajustes específicos */
               [data-theme="dark"] .register-input-wrapper input {
                 background-color: #6B5B4A !important;
                 color: #FAF2E5 !important;
               }
-              
+
               [data-theme="dark"] .register-input-wrapper label {
                 color: #E8D9B8 !important;
               }
@@ -345,7 +345,7 @@ const Register = () => {
                 type="button"
                 onClick={() => navigate('/login')}
                 className="text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#C9A875] rounded px-2 py-1"
-                style={{ 
+                style={{
                   color: '#E8D9B8',
                   fontFamily: 'Cinzel, serif',
                 }}

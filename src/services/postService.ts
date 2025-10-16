@@ -12,15 +12,15 @@ class PostService {
   private getHeaders(includeContentType = true): HeadersInit {
     const token = localStorage.getItem('token');
     const headers: HeadersInit = {};
-    
+
     if (token) {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
-    
+
     if (includeContentType) {
       (headers as Record<string, string>)['Content-Type'] = 'application/json';
     }
-    
+
     return headers;
   }
 
@@ -39,7 +39,8 @@ class PostService {
       throw new Error(error.message || 'Error al crear el post');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data; // ← Backend devuelve { success, message, data }
   }
 
   /**
@@ -54,7 +55,8 @@ class PostService {
       throw new Error('Error al obtener los posts');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data.posts; // ← Backend devuelve { success, data: { posts, pagination } }
   }
 
   /**
@@ -70,7 +72,8 @@ class PostService {
       throw new Error(error.message || 'Post no encontrado');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data; // ← Backend devuelve { success, data }
   }
 
   /**
@@ -88,7 +91,8 @@ class PostService {
       throw new Error(error.message || 'Error al actualizar el post');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data; // ← Backend devuelve { success, message, data }
   }
 
   /**
@@ -107,18 +111,11 @@ class PostService {
   }
 
   /**
-   * Obtener posts para el mapa
+   * Obtener posts para el mapa (usa el mismo endpoint que getAllPosts)
    */
   async getPostsForMap(): Promise<Post[]> {
-    const response = await fetch(`${API_URL}/posts/map`, {
-      headers: this.getHeaders(false),
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al obtener posts para el mapa');
-    }
-
-    return response.json();
+    // Tu backend no tiene endpoint /posts/map, usa el mismo de getAllPosts
+    return this.getAllPosts();
   }
 }
 
