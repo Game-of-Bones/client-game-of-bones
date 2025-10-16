@@ -58,6 +58,14 @@ export const router = createBrowserRouter([
       },
 
       // ============================================
+      // 👥 PÁGINA ABOUT/CREATORS (pública) ⬅️ NUEVA RUTA
+      // ============================================
+      { 
+        path: 'creators', 
+        element: <Creators /> 
+      },
+
+      // ============================================
       // 📚 RUTAS DE POSTS
       // Backend: GET /api/posts
       // ============================================
