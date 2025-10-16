@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
+import { usePostStore } from '../../stores/postStore';
+
 // ===============================================
 // FUNCIÓN AUXILIAR: PROYECCIÓN 3D A 2D
 // ===============================================
@@ -15,6 +17,7 @@ const getScreenCoordinates = (
   const y = (vector.y * -0.5 + 0.5) * container.clientHeight;
   return { x, y, visible: vector.z < 1 };
 };
+
 // ===============================================
 // TIPOS
 // ===============================================
@@ -28,13 +31,11 @@ interface Discovery {
   geological_period?: string;
   fossil_type: string;
 }
-interface MapComponentProps {
-  discoveries?: Discovery[];
-}
+
 // ===============================================
 // COMPONENTE PRINCIPAL
 // ===============================================
-const MapComponent = ({ discoveries }: MapComponentProps) => {
+const MapComponent = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -42,20 +43,41 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const globeRef = useRef<THREE.Mesh | null>(null);
   const pinsRef = useRef<Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }>>([]);
+  
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [hoveredDiscovery, setHoveredDiscovery] = useState<Discovery | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const lastHoveredRef = useRef<Discovery | null>(null);
+  
   const MAX_ZOOM = 6;
   const MIN_ZOOM = 1.5;
   const INITIAL_ZOOM = 4.0;
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM);
-  const mockDiscoveries: Discovery[] = discoveries || [
-    { id: 1, title: "Joaquinraptor casali", location: "La Pampa, Argentina", latitude: -36.6167, longitude: -64.2833, image_url: "/assets/joaquinraptor.jpg", geological_period: "Cretácico Superior", fossil_type: "bones_teeth" },
-    { id: 2, title: "Qunkasaura pintiquiniestra", location: "Magallanes, Chile", latitude: -51.7167, longitude: -72.5000, image_url: "/assets/qunkasaura.jpg", geological_period: "Cretácico", fossil_type: "bones_teeth" },
-    { id: 3, title: "Tyrannotitan", location: "Chubut, Argentina", latitude: -43.3000, longitude: -65.1000, image_url: "/assets/tyrannotitan.jpg", geological_period: "Cretácico Inferior", fossil_type: "bones_teeth" },
-  ];
+
+  // 🔥 Obtener posts de la BD
+  const posts = usePostStore((state) => state.posts);
+  const fetchPosts = usePostStore((state) => state.fetchPosts);
+
+  // 🔥 Cargar posts al montar el componente
+  useEffect(() => {
+    fetchPosts({ status: 'published' });
+  }, [fetchPosts]);
+
+  // 🔥 Convertir posts a discoveries (filtrar solo los que tienen coordenadas)
+  const discoveries: Discovery[] = posts
+    .filter(post => post.latitude !== null && post.longitude !== null)
+    .map(post => ({
+      id: post.id,
+      title: post.title,
+      location: post.location || 'Ubicación desconocida',
+      latitude: post.latitude!,
+      longitude: post.longitude!,
+      image_url: post.image_url,
+      geological_period: post.geological_period || undefined,
+      fossil_type: post.fossil_type
+    }));
+
   const handleZoom = (direction: 'in' | 'out') => {
     setZoomLevel(prevZoom => {
       let newZoom = prevZoom;
@@ -71,11 +93,18 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       return newZoom;
     });
   };
+
   // ===============================================
   // EFECTO PRINCIPAL DE THREE.JS
   // ===============================================
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || discoveries.length === 0) {
+      if (discoveries.length === 0) {
+        setIsLoading(true);
+      }
+      return;
+    }
+
     const container = containerRef.current;
 
     try {
@@ -102,7 +131,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       container.appendChild(renderer.domElement);
 
       const textureLoader = new THREE.TextureLoader();
-      const earthTexture = textureLoader.load('/public/earth_map.jpg');
+      const earthTexture = textureLoader.load('/earth_map.jpg');
 
       earthTexture.wrapS = THREE.RepeatWrapping;
       earthTexture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -130,7 +159,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       scene.add(pointLight);
 
       const pins: Array<{ mesh: THREE.Mesh; discovery: Discovery; halo: THREE.Mesh }> = [];
-      mockDiscoveries.forEach(discovery => {
+      discoveries.forEach(discovery => {
         const phi = (90 - discovery.latitude) * (Math.PI / 180);
         const theta = (discovery.longitude + 180) * (Math.PI / 180);
         const radius = 1.04;
@@ -263,7 +292,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
         container.removeEventListener('mousedown', handleMouseDown);
         container.removeEventListener('mouseup', handleMouseUp);
         container.removeEventListener('click', handleClick);
-        if (renderer.domElement) {
+        if (renderer.domElement && container.contains(renderer.domElement)) {
           container.removeChild(renderer.domElement);
         }
         renderer.dispose();
@@ -275,6 +304,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       setIsLoading(false);
     }
   }, [discoveries, zoomLevel, navigate]);
+
   useEffect(() => {
     if (!hoveredDiscovery || !cameraRef.current || !rendererRef.current || !containerRef.current) {
       setPopupPosition(null);
@@ -297,8 +327,9 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       }
     }
   }, [hoveredDiscovery, zoomLevel]);
+
   // ===============================================
-  // RENDERIZADO JSX CON ESTILOS GLOBALES
+  // RENDERIZADO JSX
   // ===============================================
   if (error) {
     return (
@@ -311,6 +342,7 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
       </div>
     );
   }
+
   return (
     <div className="flex justify-center w-full my-8">
       <div
@@ -334,18 +366,18 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
                   fontFamily: "'Playfair Display', serif"
                 }}
               >
-                Cargando globo 3D...
+                Cargando descubrimientos...
               </p>
             </div>
           </div>
         )}
+        
         <div
           ref={containerRef}
           className="w-full h-full"
           style={{ cursor: 'grab' }}
         />
 
-        {/* BOTONES DE ZOOM CON ESTILOS GLOBALES */}
         <div className="absolute top-4 right-20 z-20 flex flex-col gap-2">
           <button
             onClick={() => handleZoom('in')}
@@ -379,7 +411,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
           </button>
         </div>
 
-        {/* POPUP CON ESTILOS GLOBALES */}
         {hoveredDiscovery && popupPosition && (
           <div
             className="absolute rounded-lg shadow-2xl p-2 max-w-sm pointer-events-none z-30"
@@ -414,7 +445,6 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
           </div>
         )}
 
-        {/* LEYENDA CON ESTILOS GLOBALES */}
         <div
           className="absolute top-4 left-4 px-4 py-3 rounded-lg text-sm z-20 backdrop-blur-sm"
           style={{
@@ -447,11 +477,10 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
               fontFamily: "'Cinzel', serif"
             }}
           >
-            📍 <strong>{mockDiscoveries.length}</strong> descubrimientos
+            📍 <strong>{discoveries.length}</strong> descubrimientos
           </p>
         </div>
 
-        {/* LEYENDA DE COLORES CON ESTILOS GLOBALES */}
         <div
           className="absolute top-4 right-40 px-4 py-3 rounded-lg text-xs z-20 backdrop-blur-sm"
           style={{
@@ -488,4 +517,5 @@ const MapComponent = ({ discoveries }: MapComponentProps) => {
     </div>
   );
 };
+
 export default MapComponent;
