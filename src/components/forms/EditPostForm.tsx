@@ -1,11 +1,9 @@
-// src/components/forms/EditPostForm.tsx
 import { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore'; 
 import { usePostStore } from '../../stores/postStore'; 
 import { uploadToCloudinary } from '../../utils/cloudinaryUpload'; 
 import { Upload, Link, Save, MapPin } from 'lucide-react';
-import Input from '../ui/Input';
 import { FOSSIL_TYPE_OPTIONS } from '../../types/post.types';
 import type { Post, FossilType } from '../../types/post.types';
 
@@ -190,7 +188,6 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                 location: formData.location || undefined,
                 latitude: formData.latitude,
                 longitude: formData.longitude,
-                // ⬇️ AÑADE "as FossilType" para el type assertion
                 fossil_type: formData.fossil_type as FossilType,
                 geological_period: formData.geological_period || undefined,
                 discovery_date: formData.discovery_date ? new Date(formData.discovery_date).toISOString() : undefined,
@@ -208,201 +205,317 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
         }
     };
 
+    // Estilos inline basados en Figma
+    const labelStyle = {
+        color: '#C0B39A',
+        fontFamily: 'Cinzel, serif',
+        fontSize: '11px',
+        fontWeight: '400',
+        letterSpacing: '0.5px',
+        textTransform: 'uppercase' as const,
+        marginBottom: '8px'
+    };
+
+    const inputStyle = {
+        backgroundColor: '#F5E6CC',
+        color: '#2D1F13',
+        border: '1px solid #C0B39A',
+        borderRadius: '6px',
+        padding: '12px 16px',
+        fontFamily: 'Playfair Display, serif',
+        fontSize: '15px',
+        width: '100%',
+        transition: 'all 0.2s'
+    };
+
+    const buttonPrimaryStyle = {
+        backgroundColor: '#6DA49C',
+        color: '#FFFFFF',
+        border: 'none',
+        borderRadius: '6px',
+        padding: '12px 24px',
+        fontFamily: 'Cinzel, serif',
+        fontSize: '13px',
+        fontWeight: '500',
+        letterSpacing: '0.5px',
+        cursor: 'pointer',
+        transition: 'all 0.2s'
+    };
+
+    const buttonSecondaryStyle = {
+        backgroundColor: 'transparent',
+        color: '#C0B39A',
+        border: '1px solid #C0B39A',
+        borderRadius: '6px',
+        padding: '12px 24px',
+        fontFamily: 'Cinzel, serif',
+        fontSize: '13px',
+        fontWeight: '500',
+        letterSpacing: '0.5px',
+        cursor: 'pointer',
+        transition: 'all 0.2s'
+    };
+
     return (
-        <div className="container-custom mx-auto px-4 py-8 max-w-5xl">
-            <div className="text-center mb-10">
-                <h1 className="text-3xl font-cinzel tracking-wider" style={{ color: 'var(--color-primary)' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <h1 style={{ 
+                    fontFamily: 'Cinzel, serif', 
+                    fontSize: '32px', 
+                    fontWeight: '600',
+                    color: '#C0B39A',
+                    letterSpacing: '1px',
+                    marginBottom: '8px'
+                }}>
                     Editar Descubrimiento
                 </h1>
-                <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+                <p style={{ 
+                    fontSize: '14px', 
+                    color: '#8B6543',
+                    fontFamily: 'Playfair Display, serif'
+                }}>
                     Modificando: {initialData.title}
                 </p>
             </div>
 
             {(serverError || postError) && (
-                <div className="p-4 mb-6 rounded-lg text-center" style={{ backgroundColor: 'var(--bg-danger-light)', color: 'var(--color-danger)' }}>
+                <div style={{ 
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)', 
+                    color: '#dc2626', 
+                    padding: '16px', 
+                    borderRadius: '6px',
+                    marginBottom: '24px',
+                    textAlign: 'center',
+                    fontFamily: 'Playfair Display, serif'
+                }}>
                     {serverError || postError}
                 </div>
             )}
             
-            <p className="text-sm italic mb-6 text-center" style={{ color: 'var(--color-danger)' }}>
+            <p style={{ 
+                fontSize: '13px', 
+                fontStyle: 'italic', 
+                marginBottom: '24px', 
+                textAlign: 'center',
+                color: '#F76C5E',
+                fontFamily: 'Playfair Display, serif'
+            }}>
                 * Campos obligatorios
             </p>
 
-            <div className="space-y-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
-                <Input
-                    id="title"
-                    name="title"
-                    type="text"
-                    label="TÍTULO DEL POST *"
-                    value={formData.title}
-                    onChange={handleChange}
-                    error={errors.title}
-                    placeholder="Escribe el título principal..."
-                    disabled={isSubmitting}
-                    required
-                    inputClass="text-xl font-bold tracking-wider" 
-                />
+                {/* Título */}
+                <div>
+                    <label htmlFor="title" style={labelStyle}>Título del Post *</label>
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        value={formData.title}
+                        onChange={handleChange}
+                        placeholder="Escribe el título principal..."
+                        disabled={isSubmitting}
+                        style={{
+                            ...inputStyle,
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            borderColor: errors.title ? '#dc2626' : '#C0B39A'
+                        }}
+                    />
+                    {errors.title && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.title}</p>
+                    )}
+                </div>
 
-                <Input
-                    id="summary"
-                    name="summary" 
-                    type="text"
-                    label="SUBTÍTULO DEL POST *"
-                    value={formData.summary}
-                    onChange={handleChange}
-                    error={errors.summary}
-                    placeholder="Un breve resumen o eslogan..."
-                    disabled={isSubmitting}
-                    required
-                />
+                {/* Subtítulo */}
+                <div>
+                    <label htmlFor="summary" style={labelStyle}>Subtítulo del Post *</label>
+                    <input
+                        id="summary"
+                        name="summary"
+                        type="text"
+                        value={formData.summary}
+                        onChange={handleChange}
+                        placeholder="Un breve resumen o eslogan..."
+                        disabled={isSubmitting}
+                        style={{
+                            ...inputStyle,
+                            borderColor: errors.summary ? '#dc2626' : '#C0B39A'
+                        }}
+                    />
+                    {errors.summary && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.summary}</p>
+                    )}
+                </div>
                 
-                <div className="p-6 rounded-lg relative" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color-dark)' }}>
-                    
-                    <div className="flex gap-2 mb-4 justify-center">
+                {/* Imagen */}
+                <div style={{ 
+                    backgroundColor: 'rgba(245, 230, 204, 0.3)', 
+                    padding: '24px', 
+                    borderRadius: '6px',
+                    border: '1px solid rgba(192, 179, 154, 0.3)'
+                }}>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'center' }}>
                         <button
                             type="button"
                             onClick={() => setUploadMethod('url')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                uploadMethod === 'url' ? 'btn-primary-small' : 'btn-secondary-small' 
-                            }`}
+                            style={uploadMethod === 'url' ? buttonPrimaryStyle : buttonSecondaryStyle}
                         >
-                            <Link size={18} /> URL
+                            <Link size={16} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }} />
+                            URL
                         </button>
                         <button 
                             type="button" 
                             onClick={() => { setUploadMethod('file'); fileInputRef.current?.click(); }} 
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                uploadMethod === 'file' ? 'btn-primary-small' : 'btn-secondary-small' 
-                            }`}
+                            style={uploadMethod === 'file' ? buttonPrimaryStyle : buttonSecondaryStyle}
                         >
-                            <Upload size={18} /> Subir Archivo
+                            <Upload size={16} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }} />
+                            Subir Archivo
                         </button>
-                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                     </div>
 
                     {uploadMethod === 'url' && (
-                        <Input 
-                            id="image_url" 
-                            name="image_url" 
-                            type="url" 
-                            label="URL de la Imagen"
-                            labelHidden
-                            value={formData.image_url} 
-                            onChange={handleChange} 
-                            placeholder="Pega la URL de la imagen principal aquí..." 
-                            disabled={isSubmitting || isUploadingImage} 
+                        <input
+                            id="image_url"
+                            name="image_url"
+                            type="url"
+                            value={formData.image_url}
+                            onChange={handleChange}
+                            placeholder="Pega la URL de la imagen principal aquí..."
+                            disabled={isSubmitting || isUploadingImage}
+                            style={inputStyle}
                         />
                     )}
 
                     {isUploadingImage ? (
-                        <div className="text-center p-8 text-lg font-bold" style={{ color: 'var(--color-accent)' }}>Subiendo imagen...</div>
+                        <div style={{ textAlign: 'center', padding: '32px', fontSize: '16px', fontWeight: '600', color: '#D4A574' }}>
+                            Subiendo imagen...
+                        </div>
                     ) : formData.image_url ? (
-                        <div className="mt-4 border-2 rounded-lg overflow-hidden" style={{ borderColor: 'var(--border-color)' }}>
-                            <img src={formData.image_url} alt="Vista previa del descubrimiento" className="w-full" style={{ maxHeight: '350px', objectFit: 'cover' }} />
+                        <div style={{ marginTop: '16px', borderRadius: '6px', overflow: 'hidden', border: '2px solid #C0B39A' }}>
+                            <img src={formData.image_url} alt="Vista previa del descubrimiento" style={{ width: '100%', maxHeight: '350px', objectFit: 'cover' }} />
                         </div>
                     ) : (
-                        <div className="mt-4 flex flex-col justify-center items-center rounded-lg p-10" style={{ backgroundColor: 'var(--bg-input-hover)', height: '280px' }}>
+                        <div style={{ 
+                            marginTop: '16px', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            backgroundColor: '#F5E6CC',
+                            borderRadius: '6px',
+                            padding: '40px',
+                            height: '280px',
+                            border: '2px dashed #C0B39A'
+                        }}>
                             <img
                                 src="/Triceratops_Skull_in_Earthy_Brown.png"
                                 alt="Cráneo de Triceratops de marcador de posición"
-                                className="opacity-80"
-                                style={{ width: '180px', height: '180px', objectFit: 'contain' }}
+                                style={{ width: '180px', height: '180px', objectFit: 'contain', opacity: 0.4 }}
                             />
-                            {errors.image_url && <p className="mt-2 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.image_url}</p>}
+                            {errors.image_url && (
+                                <p style={{ marginTop: '8px', fontSize: '12px', color: '#dc2626' }}>{errors.image_url}</p>
+                            )}
                         </div>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        id="paleontologist"
-                        name="paleontologist"
-                        type="text"
-                        label="PALEONTÓLOGO DESCUBRIDOR"
-                        value={formData.paleontologist}
-                        onChange={handleChange}
-                        placeholder="Nombre y apellido"
-                        disabled={isSubmitting}
-                    />
-                    <Input
-                        id="geological_period"
-                        name="geological_period"
-                        type="text"
-                        label="PERÍODO GEOLÓGICO"
-                        value={formData.geological_period}
-                        onChange={handleChange}
-                        placeholder="Ej: Cretácico Superior"
-                        disabled={isSubmitting}
-                    />
+                {/* Paleontólogo y Período Geológico */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                        <label htmlFor="paleontologist" style={labelStyle}>Paleontólogo Descubridor</label>
+                        <input
+                            id="paleontologist"
+                            name="paleontologist"
+                            type="text"
+                            value={formData.paleontologist}
+                            onChange={handleChange}
+                            placeholder="Nombre y apellido"
+                            disabled={isSubmitting}
+                            style={inputStyle}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="geological_period" style={labelStyle}>Período Geológico</label>
+                        <input
+                            id="geological_period"
+                            name="geological_period"
+                            type="text"
+                            value={formData.geological_period}
+                            onChange={handleChange}
+                            placeholder="Ej: Cretácico Superior"
+                            disabled={isSubmitting}
+                            style={inputStyle}
+                        />
+                    </div>
                 </div>
 
+                {/* Lugar del Descubrimiento */}
                 <div>
-                    <label htmlFor="location" className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
-                        LUGAR DEL DESCUBRIMIENTO
-                    </label>
-                    <div className="flex gap-2">
-                        <div className="flex-1">
-                            <input
-                                id="location"
-                                name="location"
-                                type="text"
-                                value={formData.location}
-                                onChange={handleChange}
-                                placeholder="Ej: Patagonia, Argentina"
-                                disabled={isSubmitting}
-                                className="w-full px-4 py-3 rounded-md transition"
-                                style={{
-                                    backgroundColor: 'var(--bg-input)',
-                                    color: 'var(--text-primary)',
-                                    borderColor: 'var(--border-color)',
-                                    borderWidth: '1px'
-                                }}
-                            />
-                        </div>
+                    <label htmlFor="location" style={labelStyle}>Lugar del Descubrimiento</label>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <input
+                            id="location"
+                            name="location"
+                            type="text"
+                            value={formData.location}
+                            onChange={handleChange}
+                            placeholder="Ej: Patagonia, Argentina"
+                            disabled={isSubmitting}
+                            style={{ ...inputStyle, flex: 1 }}
+                        />
                         <button
                             type="button"
                             onClick={handleGeolocate}
                             disabled={isGeolocating || isSubmitting || !formData.location}
-                            className="btn btn-secondary-outline flex items-center gap-2 whitespace-nowrap"
+                            style={{
+                                ...buttonSecondaryStyle,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                whiteSpace: 'nowrap',
+                                opacity: (isGeolocating || isSubmitting || !formData.location) ? 0.5 : 1
+                            }}
                         >
-                            <MapPin size={18} />
+                            <MapPin size={16} />
                             {isGeolocating ? 'Buscando...' : 'Obtener Coordenadas'}
                         </button>
                     </div>
                     {formData.latitude && formData.longitude && (
-                        <p className="mt-2 text-xs" style={{ color: 'var(--color-success)' }}>
+                        <p style={{ marginTop: '8px', fontSize: '11px', color: '#6DA49C', fontWeight: '500' }}>
                             ✓ Coordenadas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
                         </p>
                     )}
                 </div>
 
-                <Input
-                    id="discovery_date"
-                    name="discovery_date"
-                    type="date"
-                    label="FECHA DE DESCUBRIMIENTO"
-                    value={formData.discovery_date}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                />
-                
+                {/* Fecha de Descubrimiento */}
                 <div>
-                    <label htmlFor="fossil_type" className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
-                        TIPO DE FÓSIL *
-                    </label>
+                    <label htmlFor="discovery_date" style={labelStyle}>Fecha de Descubrimiento</label>
+                    <input
+                        id="discovery_date"
+                        name="discovery_date"
+                        type="date"
+                        value={formData.discovery_date}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                        style={inputStyle}
+                    />
+                </div>
+                
+                {/* Tipo de Fósil */}
+                <div>
+                    <label htmlFor="fossil_type" style={labelStyle}>Tipo de Fósil *</label>
                     <select
                         id="fossil_type"
                         name="fossil_type"
                         value={formData.fossil_type}
                         onChange={handleChange}
                         disabled={isSubmitting}
-                        className="input-select w-full px-4 py-3 rounded-md transition"
                         style={{
-                            backgroundColor: 'var(--bg-input)',
-                            color: 'var(--text-primary)',
-                            borderColor: errors.fossil_type ? 'var(--color-danger)' : 'var(--border-color)',
+                            ...inputStyle,
+                            borderColor: errors.fossil_type ? '#dc2626' : '#C0B39A'
                         }}
                     >
                         {FOSSIL_TYPE_OPTIONS.map(type => (
@@ -412,63 +525,72 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                         ))}
                     </select>
                     {errors.fossil_type && (
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.fossil_type}</p>
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.fossil_type}</p>
                     )}
                 </div>
                 
+                {/* Contenido del Post */}
                 <div>
-                    <label htmlFor="post_content" className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
-                        CONTENIDO DEL POST (Detallado) *
-                    </label>
+                    <label htmlFor="post_content" style={labelStyle}>Contenido del Post (Detallado) *</label>
                     <textarea
                         id="post_content"
-                        name="post_content" 
+                        name="post_content"
                         value={formData.post_content}
                         onChange={handleChange}
                         placeholder="Escribe la descripción detallada, métodos de excavación, importancia del hallazgo, etc..."
                         rows={8}
                         disabled={isSubmitting}
-                        className="input-textarea w-full p-4 rounded-md transition"
                         style={{
-                            backgroundColor: 'var(--bg-input)',
-                            color: 'var(--text-primary)',
-                            borderColor: errors.post_content ? 'var(--color-danger)' : 'var(--border-color)',
-                            resize: 'vertical'
+                            ...inputStyle,
+                            resize: 'vertical' as const,
+                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
                         }}
                     />
                     {errors.post_content && (
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.post_content}</p>
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 
-                <Input
-                    id="source"
-                    name="source"
-                    type="url"
-                    label="FUENTE (Enlace de referencia)"
-                    value={formData.source}
-                    onChange={handleChange}
-                    placeholder="https://doi.org/referencia-cientifica"
-                    disabled={isSubmitting}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        id="author"
-                        name="author"
-                        type="text"
-                        label="AUTOR DEL POST"
-                        value={user?.username || 'Cargando Usuario...'}
-                        disabled
-                        placeholder=""
+                {/* Fuente */}
+                <div>
+                    <label htmlFor="source" style={labelStyle}>Fuente (Enlace de referencia)</label>
+                    <input
+                        id="source"
+                        name="source"
+                        type="url"
+                        value={formData.source}
+                        onChange={handleChange}
+                        placeholder="https://doi.org/referencia-cientifica"
+                        disabled={isSubmitting}
+                        style={inputStyle}
                     />
+                </div>
+
+                {/* Autor y Estatus */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                        <label htmlFor="author" style={labelStyle}>Autor del Post</label>
+                        <input
+                            id="author"
+                            name="author"
+                            type="text"
+                            value={user?.username || 'Cargando Usuario...'}
+                            disabled
+                            style={{ ...inputStyle, opacity: 0.6 }}
+                        />
+                    </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-2 uppercase" style={{ color: 'var(--text-secondary)' }}>
-                            ESTATUS DEL POST
-                        </label>
-                        <div className="flex gap-6 p-3 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
-                            <label className="flex items-center gap-2 cursor-pointer">
+                        <label style={labelStyle}>Estatus del Post</label>
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '24px', 
+                            padding: '12px 16px', 
+                            backgroundColor: '#F5E6CC',
+                            borderRadius: '6px',
+                            border: '1px solid #C0B39A'
+                        }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                 <input
                                     type="radio"
                                     name="status"
@@ -476,13 +598,14 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                                     checked={formData.status === 'draft'}
                                     onChange={handleChange}
                                     disabled={isSubmitting}
-                                    className="w-4 h-4 cursor-pointer"
-                                    style={{ accentColor: '#AA7B5C' }}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#6DA49C' }}
                                 />
-                                <span style={{ color: 'var(--text-primary)' }}>Borrador</span>
+                                <span style={{ color: '#2D1F13', fontFamily: 'Playfair Display, serif', fontSize: '15px' }}>
+                                    Borrador
+                                </span>
                             </label>
 
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                 <input
                                     type="radio"
                                     name="status"
@@ -490,21 +613,23 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                                     checked={formData.status === 'published'}
                                     onChange={handleChange}
                                     disabled={isSubmitting}
-                                    className="w-4 h-4 cursor-pointer"
-                                    style={{ accentColor: '#AA7B5C' }}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#6DA49C' }}
                                 />
-                                <span style={{ color: 'var(--text-primary)' }}>Publicado</span>
+                                <span style={{ color: '#2D1F13', fontFamily: 'Playfair Display, serif', fontSize: '15px' }}>
+                                    Publicado
+                                </span>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div className="pt-8 flex justify-end gap-4">
+                {/* Botones */}
+                <div style={{ paddingTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
                         disabled={isSubmitting}
-                        className="btn btn-secondary-outline" 
+                        style={buttonSecondaryStyle}
                     >
                         Cancelar
                     </button>
@@ -513,9 +638,16 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                         type="button"
                         onClick={(e) => handleSubmit(e, 'draft')}
                         disabled={isSubmitting || isUploadingImage}
-                        className="btn btn-tertiary" 
+                        style={{ 
+                            ...buttonPrimaryStyle, 
+                            backgroundColor: '#D4A574',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            opacity: (isSubmitting || isUploadingImage) ? 0.5 : 1 
+                        }}
                     >
-                        <Save size={18} className="mr-2" />
+                        <Save size={16} />
                         {isSubmitting ? 'Guardando...' : 'Guardar Borrador'}
                     </button>
                     
@@ -523,7 +655,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                         type="button"
                         onClick={(e) => handleSubmit(e, 'published')}
                         disabled={isSubmitting || isUploadingImage}
-                        className="btn btn-primary"
+                        style={{ ...buttonPrimaryStyle, opacity: (isSubmitting || isUploadingImage) ? 0.5 : 1 }}
                     >
                         {isSubmitting ? 'Actualizando...' : 'Actualizar Post'}
                     </button>
