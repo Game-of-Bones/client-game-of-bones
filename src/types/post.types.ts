@@ -1,17 +1,9 @@
-// ============================================================
-// TIPOS DE POSTS - Game of Bones
-// ============================================================
-
-/**
- * Tipos posibles de fósiles que puede tener un post.
- * Estos valores se usarán tanto en formularios como en el backend.
- */
-export type FossilType =
-  | 'bones_teeth'         // Huesos y dientes
-  | 'shell_exoskeletons'  // Conchas y exoesqueletos
-  | 'plant_impressions'   // Impresiones de plantas
-  | 'tracks_traces'       // Huellas y rastros
-  | 'amber_insects';      // Insectos en ámbar
+export type FossilType = 
+  | 'bones_teeth'
+  | 'shell_exoskeletons'
+  | 'plant_impressions'
+  | 'tracks_traces'
+  | 'amber_insects';
 
 /**
  * Estado del post en el sistema.
@@ -27,19 +19,22 @@ export interface Post {
   id: number;
   title: string;
   summary: string;
+  post_content: string; // ✅ AÑADIDO
   image_url?: string;
-  discovery_date?: string;      // fecha del hallazgo (ISO string)
-  location?: string;            // lugar del hallazgo
-  paleontologist?: string;      // nombre del paleontólogo
-  fossil_type: FossilType;      // tipo de fósil
-  geological_period?: string;   // era o periodo geológico
-  status: PostStatus;           // publicado o borrador
-  source?: string;              // fuente de información
-  author_id: number;            // referencia al usuario autor
-  created_at: string;           // fecha de creación
-  updated_at: string;           // fecha de actualización
-
-  // Relaciones opcionales (por ejemplo, cuando se incluye info del autor)
+  discovery_date?: string;
+  location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
+  paleontologist?: string;
+  fossil_type: FossilType;
+  geological_period?: string;
+  status: PostStatus;
+  source?: string;
+  author_id: number;
+  created_at: string;
+  updated_at: string;
+  
+  // Relaciones opcionales que puede incluir el backend
   author?: {
     id: number;
     username: string;
@@ -54,27 +49,32 @@ export interface Post {
 export interface CreatePostData {
   title: string;
   summary: string;
+  post_content: string; // ✅ AÑADIDO
   image_url?: string;
   discovery_date?: string;
   location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
   paleontologist?: string;
   fossil_type: FossilType;
   geological_period?: string;
   status: PostStatus;
   source?: string;
+  author_id: number; // ✅ AÑADIDO (necesario para crear)
 }
 
 /**
- * Datos para actualizar un post existente.
- * Todos los campos son opcionales (PATCH-like),
- * excepto los que el backend requiere explícitamente.
+ * Datos para actualizar un post existente
  */
 export interface UpdatePostData {
   title?: string;
   summary?: string;
+  post_content?: string; // ✅ AÑADIDO
   image_url?: string;
-  discovery_date?: string;
+  discovery_date?: string | null;
   location?: string;
+  latitude?: number | null; // ✅ AÑADIDO
+  longitude?: number | null; // ✅ AÑADIDO
   paleontologist?: string;
   fossil_type?: FossilType;
   geological_period?: string;
