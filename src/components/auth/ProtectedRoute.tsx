@@ -1,65 +1,37 @@
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth'; // Ajusta la ruta según donde esté el archivo
 
 /**
- * PROTECTED ROUTE - Game of Bones
- * 
- * Componente para proteger rutas que requieren autenticación usando el patrón de "layout route".
- * 
- * Funcionalidad:
- * - Muestra un estado de carga mientras se verifica la autenticación inicial para evitar parpadeos.
- * - Si el usuario está autenticado, renderiza el componente de la ruta solicitada (`<Outlet />`).
- * - Si no está autenticado, lo redirige a la página de login (`/login`), guardando la ruta
- *   original para poder volver a ella después de un inicio de sesión exitoso.
- * 
- * Uso en el router:
- * ```tsx
- * <Route element={<ProtectedRoute />}>
- *   <Route path="/profile" element={<Profile />} />
- * </Route>
- * ```
+ * ProtectedRoute - Componente para proteger rutas (Layout Route)
+ * * Verifica el estado de autenticación del usuario usando el hook `useAuth`.
+ * - Muestra un estado de carga mientras se verifica la autenticación inicial.
+ * - Si el usuario está autenticado, renderiza el componente hijo (<Outlet />).
+ * - Si no está autenticado, redirige a /login, guardando la ruta original.
  */
 const ProtectedRoute = () => {
-  const location = useLocation();
-  
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-  /**
-   * Mientras se verifica la autenticación, mostrar loading
-   * Esto previene parpadeos de redirección
-   */
+  // Muestra un mensaje de carga mientras se determina el estado de autenticación.
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#5D4A3A]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
         <div className="text-center">
-          <img 
-            src="/gob_logo.png" 
-            alt="Game of Bones Logo" 
-            className="h-24 w-auto mx-auto mb-4 animate-pulse"
-          />
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4A574] mx-auto mb-4"></div>
-          <p className="text-[#E8D9B8] text-lg">Verificando autenticación...</p>
+          {/* Puedes usar el diseño de carga de la primera versión si lo prefieres */}
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-coral)] mx-auto mb-4"></div>
+          <p className="text-[var(--text-secondary)] text-lg">Verificando sesión...</p>
         </div>
       </div>
     );
   }
 
-  /**
-   * Si NO está autenticado, redirigir a login
-   * Guardamos la ubicación actual para redirigir después del login
-   * 
-   * Ejemplo: 
-   * - Usuario intenta ir a /profile → redirige a /login
-   * - Después de login exitoso → redirige de vuelta a /profile
-   */
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // Si está autenticado, permite el acceso.
+  if (isAuthenticated) {
+    return <Outlet />;
   }
 
-  /**
-   * Si está autenticado, renderizar el componente hijo
-   */
-  return <Outlet />;
+  // Si no está autenticado, redirige a /login, guardando la ruta original.
+  return <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 export default ProtectedRoute;
