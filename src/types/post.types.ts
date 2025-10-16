@@ -82,10 +82,7 @@ export interface UpdatePostData {
   source?: string;
 }
 
-/**
- * Opciones estáticas para mostrar en selects (menús desplegables)
- * de tipo de fósil dentro del formulario.
- */
+
 export const FOSSIL_TYPE_OPTIONS = [
   { value: 'bones_teeth' as FossilType, label: 'Huesos y Dientes' },
   { value: 'shell_exoskeletons' as FossilType, label: 'Conchas y Exoesqueletos' },

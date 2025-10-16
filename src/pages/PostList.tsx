@@ -1,7 +1,8 @@
-// src/pages/posts/PostList.tsx
 import { useEffect, useState } from 'react';
 import PostService from '../services/postService';
-import type { Post } from '../types/post.types'
+import type { Post } from '../types/post.types';
+
+
 
 const PostList = () => {
   const [posts, setPosts] = useState<Post[]>([]);
