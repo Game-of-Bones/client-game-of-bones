@@ -1,12 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-
-/**
- * Props del componente ProtectedRoute
- */
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
 
 /**
  * PROTECTED ROUTE - Game of Bones
@@ -15,18 +8,21 @@ interface ProtectedRouteProps {
  * 
  * Funcionalidad:
  * - Verifica si el usuario está autenticado
- * - Si está autenticado, renderiza el componente hijo
+ * - Si está autenticado, renderiza las rutas hijas con <Outlet />
  * - Si NO está autenticado, redirige a /login
  * - Guarda la ubicación actual para redirigir después del login
  * 
- * Uso:
+ * Uso en React Router v6:
  * ```tsx
- * <ProtectedRoute>
- *   <Profile />
- * </ProtectedRoute>
+ * {
+ *   element: <ProtectedRoute />,
+ *   children: [
+ *     { path: 'profile', element: <Profile /> }
+ *   ]
+ * }
  * ```
  */
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = () => {
   const location = useLocation();
   
   // Obtener estado de autenticación del store de Zustand
@@ -66,9 +62,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   /**
-   * Si está autenticado, renderizar el componente hijo
+   * Si está autenticado, renderizar las rutas hijas
+   * <Outlet /> es el equivalente de {children} en React Router v6
    */
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
