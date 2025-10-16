@@ -6,6 +6,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  avatar_url?: string; 
   role: 'admin' | 'user';
   created_at: string;
 }
@@ -45,3 +46,18 @@ export interface PaginatedResponse<T> {
   limit: number;
   pages: number;
 }
+
+export interface ApiError {
+  message: string;
+  statusCode: number;
+  errors?: string[];
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+

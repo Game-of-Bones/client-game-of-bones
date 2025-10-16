@@ -1,25 +1,27 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, LogOut } from "lucide-react"; // ← AÑADIDO LogOut
 import { ThemeToggleCompact } from "../components/ui/ThemeToggles";
 import { useTheme } from "../context/ThemeContext";
+import { useAuthStore } from "../stores/authStore"; // ← AÑADIDO
 
-interface UserProfile {
-  name: string;
-  image: string;
-}
-
-interface NavbarProps {
-  user?: UserProfile;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ user }) => {
+const Navbar: React.FC = () => { // ← QUITADO props, ahora lee de Zustand
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
+  // ← AÑADIDO: Leer auth desde Zustand
+  const { user, isAuthenticated, logout } = useAuthStore();
+
   // Color de letra según el tema
   const menuColor = theme === "dark" ? "#98b189" : "#462e1b";
+
+  // ← AÑADIDO: Función de logout
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <header className="w-full bg-transparent" style={{ fontFamily: "'Cinzel', serif" }}>
@@ -84,39 +86,61 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
           </nav>
 
           {/* ---------- DERECHA: usuario / login ---------- */}
-          <div className="hidden lg:flex items-center">
-            {!user ? (
-              <Link 
-                to="/login" 
-                className="flex items-center gap-2 hover:opacity-75 transition-opacity text-base xl:text-lg uppercase tracking-wider whitespace-nowrap" 
+          <div className="hidden lg:flex items-center gap-4">
+            {!isAuthenticated ? ( // ← CAMBIADO
+              <Link
+                to="/login"
+                className="flex items-center gap-2 hover:opacity-75 transition-opacity text-base xl:text-lg uppercase tracking-wider whitespace-nowrap"
                 style={{ color: menuColor, fontWeight: 500 }}
               >
                 <User size={20} strokeWidth={1.5} />
                 <span>INICIAR SESIÓN</span>
               </Link>
             ) : (
-              <button 
-                onClick={() => navigate("/profile")} 
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-              >
-                <img 
-                  src={user.image} 
-                  alt={user.name} 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2" 
-                  style={{ borderColor: menuColor }} 
-                />
-                <span className="hidden xl:inline" style={{ color: menuColor, fontWeight: 500 }}>
-                  {user.name}
-                </span>
-              </button>
+              <> {/* ← AÑADIDO: Perfil + Logout */}
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                >
+                  {user?.avatar_url ? ( // ← CAMBIADO
+                    <img
+                      src={user.avatar_url}
+                      alt={user.username}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2"
+                      style={{ borderColor: menuColor }}
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-semibold"
+                      style={{ borderColor: menuColor, color: menuColor }}
+                    >
+                      {user?.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="hidden xl:inline" style={{ color: menuColor, fontWeight: 500 }}>
+                    {user?.username} {/* ← CAMBIADO */}
+                  </span>
+                </button>
+
+                {/* ← AÑADIDO: Botón Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 hover:opacity-75 transition-opacity text-base xl:text-lg uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: menuColor, fontWeight: 500 }}
+                  title="Cerrar sesión"
+                >
+                  <LogOut size={20} strokeWidth={1.5} />
+                  <span className="hidden xl:inline">SALIR</span>
+                </button>
+              </>
             )}
           </div>
         </div>
 
         {/* Línea decorativa con márgenes laterales */}
-        <div 
-          className="w-full" 
-          style={{ height: "1px", backgroundColor: menuColor, opacity: 0.6 }} 
+        <div
+          className="w-full"
+          style={{ height: "1px", backgroundColor: menuColor, opacity: 0.6 }}
         />
       </div>
 
@@ -153,43 +177,64 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             </Link>
 
             {/* Separador */}
-            <div 
-              className="w-full my-2" 
-              style={{ height: "1px", backgroundColor: menuColor, opacity: 0.3 }} 
+            <div
+              className="w-full my-2"
+              style={{ height: "1px", backgroundColor: menuColor, opacity: 0.3 }}
             />
 
             {/* Theme toggle y user */}
             <div className="flex items-center justify-center gap-4">
               <ThemeToggleCompact />
-              
-              {!user ? (
-                <Link 
+
+              {!isAuthenticated ? ( // ← CAMBIADO
+                <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 hover:opacity-75 transition-opacity uppercase tracking-wider" 
+                  className="flex items-center gap-2 hover:opacity-75 transition-opacity uppercase tracking-wider"
                   style={{ color: menuColor, fontWeight: 500 }}
                 >
                   <User size={20} strokeWidth={1.5} />
                   <span>INICIAR SESIÓN</span>
                 </Link>
               ) : (
-                <button 
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate("/profile");
-                  }} 
-                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                >
-                  <img 
-                    src={user.image} 
-                    alt={user.name} 
-                    className="w-8 h-8 rounded-full object-cover border-2" 
-                    style={{ borderColor: menuColor }} 
-                  />
-                  <span style={{ color: menuColor, fontWeight: 500 }}>
-                    {user.name}
-                  </span>
-                </button>
+                <> {/* ← AÑADIDO */}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate("/profile");
+                    }}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.username}
+                        className="w-8 h-8 rounded-full object-cover border-2"
+                        style={{ borderColor: menuColor }}
+                      />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center border-2 font-semibold"
+                        style={{ borderColor: menuColor, color: menuColor }}
+                      >
+                        {user?.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span style={{ color: menuColor, fontWeight: 500 }}>
+                      {user?.username}
+                    </span>
+                  </button>
+
+                  {/* ← AÑADIDO: Logout mobile */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 hover:opacity-75 transition-opacity uppercase tracking-wider"
+                    style={{ color: menuColor, fontWeight: 500 }}
+                  >
+                    <LogOut size={20} strokeWidth={1.5} />
+                    <span>SALIR</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
