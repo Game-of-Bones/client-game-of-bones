@@ -483,7 +483,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                             {isGeolocating ? 'Buscando...' : 'Obtener Coordenadas'}
                         </button>
                     </div>
-                    {formData.latitude && formData.longitude && (
+                    {formData.latitude !== null && formData.longitude !== null && (
                         <p style={{ marginTop: '8px', fontSize: '11px', color: '#6DA49C', fontWeight: '500' }}>
                             ✓ Coordenadas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
                         </p>

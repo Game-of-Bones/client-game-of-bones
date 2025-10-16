@@ -27,7 +27,8 @@ import NotFound from '../pages/NotFound';
 
 export const router = createBrowserRouter([
   // ============================================
-  // RUTAS DE AUTENTICACIÓN (sin Navbar, con Footer y botón de tema)
+  // RUTAS DE AUTENTICACIÓN (sin Navbar, con Footer)
+  // Backend: POST /api/auth/login y POST /api/auth/register
   // ============================================
   {
     element: <AuthLayout />,
@@ -51,51 +52,78 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <NotFound />,
     children: [
-      { index: true, element: <Home /> },
+      { 
+        index: true, 
+        element: <Home /> 
+      },
 
-      // 👥 PÁGINA ABOUT/CREATORS - ⬅️ NUEVA RUTA
-      { path: 'creators', element: <Creators /> },
+      // ============================================
+      // 📚 RUTAS DE POSTS
+      // Backend: GET /api/posts
+      // ============================================
+      { 
+        path: 'posts', 
+        element: <PostList /> 
+      },
+      
+      // ============================================
+      // 📄 DETALLE DE POST (público)
+      // Backend: GET /api/posts/:id
+      // ============================================
+      { 
+        path: 'posts/:id', 
+        element: <PostDetail /> 
+      },
 
-      // 📚 RUTAS DE POSTS (SIN PROTECCIÓN TEMPORAL PARA TESTING)
-      { path: 'posts', element: <PostList /> },
-      
-      // ✏️ CREAR POST (temporal sin protección)
-      { path: 'posts/new', element: <CreatePost /> },
-      
-      // ✏️ EDITAR POST (temporal sin protección) - DEBE IR ANTES DE posts/:id
-      { path: 'posts/:id/edit', element: <EditPost /> },
-      
-      // 📄 DETALLE DE POST - DEBE IR AL FINAL
-      { path: 'posts/:id', element: <PostDetail /> },
-
-      // 🔒 Rutas protegidas (requieren autenticación)
+      // ============================================
+      // 🔒 RUTAS PROTEGIDAS (requieren autenticación)
+      // ============================================
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'profile', element: <Profile /> },
-        ]
-      },
-
-      // 👑 RUTAS DE ADMINISTRACIÓN (COMENTADAS TEMPORALMENTE)
-      // Cuando quieras activar la protección, descomenta esto:
-      /*
-      {
-        path: 'admin',
-        children: [
+          // ✏️ CREAR POST
+          // Backend: POST /api/posts (requiere verifyToken)
           { 
-            path: 'users',
-            element: (
-              <AdminRoute>
-                <UserManagement />
-              </AdminRoute>
-            )
-          }
+            path: 'posts/new',
+            element: <CreatePost />
+          },
+          
+          // ✏️ EDITAR POST
+          // Backend: PUT /api/posts/:id (requiere verifyToken + ser autor o admin)
+          { 
+            path: 'posts/:id/edit',
+            element: <EditPost />
+          },
+
+          // 👤 PERFIL DE USUARIO
+          {
+            path: 'profile',
+            element: <Profile />
+          },
+
+          // ============================================
+          // 👑 RUTAS DE ADMINISTRACIÓN (requieren rol admin)
+          // ============================================
+          {
+            path: 'admin',
+            element: <AdminRoute />,
+            children: [
+              { 
+                path: 'users',
+                element: <UserManagement />
+              }
+            ]
+          },
         ]
       },
-      */
 
+      // ============================================
       // ⚠️ Página 404
-      { path: '*', element: <NotFound /> },
+      // ============================================
+      { 
+        path: '*', 
+        element: <NotFound /> 
+      },
     ],
   },
 ]);

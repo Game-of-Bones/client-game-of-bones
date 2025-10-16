@@ -4,16 +4,6 @@ import Button from '../components/ui/button';
 import Input from '../components/ui/Input';
 import { useAuthStore } from '../stores/authStore';
 
-/**
- * REGISTER PAGE - Game of Bones
- * 
- * Página de registro con diseño exacto del Figma.
- * Split-screen: Fósil izquierda, formulario derecha.
- * Respeta el tema claro/oscuro global.
- * 
- * ACTUALIZADO: Usa el componente Input del sistema de diseño
- */
-
 const Register = () => {
   const navigate = useNavigate();
   
@@ -21,7 +11,6 @@ const Register = () => {
 
   const [formData, setFormData] = useState({
     username: '',
-    displayName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -29,12 +18,14 @@ const Register = () => {
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
+  // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
+  // Limpiar errores al desmontar
   useEffect(() => {
     return () => {
       clearError();
@@ -49,6 +40,7 @@ const Register = () => {
       [name]: value,
     }));
 
+    // Limpiar error de validación local
     if (validationErrors[name]) {
       setValidationErrors((prev) => {
         const newErrors = { ...prev };
@@ -57,6 +49,7 @@ const Register = () => {
       });
     }
 
+    // Limpiar error del backend
     if (error) {
       clearError();
     }
@@ -73,14 +66,6 @@ const Register = () => {
       errors.username = 'Máximo 20 caracteres';
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       errors.username = 'Solo letras, números y guiones bajos';
-    }
-
-    if (!formData.displayName.trim()) {
-      errors.displayName = 'El nombre de perfil es requerido';
-    } else if (formData.displayName.length < 3) {
-      errors.displayName = 'Mínimo 3 caracteres';
-    } else if (formData.displayName.length > 50) {
-      errors.displayName = 'Máximo 50 caracteres';
     }
 
     if (!formData.email.trim()) {
@@ -113,12 +98,17 @@ const Register = () => {
     }
 
     try {
+      // ✅ LLAMADA REAL AL BACKEND (sin role, siempre será 'user')
       await register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
+      
+      // Si llega aquí, el registro fue exitoso
+      // authStore ya redirige automáticamente si isAuthenticated cambia
     } catch (err) {
+      // El error ya está en el store (authStore.error)
       console.error('Error en registro:', err);
     }
   };
@@ -134,22 +124,20 @@ const Register = () => {
         />
       </div>
 
-      {/* LADO DERECHO - FORMULARIO CON FONDO TRANSPARENTE */}
+      {/* LADO DERECHO - FORMULARIO */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className="w-full max-w-md">
-          {/* LOGO - Clickeable para ir al home */}
+          {/* LOGO */}
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex justify-center mb-6 w-full transition-all duration-300 hover:scale-105 focus:outline-none cursor-pointer"
+            className="flex justify-center mb-6 w-full transition-all duration-300 hover:scale-105"
             aria-label="Ir a página principal"
-            style={{ outline: 'none', border: 'none' }}
           >
             <img
               src="/gob_logo.png"
               alt="Game of Bones"
-              className="w-72 h-auto object-contain pointer-events-none"
-              style={{ maxWidth: '300px' }}
+              className="w-72 h-auto object-contain"
             />
           </button>
 
@@ -161,7 +149,6 @@ const Register = () => {
                 color: '#C9A875',
                 fontFamily: 'Cinzel, serif',
                 letterSpacing: '0.08em',
-                lineHeight: '1.5',
               }}
             >
               Rellena los datos para crear tu perfil
@@ -176,7 +163,6 @@ const Register = () => {
             >
               Registro
             </p>
-            {/* Línea horizontal decorativa */}
             <div 
               className="w-full max-w-sm mx-auto"
               style={{
@@ -204,7 +190,7 @@ const Register = () => {
               </div>
             )}
 
-            {/* Wrapper para sobreescribir estilos del Input con tema de Register */}
+            {/* Estilos para sobrescribir Input */}
             <style>{`
               .register-input-wrapper label {
                 color: #C9A875 !important;
@@ -238,16 +224,6 @@ const Register = () => {
                 font-family: 'Cinzel', serif !important;
                 font-size: 0.75rem !important;
               }
-              
-              /* Modo oscuro - ajustes específicos */
-              [data-theme="dark"] .register-input-wrapper input {
-                background-color: #6B5B4A !important;
-                color: #FAF2E5 !important;
-              }
-              
-              [data-theme="dark"] .register-input-wrapper label {
-                color: #E8D9B8 !important;
-              }
             `}</style>
 
             {/* NOMBRE DE USUARIO */}
@@ -256,27 +232,12 @@ const Register = () => {
                 id="username"
                 name="username"
                 type="text"
-                label="Nombre"
+                label="Nombre de usuario"
                 value={formData.username}
                 onChange={handleChange}
                 error={validationErrors.username}
                 placeholder="Tu nombre de usuario"
                 autoComplete="username"
-              />
-            </div>
-
-            {/* NOMBRE DE PERFIL */}
-            <div className="register-input-wrapper">
-              <Input
-                id="displayName"
-                name="displayName"
-                type="text"
-                label="Nombre de perfil"
-                value={formData.displayName}
-                onChange={handleChange}
-                error={validationErrors.displayName}
-                placeholder="Tu nombre para mostrar"
-                autoComplete="name"
               />
             </div>
 
@@ -325,15 +286,13 @@ const Register = () => {
               />
             </div>
 
-            {/* BOTÓN DE REGISTRO */}
+            {/* BOTÓN */}
             <div className="pt-3">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2 text-xs font-semibold tracking-widest uppercase transition-all"
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                }}
+                className="w-full py-2 text-xs font-semibold tracking-widest uppercase"
+                style={{ fontFamily: 'Cinzel, serif' }}
               >
                 {isLoading ? 'REGISTRANDO...' : 'REGISTRAR'}
               </Button>
@@ -344,21 +303,13 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#C9A875] rounded px-2 py-1"
+                className="text-sm transition-all duration-200 hover:scale-105"
                 style={{ 
                   color: '#E8D9B8',
                   fontFamily: 'Cinzel, serif',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#C9A875';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#E8D9B8';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
               >
-                ¿Estás ya registrado? <span style={{ color: '#D4A574', textDecoration: 'underline' }}>¡Inicia sesión aquí!</span>
+                ¿Ya tienes cuenta? <span style={{ color: '#D4A574', textDecoration: 'underline' }}>Inicia sesión aquí</span>
               </button>
             </div>
           </form>
