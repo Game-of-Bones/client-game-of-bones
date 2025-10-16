@@ -1,5 +1,95 @@
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, MessageCircle, ChevronDown, Trash2, Edit2 } from 'lucide-react';
+
+
+// Modal de confirmación de eliminación
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting?: boolean;
+}
+
+const DeleteConfirmModal = ({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  isDeleting = false
+}: DeleteConfirmModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50"
+      style={{ backgroundColor: 'rgba(29, 67, 66, 0.67)' }}
+      onClick={onCancel}
+    >
+      <div 
+        className="rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+        style={{ backgroundColor: 'rgba(29, 67, 66, 0.95)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Imagen del Triceratops */}
+        <div className="flex justify-center mb-6">
+          <div className="w-32 h-32 relative">
+            <img 
+              src="/Triceratops_Skull_in_Earthy_Brown.png" 
+              alt="Triceratops Skull" 
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+        
+        {/* Título */}
+        <h3 
+          className="text-2xl sm:text-3xl font-bold text-center mb-3"
+          style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
+        >
+          {title}
+        </h3>
+        
+        {/* Mensaje */}
+        <p 
+          className="text-center mb-8 text-base sm:text-lg"
+          style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
+        >
+          {message}
+        </p>
+        
+        {/* Botones */}
+        <div className="flex justify-center gap-4">
+          <button 
+            onClick={onCancel} 
+            disabled={isDeleting}
+            className="py-3 px-8 rounded-full text-white font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 text-lg"
+            style={{ 
+              backgroundColor: '#F76C5E',
+              fontFamily: "'Playfair Display', serif"
+            }}
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={onConfirm} 
+            disabled={isDeleting}
+            className="py-3 px-8 rounded-full text-white font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+            style={{ 
+              backgroundColor: '#8DAA91',
+              fontFamily: "'Playfair Display', serif"
+            }}
+          >
+            {isDeleting ? 'Eliminando...' : 'Eliminar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface Post {
   id: string;
@@ -37,7 +127,13 @@ const PostDetail = () => {
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<'post' | 'comment'>('post');
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const navigate = useNavigate();
+  
   useEffect(() => {
     fetchPost();
     fetchComments();
@@ -59,7 +155,7 @@ El fósil, apodado "Sue II" en honor al famoso espécimen anterior, se encuentra
 El Dr. Marcus Thompson, líder de la expedición, explica que este hallazgo es extraordinario no solo por su completitud, sino por lo que nos puede enseñar sobre el comportamiento social de estos animales.
 
 El análisis preliminar indica que el ejemplar era un adulto joven, de aproximadamente 20 años de edad al momento de su muerte. Los sedimentos circundantes sugieren que el animal murió cerca de un antiguo lecho de río.`,
-        image_url: '/public/montana.jpg',
+        image_url: 'https://images.unsplash.com/photo-1565012618935-9def2a0b9b7e?w=800',
         location: 'Montana, Estados Unidos',
         discovery_date: '2023-07-15',
         paleontologist: 'Dr. Marcus Thompson',
@@ -119,6 +215,67 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
     
     setComments([...comments, comment]);
     setNewComment('');
+  };
+
+  const handleDeletePost = async () => {
+    setIsDeleting(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Post eliminado');
+      alert('Post eliminado exitosamente');
+      // Aquí podrías redirigir a otra página después de eliminar
+      // window.location.href = '/posts';
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+    }
+  };
+
+  const handleDeleteComment = async () => {
+    if (!commentToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setComments(comments.filter(c => c.id !== commentToDelete));
+      console.log('Comentario eliminado:', commentToDelete);
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setCommentToDelete(null);
+    }
+  };
+
+  const openDeletePostModal = () => {
+    setDeleteType('post');
+    setDeleteModalOpen(true);
+  };
+
+  const openDeleteCommentModal = (commentId: string) => {
+    setDeleteType('comment');
+    setCommentToDelete(commentId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteType === 'post') {
+      handleDeletePost();
+    } else {
+      handleDeleteComment();
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setCommentToDelete(null);
+  };
+
+  const handleEditPost = () => {
+    navigate(`/posts/${post?.id}/edit`); // ✅ CAMBIO REALIZADO AQUÍ
   };
 
   const formatDate = (dateString: string) => {
@@ -277,13 +434,41 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
             </div>
 
             <div 
-              className="rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 mx-2 sm:mx-0"
+              className="rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 mx-2 sm:mx-0 relative"
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
               <div className="space-y-3 sm:space-y-4 leading-relaxed text-base sm:text-lg" style={{ color: '#FFFFFF' }}>
                 {post.post_content.split('\n\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}
+              </div>
+              
+              {/* Botones de editar y eliminar post */}
+              <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex gap-2">
+                <button
+                  onClick={handleEditPost}
+                  className="p-2 rounded-full hover:bg-opacity-20 transition-all group"
+                  style={{ backgroundColor: 'rgba(72, 169, 166, 0.1)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(72, 169, 166, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(72, 169, 166, 0.1)'}
+                  title="Editar"
+                >
+                  <Edit2 size={20} style={{ color: '#48a9a6' }} />
+                  <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Editar
+                  </span>
+                </button>
+                
+                <button
+                  onClick={openDeletePostModal}
+                  className="p-2 rounded-full hover:bg-red-500/20 transition-all group"
+                  title="Eliminar"
+                >
+                  <Trash2 size={20} className="text-red-400 group-hover:text-red-300" />
+                  <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Eliminar
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -299,9 +484,21 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
             {comments.map(comment => (
               <div 
                 key={comment.id}
-                className="rounded-xl p-4 sm:p-6"
+                className="rounded-xl p-4 sm:p-6 relative"
                 style={{ backgroundColor: 'rgba(139, 107, 77, 0.5)' }}
               >
+                {/* Botón eliminar comentario */}
+                <button
+                  onClick={() => openDeleteCommentModal(comment.id)}
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-full hover:bg-red-500/20 transition-all group"
+                  title="Eliminar"
+                >
+                  <Trash2 size={18} className="text-red-400 group-hover:text-red-300" />
+                  <span className="absolute top-full right-0 mt-2 px-3 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Eliminar
+                  </span>
+                </button>
+                
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <img 
                     src={comment.user.avatar} 
@@ -312,7 +509,7 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
                     {comment.user.username}
                   </span>
                 </div>
-                <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#FFFFFF' }}>
+                <p className="text-base sm:text-lg leading-relaxed pr-8" style={{ color: '#FFFFFF' }}>
                   {comment.content}
                 </p>
               </div>
@@ -341,6 +538,16 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        title={deleteType === 'post' ? '¡¿ELIMINAR PUBLICACIÓN?!' : '¡¿ELIMINAR COMENTARIO?!'}
+        message="Esta acción no se puede deshacer. ¿Estás seguro de ello?"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };
