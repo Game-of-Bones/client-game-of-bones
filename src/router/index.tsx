@@ -22,9 +22,7 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import AdminRoute from '../components/common/AdminRoute';
 
 // NotFound temporal
-function NotFound() {
-  return <div className="p-8">404 - Not Found</div>;
-}
+import NotFound from '../pages/NotFound';
 
 export const router = createBrowserRouter([
   // ============================================
