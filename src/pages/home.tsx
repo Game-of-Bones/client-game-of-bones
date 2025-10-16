@@ -1,6 +1,8 @@
 // Home.tsx
 import { Link } from 'react-router-dom';
 import MapComponent from '../components/ui/MapComponent';
+import RecentPostsCarousel from '../components/ui/RecentPostsCarousel';
+
 
 const Home = () => {
   return (
@@ -46,6 +48,8 @@ const Home = () => {
           </h2>
           <MapComponent />
         </section>
+
+        <RecentPostsCarousel />
 
         {/* Features - Con backdrop blur para efecto glassmorphism */}
         <section className="grid md:grid-cols-3 gap-6 mb-8">
