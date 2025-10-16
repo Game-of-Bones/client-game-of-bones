@@ -4,8 +4,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Sparkles } from 'lucide-react';
 import MapComponent from '../components/ui/MapComponent';
 import CreatePostButton from '../components/ui/CreatePostButton';
-import { getAllPosts } from '../services/PostService';
-import type { Post } from '../types/post.types';
+import { getAllPosts } from '../services/postService';
+
+// Definimos el tipo Post directamente aquí (basado en lo que devuelve tu API)
+interface Post {
+  post_id: number;
+  title: string;
+  content: string;
+  images: string[];
+  created_at: string;
+  status: string;
+  fossil_type?: string;
+}
 
 const Home = () => {
   const navigate = useNavigate();
@@ -23,7 +33,7 @@ const Home = () => {
           limit: 6 
         });
         setRecentPosts(data.posts);
-        console.log('Posts cargados:', data.posts); // Debug
+        console.log('Posts cargados:', data.posts);
       } catch (error) {
         console.error('Error al cargar posts:', error);
       } finally {
@@ -223,9 +233,9 @@ const Home = () => {
         )}
       </section>
 
-      {/* Features Mejorados con Links */}
+      {/* Features con Links */}
       <section className="grid md:grid-cols-2 gap-8 mb-8">
-        {/* Feature 1 - Link a Crear Post */}
+        {/* Banner 1 - Link a CREAR POST */}
         <Link 
           to="/posts/new"
           className="group relative p-8 rounded-2xl text-center backdrop-blur-sm border-2 transition-all duration-300 overflow-hidden block"
@@ -274,7 +284,7 @@ const Home = () => {
           </div>
         </Link>
 
-        {/* Feature 2 - Link a Lista de Posts */}
+        {/* Banner 2 - Link a LISTA DE POSTS */}
         <Link 
           to="/posts"
           className="group relative p-8 rounded-2xl text-center backdrop-blur-sm border-2 transition-all duration-300 overflow-hidden block"
