@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Heart, MessageCircle, ChevronDown, Trash2, Edit2 } from 'lucide-react';
-
+import PostService from '../services/PostService';
 
 // Modal de confirmación de eliminación
 interface DeleteConfirmModalProps {
@@ -133,11 +133,14 @@ const PostDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
-  
+  const { id } = useParams();
+
+
   useEffect(() => {
     fetchPost();
     fetchComments();
-  }, []);
+  }, [id]); // ✅ Ahora dependemos del id
+
 
   const fetchPost = async () => {
     setIsLoading(true);
@@ -177,14 +180,22 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
       };
       
       setPost(mockPost);
+
+      
+      // ✅ NUEVO - obtener post real del backend
+        
+      const fetchedPost = await PostService.getPostById(Number(id));
+        setPost(fetchedPost);
+      
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al obtener el post:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const fetchComments = async () => {
+
     const mockComments: Comment[] = [
       {
         id: '1',
@@ -217,21 +228,23 @@ El análisis preliminar indica que el ejemplar era un adulto joven, de aproximad
     setNewComment('');
   };
 
+  //NUEVO ✅
   const handleDeletePost = async () => {
-    setIsDeleting(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Post eliminado');
-      alert('Post eliminado exitosamente');
-      // Aquí podrías redirigir a otra página después de eliminar
-      // window.location.href = '/posts';
-    } catch (error) {
-      console.error('Error al eliminar:', error);
-    } finally {
-      setIsDeleting(false);
-      setDeleteModalOpen(false);
-    }
-  };
+  setIsDeleting(true);
+  try {
+    await PostService.deletePost(Number(id));
+    console.log('Post eliminado desde backend');
+    alert('Post eliminado exitosamente');
+    navigate('/posts');
+  } catch (error) {
+    console.error('Error al eliminar:', error);
+    alert('No se pudo eliminar el post');
+  } finally {
+    setIsDeleting(false);
+    setDeleteModalOpen(false);
+  }
+};
+
 
   const handleDeleteComment = async () => {
     if (!commentToDelete) return;
