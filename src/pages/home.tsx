@@ -3,43 +3,23 @@ import { Link } from 'react-router-dom';
 import MapComponent from '../components/ui/MapComponent';
 import RecentPostsCarousel from '../components/ui/RecentPostsCarousel';
 
-
 const Home = () => {
   return (
     <>
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Hero Section - SIN bg-gray-100 */}
-        <section className="text-center py-12 rounded-lg mb-8 backdrop-blur-sm bg-white/10 border border-white/20">
-          <h1 className="text-4xl font-bold mb-4">
-            Bienvenido a Game of Bones
-          </h1>
-          <p className="text-xl mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Comparte y descubre historias épicas
-          </p>
-          <div className="space-x-4">
-            <Link
-              to="/posts"
-              className="inline-block px-6 py-3 rounded transition"
-              style={{ 
-                backgroundColor: 'var(--color-teal)',
-                color: 'var(--text-inverse)'
-              }}
-            >
-              Ver Posts
-            </Link>
-            <Link
-              to="/register"
-              className="inline-block px-6 py-3 rounded transition"
-              style={{ 
-                backgroundColor: 'var(--color-coral)',
-                color: 'var(--text-inverse)'
-              }}
-            >
-              Únete Ahora
-            </Link>
-          </div>
-        </section>
+      <div className="container mx-auto px-4 py-8 relative">
+  {/* 🔘 Botón lateral derecho flotante */}
+  <Link
+    to="/posts/new"
+    className="fixed top-28 right-8 z-50 px-5 py-3 rounded-lg uppercase font-[Cinzel] text-sm tracking-wider shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
+    style={{
+      backgroundColor: 'rgba(141, 170, 145, 0.7)', // color 8DAA91 al 70%
+      border: '0.5px solid #1D4342',
+      color: '#FFFFFF', // ← ahora el texto es blanco puro
+    }}
+  >
+    Crear nuevo Post
+  </Link>
+
 
         {/* Mapa */}
         <section className="mb-8" style={{ minHeight: '800px' }}>
@@ -51,7 +31,7 @@ const Home = () => {
 
         <RecentPostsCarousel />
 
-        {/* Features - Con backdrop blur para efecto glassmorphism */}
+        {/* Features */}
         <section className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-lg text-center backdrop-blur-sm bg-white/10 border border-white/20">
             <h3 className="text-xl font-semibold mb-2">📝 Crea Posts</h3>
