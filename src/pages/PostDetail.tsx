@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Heart, MessageCircle, ChevronDown, Trash2, Edit2, Send } from 'lucide-react';
+import { MessageCircle, ChevronDown, Trash2, Edit2, Send } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import type { Post } from '../types/post.types';
+import { splitPostContent } from '../types/post.types';
 
-// Tipos para comentarios y likes
+// Tipos para comentarios
 interface Comment {
   id: number;
   content: string;
@@ -15,13 +16,6 @@ interface Comment {
     id: number;
     username: string;
   };
-}
-
-interface Like {
-  id: number;
-  user_id: number;
-  post_id: number;
-  created_at?: string;
 }
 
 // Modal de confirmación
@@ -88,7 +82,6 @@ const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isDel
 const PostDetail = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [likes, setLikes] = useState<Like[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
@@ -105,10 +98,11 @@ const PostDetail = () => {
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
+    console.log('📍 ID recibido en PostDetail:', id);
     if (id) {
       loadAllData();
     }
-  }, [id, user]); // ✅ Recargar cuando cambie el usuario
+  }, [id]);
 
   // Función para cargar todos los datos
   const loadAllData = async () => {
@@ -152,7 +146,6 @@ const PostDetail = () => {
       const data = await response.json();
       console.log('✅ Comentarios obtenidos:', data);
 
-      // ✅ Manejar formato: { data: { comments: [], count: 0 }, success: true }
       let commentsArray: Comment[] = [];
 
       if (Array.isArray(data)) {
@@ -175,7 +168,6 @@ const PostDetail = () => {
 
   const fetchLikes = async () => {
     try {
-      // ✅ Usar el endpoint existente que cuenta los likes
       const response = await fetch(`http://localhost:3001/api/posts/${id}`);
 
       if (!response.ok) {
@@ -188,13 +180,10 @@ const PostDetail = () => {
       const result = await response.json();
       const postData = result.data || result;
 
-      // Si el backend devuelve el contador de likes en el post
       if (postData.likes_count !== undefined) {
         setLikesCount(postData.likes_count);
       }
 
-      // ⚠️ Como no podemos verificar si el usuario dio like, lo dejamos en false por defecto
-      // El estado se manejará localmente durante la sesión
       setUserLiked(false);
 
     } catch (err: any) {
@@ -210,6 +199,12 @@ const PostDetail = () => {
       return;
     }
 
+    const previousLiked = userLiked;
+    const previousCount = likesCount;
+    
+    setUserLiked(!userLiked);
+    setLikesCount(userLiked ? likesCount - 1 : likesCount + 1);
+
     try {
       const response = await fetch(`http://localhost:3001/api/posts/${id}/like`, {
         method: 'POST',
@@ -219,30 +214,26 @@ const PostDetail = () => {
         }
       });
 
-      if (!response.ok) throw new Error('Error al procesar el like');
+      if (!response.ok) {
+        setUserLiked(previousLiked);
+        setLikesCount(previousCount);
+        throw new Error('Error al procesar el like');
+      }
 
       const result = await response.json();
       console.log('✅ Like toggle exitoso:', result);
 
-      // ✅ Actualizar estados según la respuesta del backend
       if (result.liked !== undefined) {
         setUserLiked(result.liked);
-      } else {
-        setUserLiked(!userLiked);
       }
 
       if (result.likes_count !== undefined) {
         setLikesCount(result.likes_count);
-      } else {
-        setLikesCount(userLiked ? likesCount - 1 : likesCount + 1);
       }
-
-      // ✅ Recargar likes para tener datos actualizados
-      await fetchLikes();
 
     } catch (err: any) {
       console.error('❌ Error al dar like:', err);
-      alert('Error al procesar el like');
+      alert('Error al procesar el like. Inténtalo de nuevo.');
     }
   };
 
@@ -276,7 +267,6 @@ const PostDetail = () => {
       const result = await response.json();
       console.log('✅ Comentario creado:', result);
 
-      // ✅ Recargar comentarios para obtener datos actualizados del backend
       await fetchComments();
       setNewComment('');
 
@@ -303,7 +293,6 @@ const PostDetail = () => {
 
       console.log('✅ Comentario eliminado');
 
-      // ✅ Recargar comentarios después de eliminar
       await fetchComments();
       setDeleteCommentId(null);
 
@@ -388,6 +377,9 @@ const PostDetail = () => {
     );
   }
 
+  // ✅ Separar el contenido en resumen corto y contenido detallado
+  const { detailedContent } = splitPostContent(post.summary);
+
   return (
     <div className="min-h-screen pb-8" style={{ fontFamily: "'Playfair Display', serif" }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
@@ -408,13 +400,9 @@ const PostDetail = () => {
           </div>
         )}
 
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2 sm:px-0" style={{ color: '#FFFFFF' }}>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 px-2 sm:px-0" style={{ color: '#FFFFFF' }}>
           {post.title}
         </h1>
-
-        <p className="text-base sm:text-lg md:text-xl italic mb-6 sm:mb-8 opacity-80 px-2 sm:px-0 leading-relaxed" style={{ color: '#FFFFFF' }}>
-          {post.summary}
-        </p>
 
         {/* LIKES Y COMENTARIOS CONTADOR */}
         <div className="flex items-center gap-6 mb-6 px-2 sm:px-0">
@@ -526,8 +514,8 @@ const PostDetail = () => {
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
               <div className="space-y-3 sm:space-y-4 leading-relaxed text-base sm:text-lg" style={{ color: '#FFFFFF' }}>
-                {post.post_content ? (
-                  post.post_content.split('\n\n').map((paragraph, idx) => (
+                {detailedContent ? (
+                  detailedContent.split('\n\n').map((paragraph, idx) => (
                     <p key={idx}>{paragraph}</p>
                   ))
                 ) : (

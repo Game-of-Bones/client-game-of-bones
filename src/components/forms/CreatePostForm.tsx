@@ -9,8 +9,7 @@ import type { FossilType, CreatePostData } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    summary: string; // Resumen corto
-    post_content: string; // ✅ Contenido detallado
+    post_content: string; // ✅ Solo contenido (se guardará en summary)
     image_url: string;
     paleontologist: string;
     location: string;
@@ -32,8 +31,7 @@ const CreatePostForm = () => {
 
     const [formData, setFormData] = useState<FormData>({
         title: '',
-        summary: '', // Resumen corto
-        post_content: '', // ✅ Contenido detallado
+        post_content: '', // ✅ Todo el contenido aquí
         image_url: '',
         paleontologist: '',
         location: '',
@@ -88,8 +86,7 @@ const CreatePostForm = () => {
         const newErrors: Record<string, string> = {};
 
         if (!formData.title.trim()) newErrors.title = 'El Título del Post es obligatorio.';
-        if (!formData.summary.trim()) newErrors.summary = 'El Subtítulo/Resumen es obligatorio.';
-        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido Detallado es obligatorio.';
+        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido de la Publicación es obligatorio.';
         if (!formData.fossil_type) newErrors.fossil_type = 'Debes seleccionar el Tipo de Fósil.';
         if (!formData.image_url && !isUploadingImage) newErrors.image_url = 'Debes incluir una imagen principal.';
 
@@ -115,15 +112,13 @@ const CreatePostForm = () => {
         }
 
         try {
-            const fullContent = `${formData.summary}\n\n${formData.post_content}`;
-            
-            // ✅ Construir objeto con el tipo correcto
+            // ✅ El contenido completo va en summary (como espera el backend)
             const dataToSubmit: CreatePostData = {
                 title: formData.title,
-                summary: fullContent, // ✅ Contenido completo en summary
+                summary: formData.post_content, // ✅ Todo el contenido en summary
                 fossil_type: formData.fossil_type as FossilType,
                 status: statusOverride,
-                user_id: user.id, // ✅ Es user_id según el modelo backend
+                user_id: user.id,
             };
 
             // Solo añadir campos opcionales si tienen valor
@@ -135,8 +130,6 @@ const CreatePostForm = () => {
             if (formData.geological_period) dataToSubmit.geological_period = formData.geological_period;
             if (formData.discovery_date) dataToSubmit.discovery_date = new Date(formData.discovery_date).toISOString();
             if (formData.source) dataToSubmit.source = formData.source;
-
-            console.log('📤 Datos a enviar:', dataToSubmit);
 
             console.log('📤 Datos a enviar:', dataToSubmit);
 
@@ -267,27 +260,6 @@ const CreatePostForm = () => {
                     )}
                 </div>
 
-                {/* Subtítulo/Resumen */}
-                <div>
-                    <label htmlFor="summary" style={labelStyle}>Subtítulo del Post *</label>
-                    <input
-                        id="summary"
-                        name="summary"
-                        type="text"
-                        value={formData.summary}
-                        onChange={handleChange}
-                        placeholder="Un breve resumen o eslogan..."
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            borderColor: errors.summary ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.summary && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.summary}</p>
-                    )}
-                </div>
-
                 {/* Imagen */}
                 <div style={{
                     backgroundColor: 'rgba(245, 230, 204, 0.3)',
@@ -358,6 +330,28 @@ const CreatePostForm = () => {
                                 <p style={{ marginTop: '8px', fontSize: '12px', color: '#dc2626' }}>{errors.image_url}</p>
                             )}
                         </div>
+                    )}
+                </div>
+
+                {/* Contenido del Post */}
+                <div>
+                    <label htmlFor="post_content" style={labelStyle}>Contenido de la Publicación *</label>
+                    <textarea
+                        id="post_content"
+                        name="post_content"
+                        value={formData.post_content}
+                        onChange={handleChange}
+                        placeholder="Escribe el contenido completo del post: descripción, métodos de excavación, importancia del hallazgo, etc..."
+                        rows={10}
+                        disabled={isSubmitting}
+                        style={{
+                            ...inputStyle,
+                            resize: 'vertical' as const,
+                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
+                        }}
+                    />
+                    {errors.post_content && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 
@@ -442,28 +436,6 @@ const CreatePostForm = () => {
                     </select>
                     {errors.fossil_type && (
                         <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.fossil_type}</p>
-                    )}
-                </div>
-
-                {/* Contenido del Post */}
-                <div>
-                    <label htmlFor="post_content" style={labelStyle}>Contenido del Post (Detallado) *</label>
-                    <textarea
-                        id="post_content"
-                        name="post_content"
-                        value={formData.post_content}
-                        onChange={handleChange}
-                        placeholder="Escribe la descripción detallada, métodos de excavación, importancia del hallazgo, etc..."
-                        rows={8}
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            resize: 'vertical' as const,
-                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.post_content && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 

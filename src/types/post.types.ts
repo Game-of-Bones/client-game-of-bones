@@ -9,12 +9,12 @@ export type PostStatus = 'draft' | 'published';
 
 /**
  * Estructura completa de un post recibido desde el backend.
+ * ✅ BACKEND USA "summary" PARA TODO EL CONTENIDO
  */
 export interface Post {
   id: number;
   title: string;
-  summary: string; // Resumen corto
-  post_content?: string; // ✅ OPCIONAL hasta que el backend lo añada
+  summary: string; // ✅ Contiene TODO el contenido (resumen + detalle)
   image_url?: string;
   discovery_date?: string;
   location?: string;
@@ -35,15 +35,18 @@ export interface Post {
     username: string;
     email: string;
   };
+  
+  // ✅ HELPER: Para separar el contenido en el frontend
+  post_content?: string; // No existe en backend, lo calculamos nosotros
 }
 
 /**
  * Datos requeridos para crear un nuevo post.
+ * ✅ BACKEND SOLO ACEPTA "summary"
  */
 export interface CreatePostData {
   title: string;
-  summary: string; // Resumen/subtítulo corto
-  post_content?: string; // ✅ OPCIONAL hasta que el backend lo añada
+  summary: string; // ✅ Aquí va TODO: resumen + contenido detallado
   image_url?: string;
   discovery_date?: string;
   location?: string;
@@ -54,7 +57,7 @@ export interface CreatePostData {
   geological_period?: string;
   status: PostStatus;
   source?: string;
-  user_id: number; // ✅ Requerido para crear
+  user_id: number;
 }
 
 /**
@@ -62,8 +65,7 @@ export interface CreatePostData {
  */
 export interface UpdatePostData {
   title?: string;
-  summary?: string;
-  post_content?: string; // ✅ Contenido detallado
+  summary?: string; // Contiene TODO el contenido(summary+postdetail)
   image_url?: string;
   discovery_date?: string | null;
   location?: string;
@@ -83,3 +85,22 @@ export const FOSSIL_TYPE_OPTIONS = [
   { value: 'tracks_traces' as FossilType, label: 'Huellas y Rastros' },
   { value: 'amber_insects' as FossilType, label: 'Insectos en Ámbar' },
 ] as const;
+
+// ✅ HELPER: Separa el summary en dos partes para mostrar en el frontend
+export function splitPostContent(summary: string): { shortSummary: string; detailedContent: string } {
+  // Si el summary tiene doble salto de línea, separamos
+  const parts = summary.split('\n\n');
+  
+  if (parts.length >= 2) {
+    return {
+      shortSummary: parts[0],
+      detailedContent: parts.slice(1).join('\n\n')
+    };
+  }
+  
+  // Si no hay separación, el summary es tanto resumen como contenido
+  return {
+    shortSummary: summary,
+    detailedContent: summary
+  };
+}

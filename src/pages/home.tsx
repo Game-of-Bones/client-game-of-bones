@@ -4,21 +4,7 @@ import { BookOpen, Sparkles } from 'lucide-react';
 import MapComponent from '../components/ui/MapComponent';
 import CreatePostButton from '../components/ui/CreatePostButton';
 import { getAllPosts } from '../services/postService';
-
-// Definimos el tipo Post basado en lo que REALMENTE devuelve tu API
-interface Post {
-  post_id: number;
-  title: string;
-  content: string;
-  summary?: string;
-  image_url?: string;
-  images?: string[];  // Por si acaso tu API devuelve un array
-  created_at: string;
-  status: string;
-  fossil_type?: string;
-  location?: string;
-  paleontologist?: string;
-}
+import type { Post } from '../types/post.types'; // ✅ Importar el tipo correcto
 
 const Home = () => {
   const navigate = useNavigate();
@@ -36,7 +22,6 @@ const Home = () => {
           limit: 6 
         });
         
-        // ✅ CORRECCIÓN: Asegurarnos de que data.posts existe
         if (data && data.posts) {
           setRecentPosts(data.posts);
           console.log('Posts cargados:', data.posts);
@@ -67,20 +52,17 @@ const Home = () => {
   }, [recentPosts.length]);
 
   const handlePostClick = (postId: number) => {
+    console.log('🔍 Click en post con ID:', postId);
     navigate(`/posts/${postId}`);
   };
 
   // ✅ Función helper para obtener la imagen del post
   const getPostImage = (post: Post): string | null => {
-    // Prioridad: image_url > images[0] > null
-    if (post.image_url) return post.image_url;
-    if (post.images && post.images.length > 0) return post.images[0];
-    return null;
+    return post.image_url || null;
   };
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      {/* Botón Crear Post */}
       <CreatePostButton variant="fixed" />
 
       {/* Mapa */}
@@ -125,7 +107,6 @@ const Home = () => {
           </div>
         ) : (
           <div className="relative px-12">
-            {/* Carousel Container */}
             <div className="overflow-hidden rounded-xl">
               <div 
                 className="flex transition-transform duration-700 ease-in-out"
@@ -139,12 +120,12 @@ const Home = () => {
                   
                   return (
                     <div
-                      key={post.post_id}
-                      onClick={() => handlePostClick(post.post_id)}
+                      key={post.id}
+                      onClick={() => handlePostClick(post.id)}
                       className="cursor-pointer group flex-shrink-0"
                       style={{ 
                         width: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)',
-                        minWidth: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)'
+                        minWidth: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)',
                       }}
                     >
                       <div 
@@ -192,7 +173,7 @@ const Home = () => {
                             {post.title}
                           </h3>
                           <p className="text-white/90 text-sm line-clamp-2 mb-2">
-                            {post.summary || post.content?.substring(0, 100) || 'Sin descripción'}...
+                            {post.summary?.substring(0, 100) || 'Sin descripción'}...
                           </p>
                           <span className="text-white/70 text-xs">
                             📅 {new Date(post.created_at).toLocaleDateString('es-ES')}
@@ -216,7 +197,8 @@ const Home = () => {
                   style={{
                     backgroundColor: 'rgba(141, 170, 145, 0.9)',
                     color: 'white',
-                    border: '2px solid #1D4342'
+                    border: '2px solid #1D4342',
+                    zIndex: 10
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
@@ -237,7 +219,8 @@ const Home = () => {
                   style={{
                     backgroundColor: 'rgba(141, 170, 145, 0.9)',
                     color: 'white',
-                    border: '2px solid #1D4342'
+                    border: '2px solid #1D4342',
+                    zIndex: 10
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';

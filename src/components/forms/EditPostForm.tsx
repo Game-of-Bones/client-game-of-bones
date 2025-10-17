@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { usePostStore } from '../../stores/postStore';
 import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
-import { Upload, Link, Save, MapPin } from 'lucide-react';
+import { Upload, Link, Save } from 'lucide-react';
 import { FOSSIL_TYPE_OPTIONS } from '../../types/post.types';
 import type { Post, FossilType } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    post_content: string;
-    summary: string;
+    post_content: string; // ✅ Solo contenido (se guardará en summary)
     image_url: string;
     paleontologist: string;
     location: string;
@@ -37,8 +36,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
 
     const [formData, setFormData] = useState<FormData>({
         title: initialData.title || '',
-        post_content: initialData.post_content || '',
-        summary: initialData.summary || '',
+        post_content: initialData.summary || '', // ✅ summary contiene todo el contenido
         image_url: initialData.image_url || '',
         paleontologist: initialData.paleontologist || '',
         location: initialData.location || '',
@@ -54,8 +52,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     useEffect(() => {
         setFormData({
             title: initialData.title || '',
-            post_content: initialData.post_content || '',
-            summary: initialData.summary || '',
+            post_content: initialData.summary || '',
             image_url: initialData.image_url || '',
             paleontologist: initialData.paleontologist || '',
             location: initialData.location || '',
@@ -72,7 +69,6 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState('');
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    // const [isGeolocating, setIsGeolocating] = useState(false); // COMENTADO: Estado para geolocalización
     const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,62 +104,12 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
         }
     };
 
-    // COMENTADO: Función de geolocalización
-    /*
-    const handleGeolocate = async () => {
-        const location = formData.location.trim();
-        if (!location) {
-            setServerError('Por favor, introduce una ubicación antes de geocodificar.');
-            return;
-        }
-
-        setIsGeolocating(true);
-        setServerError('');
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
-                {
-                    headers: {
-                        'User-Agent': 'PaleontologApp/1.0'
-                    }
-                }
-            );
-            
-            if (!response.ok) {
-                throw new Error('Error al conectar con el servicio de geocodificación');
-            }
-
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                setFormData(prev => ({
-                    ...prev,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lon)
-                }));
-                setServerError('');
-            } else {
-                setServerError('No se encontraron coordenadas para esa ubicación. Intenta ser más específico.');
-            }
-        } catch (error: any) {
-            console.error('Geocoding error:', error);
-            setServerError(error.message || 'Error al obtener las coordenadas de la ubicación');
-        } finally {
-            setIsGeolocating(false);
-        }
-    };
-    */
-
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
         if (!formData.title.trim()) newErrors.title = 'El Título del Post es obligatorio.';
-        if (!formData.summary.trim()) newErrors.summary = 'El Subtítulo/Resumen es obligatorio.';
-        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido Detallado es obligatorio.';
+        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido de la Publicación es obligatorio.';
         if (!formData.fossil_type) newErrors.fossil_type = 'Debes seleccionar el Tipo de Fósil.';
-
         if (!formData.image_url && !isUploadingImage) newErrors.image_url = 'Debes incluir una imagen principal.';
 
         setErrors(newErrors);
@@ -184,8 +130,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
         try {
             const dataToSubmit = {
                 title: formData.title,
-                summary: formData.summary,
-                post_content: formData.post_content,
+                summary: formData.post_content, // ✅ Todo el contenido en summary
                 image_url: formData.image_url,
                 paleontologist: formData.paleontologist || undefined,
                 location: formData.location || undefined,
@@ -331,27 +276,6 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     )}
                 </div>
 
-                {/* Subtítulo */}
-                <div>
-                    <label htmlFor="summary" style={labelStyle}>Subtítulo del Post *</label>
-                    <input
-                        id="summary"
-                        name="summary"
-                        type="text"
-                        value={formData.summary}
-                        onChange={handleChange}
-                        placeholder="Un breve resumen o eslogan..."
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            borderColor: errors.summary ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.summary && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.summary}</p>
-                    )}
-                </div>
-
                 {/* Imagen */}
                 <div style={{
                     backgroundColor: 'rgba(245, 230, 204, 0.3)',
@@ -425,6 +349,28 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     )}
                 </div>
 
+                {/* Contenido del Post */}
+                <div>
+                    <label htmlFor="post_content" style={labelStyle}>Contenido de la Publicación *</label>
+                    <textarea
+                        id="post_content"
+                        name="post_content"
+                        value={formData.post_content}
+                        onChange={handleChange}
+                        placeholder="Escribe el contenido completo del post: descripción, métodos de excavación, importancia del hallazgo, etc..."
+                        rows={10}
+                        disabled={isSubmitting}
+                        style={{
+                            ...inputStyle,
+                            resize: 'vertical' as const,
+                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
+                        }}
+                    />
+                    {errors.post_content && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
+                    )}
+                </div>
+
                 {/* Paleontólogo y Período Geológico */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
@@ -455,47 +401,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     </div>
                 </div>
 
-                {/* COMENTADO: Lugar del Descubrimiento con botón de geolocalización */}
-                {/*
-                <div>
-                    <label htmlFor="location" style={labelStyle}>Lugar del Descubrimiento</label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <input
-                            id="location"
-                            name="location"
-                            type="text"
-                            value={formData.location}
-                            onChange={handleChange}
-                            placeholder="Ej: Patagonia, Argentina"
-                            disabled={isSubmitting}
-                            style={{ ...inputStyle, flex: 1 }}
-                        />
-                        <button
-                            type="button"
-                            onClick={handleGeolocate}
-                            disabled={isGeolocating || isSubmitting || !formData.location}
-                            style={{
-                                ...buttonSecondaryStyle,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                whiteSpace: 'nowrap',
-                                opacity: (isGeolocating || isSubmitting || !formData.location) ? 0.5 : 1
-                            }}
-                        >
-                            <MapPin size={16} />
-                            {isGeolocating ? 'Buscando...' : 'Obtener Coordenadas'}
-                        </button>
-                    </div>
-                    {formData.latitude !== null && formData.longitude !== null && (
-                        <p style={{ marginTop: '8px', fontSize: '11px', color: '#6DA49C', fontWeight: '500' }}>
-                            ✓ Coordenadas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-                        </p>
-                    )}
-                </div>
-                */}
-
-                {/* Lugar del Descubrimiento - SIN geolocalización */}
+                {/* Lugar del Descubrimiento */}
                 <div>
                     <label htmlFor="location" style={labelStyle}>Lugar del Descubrimiento</label>
                     <input
@@ -546,28 +452,6 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     </select>
                     {errors.fossil_type && (
                         <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.fossil_type}</p>
-                    )}
-                </div>
-
-                {/* Contenido del Post */}
-                <div>
-                    <label htmlFor="post_content" style={labelStyle}>Contenido del Post (Detallado) *</label>
-                    <textarea
-                        id="post_content"
-                        name="post_content"
-                        value={formData.post_content}
-                        onChange={handleChange}
-                        placeholder="Escribe la descripción detallada, métodos de excavación, importancia del hallazgo, etc..."
-                        rows={8}
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            resize: 'vertical' as const,
-                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.post_content && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 
