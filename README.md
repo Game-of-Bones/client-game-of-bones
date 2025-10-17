@@ -1,4 +1,3 @@
-# client-game-of-bones
 # 🦴 Game of Bones - Client
 
 This is the client-side application for "Game of Bones", a blog dedicated to the latest discoveries in paleontology. This project provides the user interface for readers and authors, built with React.
@@ -24,13 +23,15 @@ This project serves as the frontend for the "Game of Bones" paleontology blog. I
 
 **Built With:**
 
-*   React
-*   Redux Toolkit
-*   React Router
-*   Axios
-*   Tailwind
-
-*(Please adjust the list of technologies to match what you've used.)*
+*   [React](https://reactjs.org/) - A JavaScript library for building user interfaces.
+*   [Vite](https://vitejs.dev/) - Next-generation frontend tooling.
+*   [TypeScript](https://www.typescriptlang.org/) - A typed superset of JavaScript.
+*   [Zustand](https://zustand-demo.pmnd.rs/) - A small, fast, and scalable state-management solution.
+*   [React Router](https://reactrouter.com/) - Declarative routing for React.
+*   [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework.
+*   [Axios](https://axios-http.com/) - Promise-based HTTP client for the browser and node.js.
+*   [React Hook Form](https://react-hook-form.com/) - Performant, flexible, and extensible forms with easy-to-use validation.
+*   [Three.js](https://threejs.org/) - 3D graphics library.
 
 ---
 
