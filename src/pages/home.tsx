@@ -63,6 +63,7 @@ const Home = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
+      {/* ✨ Botón Crear Post - Ahora en el lado izquierdo y transparente */}
       <CreatePostButton variant="fixed" />
 
       {/* Mapa */}
