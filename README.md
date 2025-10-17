@@ -155,37 +155,31 @@ Each post is not just an article, but a technical record that can display:
 
 A brief overview of the main folders in this project:
 
-```
+```markdown
 client-game-of-bones/
-├── public/         # Public assets and index.html
+├── public/               # Static files (favicon, index.html)
 ├── src/
-│   ├── assets/     # Images, fonts, etc.
-│   ├── components/ # Reusable UI components
-│   ├── features/   # Components and logic for specific features (e.g., auth, posts)
-│   ├── hooks/      # Custom React hooks
-│   ├── hooks/      # Custom React hooks for shared logic
-│   ├── pages/      # Top-level page components
-│   ├── services/   # API calls and other external services
-│   ├── store/      # Redux store configuration
-│   ├── store/      # Global state management (Zustand)
-│   ├── App.js      # Main application component
-│   └── index.js    # Application entry point
-└── package.json
+│   ├── components/       # Reusable React components
+│   ├── context/          # React API Context
+│   ├── hooks/            # Custom React hooks
+│   ├── layout/           # Structural components (e.g., AuthLayout)
+│   ├── pages/            # Page components (one per route)
+│   ├── router/           # App routing configuration
+│   ├── services/         # API communication logic
+│   ├── store/            # Global state with Zustand
+│   ├── styles/           # Global CSS files (e.g., globals.css)
+│   ├── types/            # TypeScript type definitions
+│   ├── utils/            # Utility functions (e.g., formatDate)
+│   ├── App.tsx           # Root application component
+│   └── main.tsx          # Application entry point
+├── .env                  # Environment variables (local)
+├── .env.example          # Example environment variables
+├── .gitignore            # Files ignored by Git
+├── package.json          # Project dependencies and scripts
+├── README.md             # Project documentation
+├── tsconfig.json         # TypeScript configuration
+└── vite.config.ts        # Vite configuration
 ```
-
-*(Adjust this structure to reflect your project's layout.)*
-
----
-
-## Contributing
-
-Contributions are welcome! Please feel free to open an issue or submit a pull request.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
 
 ---
 
