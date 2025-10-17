@@ -74,26 +74,19 @@ To run this project, you will need Node.js and npm installed on your system.
 
 In the project directory, you can run:
 
-*   `npm start`
-    Runs the app in development mode. Open http://localhost:3000 to view it in the browser.
-
-*   `npm test`
-    Launches the test runner in interactive watch mode.
-
-*   `npm run build`
-    Builds the app for production to the `build` folder.
-
+*   `npm run dev`
+    Runs the app in development mode. Open http://localhost:5173 (or the port specified by Vite) to view it in the browser.
 ---
 
 ## Environment Variables
 
-This project requires the following environment variables to be set in a `.env` file in the root directory.
+This project requires the following environment variables to be set in a `.env` file in the root directory. By default, Vite only exposes variables prefixed with `VITE_`.
 
-*   `REACT_APP_API_URL`: The base URL for the backend server API.
+*   `VITE_API_URL`: The base URL for the backend server API.
 
 Example `.env` file:
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+VITE_API_URL=http://localhost:3000
 ```
 
 ---
