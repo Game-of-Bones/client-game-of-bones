@@ -10,7 +10,13 @@ This is the client-side application for "Game of Bones", a blog dedicated to the
   - Installation
 - Available Scripts
 - Environment Variables
-- Features
+- Main Features of the Application
+  - Post Management
+  - Detailed Paleontological Data Display
+  - User Management and Authentication
+  - Content Organization and Navigation
+  - User Interactivity
+  - Modern and Responsive User Interface
 - Project Structure
 - Contributing
 - License
