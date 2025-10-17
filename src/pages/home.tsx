@@ -6,15 +6,19 @@ import MapComponent from '../components/ui/MapComponent';
 import CreatePostButton from '../components/ui/CreatePostButton';
 import { getAllPosts } from '../services/PostService';
 
-// Definimos el tipo Post directamente aquí (basado en lo que devuelve tu API)
+// Definimos el tipo Post basado en lo que REALMENTE devuelve tu API
 interface Post {
   post_id: number;
   title: string;
   content: string;
-  images: string[];
+  summary?: string;
+  image_url?: string;
+  images?: string[];  // Por si acaso tu API devuelve un array
   created_at: string;
   status: string;
   fossil_type?: string;
+  location?: string;
+  paleontologist?: string;
 }
 
 const Home = () => {
@@ -32,10 +36,18 @@ const Home = () => {
           page: 1, 
           limit: 6 
         });
-        setRecentPosts(data.posts);
-        console.log('Posts cargados:', data.posts);
+        
+        // ✅ CORRECCIÓN: Asegurarnos de que data.posts existe
+        if (data && data.posts) {
+          setRecentPosts(data.posts);
+          console.log('Posts cargados:', data.posts);
+        } else {
+          console.warn('No se encontraron posts en la respuesta');
+          setRecentPosts([]);
+        }
       } catch (error) {
         console.error('Error al cargar posts:', error);
+        setRecentPosts([]);
       } finally {
         setLoading(false);
       }
@@ -57,6 +69,14 @@ const Home = () => {
 
   const handlePostClick = (postId: number) => {
     navigate(`/posts/${postId}`);
+  };
+
+  // ✅ Función helper para obtener la imagen del post
+  const getPostImage = (post: Post): string | null => {
+    // Prioridad: image_url > images[0] > null
+    if (post.image_url) return post.image_url;
+    if (post.images && post.images.length > 0) return post.images[0];
+    return null;
   };
 
   return (
@@ -115,70 +135,74 @@ const Home = () => {
                   gap: '1.5rem'
                 }}
               >
-                {recentPosts.map((post) => (
-                  <div
-                    key={post.post_id}
-                    onClick={() => handlePostClick(post.post_id)}
-                    className="cursor-pointer group flex-shrink-0"
-                    style={{ 
-                      width: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)',
-                      minWidth: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)'
-                    }}
-                  >
-                    <div 
-                      className="relative h-96 rounded-xl overflow-hidden shadow-lg transition-all duration-300"
-                      style={{
-                        border: '1px solid rgba(141, 170, 145, 0.3)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.03) translateY(-8px)';
-                        e.currentTarget.style.boxShadow = '0 20px 40px rgba(29, 67, 66, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1) translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+                {recentPosts.map((post) => {
+                  const imageUrl = getPostImage(post);
+                  
+                  return (
+                    <div
+                      key={post.post_id}
+                      onClick={() => handlePostClick(post.post_id)}
+                      className="cursor-pointer group flex-shrink-0"
+                      style={{ 
+                        width: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)',
+                        minWidth: recentPosts.length >= 3 ? 'calc(33.333% - 1rem)' : 'calc(50% - 0.75rem)'
                       }}
                     >
-                      {/* Imagen o placeholder */}
-                      {post.images && post.images.length > 0 ? (
-                        <img 
-                          src={post.images[0]} 
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div 
-                          className="w-full h-full flex items-center justify-center"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(141, 170, 145, 0.2) 0%, rgba(29, 67, 66, 0.2) 100%)'
-                          }}
-                        >
-                          <BookOpen size={80} style={{ opacity: 0.3, color: '#8DAA91' }} />
-                        </div>
-                      )}
-                      
-                      {/* Overlay con información */}
                       <div 
-                        className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        className="relative h-96 rounded-xl overflow-hidden shadow-lg transition-all duration-300"
                         style={{
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)'
+                          border: '1px solid rgba(141, 170, 145, 0.3)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.03) translateY(-8px)';
+                          e.currentTarget.style.boxShadow = '0 20px 40px rgba(29, 67, 66, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1) translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
                         }}
                       >
-                        <h3 className="text-white text-xl font-bold mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-                          {post.title}
-                        </h3>
-                        <p className="text-white/90 text-sm line-clamp-2 mb-2">
-                          {post.content.substring(0, 100)}...
-                        </p>
-                        <span className="text-white/70 text-xs">
-                          📅 {new Date(post.created_at).toLocaleDateString('es-ES')}
-                        </span>
+                        {/* Imagen o placeholder */}
+                        {imageUrl ? (
+                          <img 
+                            src={imageUrl} 
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full flex items-center justify-center"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(141, 170, 145, 0.2) 0%, rgba(29, 67, 66, 0.2) 100%)'
+                            }}
+                          >
+                            <BookOpen size={80} style={{ opacity: 0.3, color: '#8DAA91' }} />
+                          </div>
+                        )}
+                        
+                        {/* Overlay con información */}
+                        <div 
+                          className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)'
+                          }}
+                        >
+                          <h3 className="text-white text-xl font-bold mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                            {post.title}
+                          </h3>
+                          <p className="text-white/90 text-sm line-clamp-2 mb-2">
+                            {post.summary || post.content?.substring(0, 100) || 'Sin descripción'}...
+                          </p>
+                          <span className="text-white/70 text-xs">
+                            📅 {new Date(post.created_at).toLocaleDateString('es-ES')}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

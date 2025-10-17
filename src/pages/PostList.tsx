@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePostStore } from '../stores/postStore';
 import type { Post, FossilType } from '../types/post.types';
+import CreatePostButton from '../components/ui/CreatePostButton';
 
 const PostList = () => {
   const { posts, isLoading, error, fetchPosts } = usePostStore();
@@ -25,7 +26,7 @@ const PostList = () => {
     });
   }, [currentPage, filters.fossilType]);
 
-  // Filtrado local por búsqueda (porque el backend puede no tenerlo implementado)
+  // Filtrado local por búsqueda
   const filteredPosts = posts.filter(post => {
     if (!filters.search) return true;
     
@@ -56,9 +57,11 @@ const PostList = () => {
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ fontFamily: "'Playfair Display', serif" }}>
-      <div className="container mx-auto px-4">
-        
+    <div className="min-h-screen" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Botón flotante */}
+        <CreatePostButton variant="fixed" />
+
         {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#FFFFFF' }}>
