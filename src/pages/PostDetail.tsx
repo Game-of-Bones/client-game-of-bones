@@ -1,10 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Heart, MessageCircle, ChevronDown, Trash2, Edit2 } from 'lucide-react';
-import { getPostById, deletePost } from '../services';
+import { Heart, MessageCircle, ChevronDown, Trash2, Edit2, Send } from 'lucide-react';
+import { useAuthStore } from '../stores/authStore';
 import type { Post } from '../types/post.types';
 
-// Modal de confirmación (mantén el componente DeleteConfirmModal igual)
+// Tipos para comentarios y likes
+interface Comment {
+  id: number;
+  content: string;
+  user_id: number;
+  post_id: number;
+  created_at: string;
+  author?: {
+    id: number;
+    username: string;
+  };
+}
+
+interface Like {
+  id: number;
+  user_id: number;
+  post_id: number;
+  created_at?: string;
+}
+
+// Modal de confirmación
 const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isDeleting }: any) => {
   if (!isOpen) return null;
   return (
@@ -67,29 +87,50 @@ const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isDel
 
 const PostDetail = () => {
   const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [likes, setLikes] = useState<Like[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [userLiked, setUserLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const navigate = useNavigate();
   const { id } = useParams();
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     if (id) {
-      fetchPost();
+      loadAllData();
     }
-  }, [id]);
+  }, [id, user]); // ✅ Recargar cuando cambie el usuario
+
+  // Función para cargar todos los datos
+  const loadAllData = async () => {
+    await Promise.all([
+      fetchPost(),
+      fetchComments(),
+      fetchLikes()
+    ]);
+  };
 
   const fetchPost = async () => {
     setIsLoading(true);
     setError('');
     
     try {
-      const fetchedPost = await getPostById(Number(id));
-      console.log('✅ Post obtenido:', fetchedPost);
-      setPost(fetchedPost);
+      const response = await fetch(`http://localhost:3001/api/posts/${id}`);
+      if (!response.ok) throw new Error('Error al cargar el post');
+      const result = await response.json();
+      console.log('✅ Post obtenido:', result);
+      
+      const postData = result.data || result;
+      setPost(postData);
     } catch (err: any) {
       console.error('❌ Error al obtener el post:', err);
       setError(err.message || 'No se pudo cargar el post');
@@ -98,10 +139,198 @@ const PostDetail = () => {
     }
   };
 
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
+      
+      if (!response.ok) {
+        console.warn('⚠️ Error al cargar comentarios:', response.status);
+        setComments([]);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ Comentarios obtenidos:', data);
+      
+      // ✅ Manejar formato: { data: { comments: [], count: 0 }, success: true }
+      let commentsArray: Comment[] = [];
+      
+      if (Array.isArray(data)) {
+        commentsArray = data;
+      } else if (data.data && Array.isArray(data.data.comments)) {
+        commentsArray = data.data.comments;
+      } else if (data.data && Array.isArray(data.data)) {
+        commentsArray = data.data;
+      } else if (data.comments && Array.isArray(data.comments)) {
+        commentsArray = data.comments;
+      }
+      
+      setComments(commentsArray);
+      
+    } catch (err: any) {
+      console.error('❌ Error al obtener comentarios:', err);
+      setComments([]);
+    }
+  };
+
+  const fetchLikes = async () => {
+    try {
+      // ✅ INTENTAR OBTENER LIKES DEL BACKEND
+      const response = await fetch(`http://localhost:3001/api/posts/${id}/likes`);
+      
+      if (!response.ok) {
+        console.warn('⚠️ Endpoint de likes no disponible. Usando fallback.');
+        setLikes([]);
+        setLikesCount(0);
+        setUserLiked(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ Likes obtenidos:', data);
+      
+      // Manejar diferentes formatos de respuesta
+      const likesArray = Array.isArray(data) ? data : (data.data || []);
+      setLikes(likesArray);
+      setLikesCount(likesArray.length);
+      
+      // ✅ Verificar si el usuario actual dio like
+      if (user) {
+        const hasLiked = likesArray.some((like: Like) => like.user_id === user.id);
+        setUserLiked(hasLiked);
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Error al obtener likes:', err);
+      setLikes([]);
+      setLikesCount(0);
+      setUserLiked(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      alert('Debes iniciar sesión para dar like');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/posts/${id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Error al procesar el like');
+      
+      const result = await response.json();
+      console.log('✅ Like toggle exitoso:', result);
+      
+      // ✅ Actualizar estados según la respuesta del backend
+      if (result.liked !== undefined) {
+        setUserLiked(result.liked);
+      } else {
+        setUserLiked(!userLiked);
+      }
+      
+      if (result.likes_count !== undefined) {
+        setLikesCount(result.likes_count);
+      } else {
+        setLikesCount(userLiked ? likesCount - 1 : likesCount + 1);
+      }
+      
+      // ✅ Recargar likes para tener datos actualizados
+      await fetchLikes();
+      
+    } catch (err: any) {
+      console.error('❌ Error al dar like:', err);
+      alert('Error al procesar el like');
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      alert('Debes iniciar sesión para comentar');
+      return;
+    }
+
+    if (!newComment.trim()) {
+      alert('El comentario no puede estar vacío');
+      return;
+    }
+
+    setIsSubmittingComment(true);
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ content: newComment })
+      });
+
+      if (!response.ok) throw new Error('Error al crear comentario');
+      
+      const result = await response.json();
+      console.log('✅ Comentario creado:', result);
+      
+      // ✅ Recargar comentarios para obtener datos actualizados del backend
+      await fetchComments();
+      setNewComment('');
+      
+    } catch (err: any) {
+      console.error('❌ Error al comentar:', err);
+      alert('Error al publicar el comentario');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar comentario');
+      
+      console.log('✅ Comentario eliminado');
+      
+      // ✅ Recargar comentarios después de eliminar
+      await fetchComments();
+      setDeleteCommentId(null);
+      
+    } catch (err: any) {
+      console.error('❌ Error al eliminar comentario:', err);
+      alert('Error al eliminar el comentario');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleDeletePost = async () => {
     setIsDeleting(true);
     try {
-      await deletePost(Number(id));
+      const response = await fetch(`http://localhost:3001/api/posts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Error al eliminar el post');
+      
       console.log('✅ Post eliminado exitosamente');
       navigate('/posts');
     } catch (err: any) {
@@ -133,6 +362,8 @@ const PostDetail = () => {
     tracks_traces: 'Huellas y Rastros',
     amber_insects: 'Insectos en Ámbar'
   };
+
+  const canDeletePost = user && post && (user.id === post.user_id || user.role === 'admin');
 
   if (isLoading) {
     return (
@@ -188,6 +419,38 @@ const PostDetail = () => {
         <p className="text-base sm:text-lg md:text-xl italic mb-6 sm:mb-8 opacity-80 px-2 sm:px-0 leading-relaxed" style={{ color: '#FFFFFF' }}>
           {post.summary}
         </p>
+
+        {/* LIKES Y COMENTARIOS CONTADOR */}
+        <div className="flex items-center gap-6 mb-6 px-2 sm:px-0">
+          {user && (
+            <button
+              onClick={handleLike}
+              className="flex items-center gap-2 transition-all hover:scale-110"
+              title={userLiked ? "Quitar like" : "Dar like"}
+            >
+              <span 
+                style={{ 
+                  fontSize: '28px',
+                  filter: userLiked ? 'none' : 'grayscale(100%)',
+                  opacity: userLiked ? 1 : 0.5,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                🦖
+              </span>
+              <span style={{ color: '#FFFFFF' }} className="font-semibold">
+                {likesCount}
+              </span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-2">
+            <MessageCircle size={24} style={{ color: '#48a9a6' }} />
+            <span style={{ color: '#FFFFFF' }} className="font-semibold">
+              {comments.length}
+            </span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
           
@@ -267,7 +530,6 @@ const PostDetail = () => {
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
               <div className="space-y-3 sm:space-y-4 leading-relaxed text-base sm:text-lg" style={{ color: '#FFFFFF' }}>
-                {/* ✅ FIX: Manejar cuando post_content sea undefined o vacío */}
                 {post.post_content ? (
                   post.post_content.split('\n\n').map((paragraph, idx) => (
                     <p key={idx}>{paragraph}</p>
@@ -277,35 +539,140 @@ const PostDetail = () => {
                 )}
               </div>
               
-              <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex gap-2">
-                <button
-                  onClick={handleEditPost}
-                  className="p-2 rounded-full hover:bg-opacity-20 transition-all"
-                  style={{ backgroundColor: 'rgba(72, 169, 166, 0.1)' }}
-                  title="Editar"
-                >
-                  <Edit2 size={20} style={{ color: '#48a9a6' }} />
-                </button>
-                
-                <button
-                  onClick={() => setDeleteModalOpen(true)}
-                  className="p-2 rounded-full hover:bg-red-500/20 transition-all"
-                  title="Eliminar"
-                >
-                  <Trash2 size={20} className="text-red-400" />
-                </button>
+              {canDeletePost && (
+                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex gap-2">
+                  <button
+                    onClick={handleEditPost}
+                    className="p-2 rounded-full hover:bg-opacity-20 transition-all"
+                    style={{ backgroundColor: 'rgba(72, 169, 166, 0.1)' }}
+                    title="Editar"
+                  >
+                    <Edit2 size={20} style={{ color: '#48a9a6' }} />
+                  </button>
+                  
+                  <button
+                    onClick={() => setDeleteModalOpen(true)}
+                    className="p-2 rounded-full hover:bg-red-500/20 transition-all"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={20} className="text-red-400" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* SECCIÓN DE COMENTARIOS */}
+            <div 
+              className="rounded-xl sm:rounded-2xl p-4 sm:p-6 mx-2 sm:mx-0"
+              style={{ backgroundColor: 'rgba(72, 169, 166, 0.2)' }}
+            >
+              <h3 className="text-xl sm:text-2xl font-bold mb-4" style={{ color: '#FFFFFF' }}>
+                Comentarios ({comments.length})
+              </h3>
+
+              {/* FORMULARIO DE COMENTARIO */}
+              {user ? (
+                <form onSubmit={handleSubmitComment} className="mb-6">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Escribe un comentario..."
+                      className="flex-1 px-4 py-2 rounded-full"
+                      style={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                        color: '#2D1F13',
+                        border: 'none',
+                        outline: 'none'
+                      }}
+                      disabled={isSubmittingComment}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingComment || !newComment.trim()}
+                      className="p-2 rounded-full transition-all hover:scale-110"
+                      style={{ 
+                        backgroundColor: '#48a9a6',
+                        opacity: (isSubmittingComment || !newComment.trim()) ? 0.5 : 1
+                      }}
+                    >
+                      <Send size={20} style={{ color: '#FFFFFF' }} />
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="mb-6 text-center py-4" style={{ color: '#FFFFFF', opacity: 0.7 }}>
+                  Inicia sesión para comentar
+                </div>
+              )}
+
+              {/* LISTA DE COMENTARIOS */}
+              <div className="space-y-4">
+                {comments.length === 0 ? (
+                  <p className="text-center py-8" style={{ color: '#FFFFFF', opacity: 0.7 }}>
+                    No hay comentarios aún. ¡Sé el primero en comentar!
+                  </p>
+                ) : (
+                  comments.map(comment => {
+                    const canDeleteComment = user && (user.id === comment.user_id || user.role === 'admin');
+                    
+                    return (
+                      <div 
+                        key={comment.id}
+                        className="p-4 rounded-lg relative"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="font-semibold mb-1" style={{ color: '#48a9a6' }}>
+                              {comment.author?.username || 'Usuario'}
+                            </p>
+                            <p style={{ color: '#FFFFFF' }}>
+                              {comment.content}
+                            </p>
+                            <p className="text-xs mt-2" style={{ color: '#FFFFFF', opacity: 0.6 }}>
+                              {formatDate(comment.created_at)}
+                            </p>
+                          </div>
+                          
+                          {canDeleteComment && (
+                            <button
+                              onClick={() => setDeleteCommentId(comment.id)}
+                              className="p-1 rounded hover:bg-red-500/20 transition-all"
+                              title="Eliminar comentario"
+                            >
+                              <Trash2 size={16} className="text-red-400" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Modal para eliminar post */}
       <DeleteConfirmModal
         isOpen={deleteModalOpen}
         title="¡¿ELIMINAR PUBLICACIÓN?!"
         message="Esta acción no se puede deshacer. ¿Estás seguro?"
         onConfirm={handleDeletePost}
         onCancel={() => setDeleteModalOpen(false)}
+        isDeleting={isDeleting}
+      />
+
+      {/* Modal para eliminar comentario */}
+      <DeleteConfirmModal
+        isOpen={deleteCommentId !== null}
+        title="¡¿ELIMINAR COMENTARIO?!"
+        message="Esta acción no se puede deshacer. ¿Estás seguro?"
+        onConfirm={() => deleteCommentId && handleDeleteComment(deleteCommentId)}
+        onCancel={() => setDeleteCommentId(null)}
         isDeleting={isDeleting}
       />
     </div>
