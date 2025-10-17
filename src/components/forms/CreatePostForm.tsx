@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { usePostStore } from '../../stores/postStore';
 import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
-import { Upload, Link, MapPin } from 'lucide-react';
+import { Upload, Link } from 'lucide-react';
 import { FOSSIL_TYPE_OPTIONS } from '../../types/post.types';
+import type { FossilType, CreatePostData } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    post_content: string;
-    summary: string;
+    summary: string; // Resumen corto
+    post_content: string; // ✅ Contenido detallado
     image_url: string;
     paleontologist: string;
     location: string;
@@ -31,8 +32,8 @@ const CreatePostForm = () => {
 
     const [formData, setFormData] = useState<FormData>({
         title: '',
-        post_content: '',
-        summary: '',
+        summary: '', // Resumen corto
+        post_content: '', // ✅ Contenido detallado
         image_url: '',
         paleontologist: '',
         location: '',
@@ -48,7 +49,6 @@ const CreatePostForm = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState('');
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    const [isGeolocating, setIsGeolocating] = useState(false);
     const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,51 +84,6 @@ const CreatePostForm = () => {
         }
     };
 
-    const handleGeolocate = async () => {
-        const location = formData.location.trim();
-        if (!location) {
-            setServerError('Por favor, introduce una ubicación antes de geocodificar.');
-            return;
-        }
-
-        setIsGeolocating(true);
-        setServerError('');
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
-                {
-                    headers: {
-                        'User-Agent': 'PaleontologApp/1.0'
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('Error al conectar con el servicio de geocodificación');
-            }
-
-            const data = await response.json();
-
-            if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                setFormData(prev => ({
-                    ...prev,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lon)
-                }));
-                setServerError('');
-            } else {
-                setServerError('No se encontraron coordenadas para esa ubicación. Intenta ser más específico (ej: "Patagonia, Argentina")');
-            }
-        } catch (error: any) {
-            console.error('Geocoding error:', error);
-            setServerError(error.message || 'Error al obtener las coordenadas de la ubicación');
-        } finally {
-            setIsGeolocating(false);
-        }
-    };
-
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -136,7 +91,6 @@ const CreatePostForm = () => {
         if (!formData.summary.trim()) newErrors.summary = 'El Subtítulo/Resumen es obligatorio.';
         if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido Detallado es obligatorio.';
         if (!formData.fossil_type) newErrors.fossil_type = 'Debes seleccionar el Tipo de Fósil.';
-
         if (!formData.image_url && !isUploadingImage) newErrors.image_url = 'Debes incluir una imagen principal.';
 
         setErrors(newErrors);
@@ -148,36 +102,51 @@ const CreatePostForm = () => {
         setServerError('');
 
         if (!validateForm()) {
-            setServerError('POR FAVOR, RELLENE TODOS LOS CAMPOS OBLIGATORIOS PARA COMPLETAR SU POST DE MANERA CORRECTA.');
+            setServerError('POR FAVOR, RELLENE TODOS LOS CAMPOS OBLIGATORIOS.');
             return;
         }
 
         if (isSubmitting || isUploadingImage) return;
 
+        // ✅ Validar usuario autenticado
+        if (!user?.id) {
+            setServerError('Debes estar autenticado para crear un post');
+            return;
+        }
+
         try {
-            const dataToSubmit = {
+            const fullContent = `${formData.summary}\n\n${formData.post_content}`;
+            
+            // ✅ Construir objeto con el tipo correcto
+            const dataToSubmit: CreatePostData = {
                 title: formData.title,
-                summary: formData.summary,
-                post_content: formData.post_content,
-                image_url: formData.image_url,
-                paleontologist: formData.paleontologist || null,
-                location: formData.location || null,
-                latitude: formData.latitude,
-                longitude: formData.longitude,
-                fossil_type: formData.fossil_type,
-                geological_period: formData.geological_period || null,
-                discovery_date: formData.discovery_date ? new Date(formData.discovery_date).toISOString() : null,
-                source: formData.source || null,
+                summary: fullContent, // ✅ Contenido completo en summary
+                fossil_type: formData.fossil_type as FossilType,
                 status: statusOverride,
-                author_id: user?.id,
+                user_id: user.id, // ✅ Es user_id según el modelo backend
             };
 
-            const newPost = await createPost(dataToSubmit as any);
+            // Solo añadir campos opcionales si tienen valor
+            if (formData.image_url) dataToSubmit.image_url = formData.image_url;
+            if (formData.paleontologist) dataToSubmit.paleontologist = formData.paleontologist;
+            if (formData.location) dataToSubmit.location = formData.location;
+            if (formData.latitude !== null) dataToSubmit.latitude = formData.latitude;
+            if (formData.longitude !== null) dataToSubmit.longitude = formData.longitude;
+            if (formData.geological_period) dataToSubmit.geological_period = formData.geological_period;
+            if (formData.discovery_date) dataToSubmit.discovery_date = new Date(formData.discovery_date).toISOString();
+            if (formData.source) dataToSubmit.source = formData.source;
+
+            console.log('📤 Datos a enviar:', dataToSubmit);
+
+            console.log('📤 Datos a enviar:', dataToSubmit);
+
+            const newPost = await createPost(dataToSubmit);
 
             const redirectPath = statusOverride === 'published' ? `/posts/${newPost.id}` : '/profile';
             navigate(redirectPath);
 
         } catch (err: any) {
+            console.error('❌ Error al crear post:', err);
             setServerError(postError || err.message || 'Error al guardar el post.');
         }
     };
@@ -236,9 +205,9 @@ const CreatePostForm = () => {
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 style={{ 
-                    fontFamily: 'Cinzel, serif', 
-                    fontSize: '32px', 
+                <h1 style={{
+                    fontFamily: 'Cinzel, serif',
+                    fontSize: '32px',
                     fontWeight: '600',
                     color: '#C0B39A',
                     letterSpacing: '1px',
@@ -249,10 +218,10 @@ const CreatePostForm = () => {
             </div>
 
             {(serverError || postError) && (
-                <div style={{ 
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)', 
-                    color: '#dc2626', 
-                    padding: '16px', 
+                <div style={{
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    color: '#dc2626',
+                    padding: '16px',
                     borderRadius: '6px',
                     marginBottom: '24px',
                     textAlign: 'center',
@@ -262,10 +231,10 @@ const CreatePostForm = () => {
                 </div>
             )}
 
-            <p style={{ 
-                fontSize: '13px', 
-                fontStyle: 'italic', 
-                marginBottom: '24px', 
+            <p style={{
+                fontSize: '13px',
+                fontStyle: 'italic',
+                marginBottom: '24px',
                 textAlign: 'center',
                 color: '#F76C5E',
                 fontFamily: 'Playfair Display, serif'
@@ -298,7 +267,7 @@ const CreatePostForm = () => {
                     )}
                 </div>
 
-                {/* Subtítulo */}
+                {/* Subtítulo/Resumen */}
                 <div>
                     <label htmlFor="summary" style={labelStyle}>Subtítulo del Post *</label>
                     <input
@@ -320,9 +289,9 @@ const CreatePostForm = () => {
                 </div>
 
                 {/* Imagen */}
-                <div style={{ 
-                    backgroundColor: 'rgba(245, 230, 204, 0.3)', 
-                    padding: '24px', 
+                <div style={{
+                    backgroundColor: 'rgba(245, 230, 204, 0.3)',
+                    padding: '24px',
                     borderRadius: '6px',
                     border: '1px solid rgba(192, 179, 154, 0.3)'
                 }}>
@@ -368,11 +337,11 @@ const CreatePostForm = () => {
                             <img src={formData.image_url} alt="Vista previa" style={{ width: '100%', maxHeight: '350px', objectFit: 'cover' }} />
                         </div>
                     ) : (
-                        <div style={{ 
-                            marginTop: '16px', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            justifyContent: 'center', 
+                        <div style={{
+                            marginTop: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
                             alignItems: 'center',
                             backgroundColor: '#F5E6CC',
                             borderRadius: '6px',
@@ -425,39 +394,16 @@ const CreatePostForm = () => {
                 {/* Lugar del Descubrimiento */}
                 <div>
                     <label htmlFor="location" style={labelStyle}>Lugar del Descubrimiento</label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <input
-                            id="location"
-                            name="location"
-                            type="text"
-                            value={formData.location}
-                            onChange={handleChange}
-                            placeholder="Ej: Patagonia, Argentina"
-                            disabled={isSubmitting}
-                            style={{ ...inputStyle, flex: 1 }}
-                        />
-                        <button
-                            type="button"
-                            onClick={handleGeolocate}
-                            disabled={isGeolocating || isSubmitting || !formData.location}
-                            style={{
-                                ...buttonSecondaryStyle,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                whiteSpace: 'nowrap',
-                                opacity: (isGeolocating || isSubmitting || !formData.location) ? 0.5 : 1
-                            }}
-                        >
-                            <MapPin size={16} />
-                            {isGeolocating ? 'Buscando...' : 'Obtener Coordenadas'}
-                        </button>
-                    </div>
-                    {formData.latitude !== null && formData.longitude !== null && (
-                        <p style={{ marginTop: '8px', fontSize: '11px', color: '#6DA49C', fontWeight: '500' }}>
-                            ✓ Coordenadas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-                        </p>
-                    )}
+                    <input
+                        id="location"
+                        name="location"
+                        type="text"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="Ej: Patagonia, Argentina"
+                        disabled={isSubmitting}
+                        style={inputStyle}
+                    />
                 </div>
 
                 {/* Fecha de Descubrimiento */}
@@ -552,10 +498,10 @@ const CreatePostForm = () => {
 
                     <div>
                         <label style={labelStyle}>Estatus del Post</label>
-                        <div style={{ 
-                            display: 'flex', 
-                            gap: '24px', 
-                            padding: '12px 16px', 
+                        <div style={{
+                            display: 'flex',
+                            gap: '24px',
+                            padding: '12px 16px',
                             backgroundColor: '#F5E6CC',
                             borderRadius: '6px',
                             border: '1px solid #C0B39A'

@@ -5,11 +5,6 @@ export type FossilType =
   | 'tracks_traces'
   | 'amber_insects';
 
-/**
- * Estado del post en el sistema.
- * 'draft' → aún no publicado.
- * 'published' → visible para todos.
- */
 export type PostStatus = 'draft' | 'published';
 
 /**
@@ -18,23 +13,23 @@ export type PostStatus = 'draft' | 'published';
 export interface Post {
   id: number;
   title: string;
-  summary: string;
-  post_content: string; // ✅ AÑADIDO
+  summary: string; // Resumen corto
+  post_content?: string; // ✅ OPCIONAL hasta que el backend lo añada
   image_url?: string;
   discovery_date?: string;
   location?: string;
-  latitude?: number | null; // ✅ AÑADIDO
-  longitude?: number | null; // ✅ AÑADIDO
+  latitude?: number | null;
+  longitude?: number | null;
   paleontologist?: string;
   fossil_type: FossilType;
   geological_period?: string;
   status: PostStatus;
   source?: string;
-  author_id: number;
+  user_id: number;
   created_at: string;
   updated_at: string;
   
-  // Relaciones opcionales que puede incluir el backend
+  // Relaciones opcionales
   author?: {
     id: number;
     username: string;
@@ -44,23 +39,22 @@ export interface Post {
 
 /**
  * Datos requeridos para crear un nuevo post.
- * No incluye campos que el backend asigna automáticamente (id, fechas, etc).
  */
 export interface CreatePostData {
   title: string;
-  summary: string;
-  post_content: string; // ✅ AÑADIDO
+  summary: string; // Resumen/subtítulo corto
+  post_content?: string; // ✅ OPCIONAL hasta que el backend lo añada
   image_url?: string;
   discovery_date?: string;
   location?: string;
-  latitude?: number | null; // ✅ AÑADIDO
-  longitude?: number | null; // ✅ AÑADIDO
+  latitude?: number | null;
+  longitude?: number | null;
   paleontologist?: string;
   fossil_type: FossilType;
   geological_period?: string;
   status: PostStatus;
   source?: string;
-  author_id: number; // ✅ AÑADIDO (necesario para crear)
+  user_id: number; // ✅ Requerido para crear
 }
 
 /**
@@ -69,19 +63,18 @@ export interface CreatePostData {
 export interface UpdatePostData {
   title?: string;
   summary?: string;
-  post_content?: string; // ✅ AÑADIDO
+  post_content?: string; // ✅ Contenido detallado
   image_url?: string;
   discovery_date?: string | null;
   location?: string;
-  latitude?: number | null; // ✅ AÑADIDO
-  longitude?: number | null; // ✅ AÑADIDO
+  latitude?: number | null;
+  longitude?: number | null;
   paleontologist?: string;
   fossil_type?: FossilType;
   geological_period?: string;
   status?: PostStatus;
   source?: string;
 }
-
 
 export const FOSSIL_TYPE_OPTIONS = [
   { value: 'bones_teeth' as FossilType, label: 'Huesos y Dientes' },

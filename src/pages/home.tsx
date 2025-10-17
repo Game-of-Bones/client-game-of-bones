@@ -1,10 +1,9 @@
-// src/pages/home.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Sparkles } from 'lucide-react';
 import MapComponent from '../components/ui/MapComponent';
 import CreatePostButton from '../components/ui/CreatePostButton';
-import { getAllPosts } from '../services/PostService';
+import { getAllPosts } from '../services/postService';
 
 // Definimos el tipo Post basado en lo que REALMENTE devuelve tu API
 interface Post {

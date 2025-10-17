@@ -1,475 +1,560 @@
-// Página de perfil de usuario (ruta protegida)
-
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-// TODO: Importar servicios cuando estén disponibles
-// import { getUserProfile, updateProfile } from '../services/userService';
-// import { getUserPosts } from '../services/postService';
-// import { useAuth } from '../hooks/useAuth';
+import { Link, useNavigate } from 'react-router-dom';
+import type { ProfileType, UserStats, UserPost } from '../types/profile.types';
+import type { Post } from '../types/post.types';
+import type { User } from '../types/auth.types';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload';
+import apiClient from '../services/api//axiosConfig';
 
-/**
- * Profile - Página de perfil del usuario autenticado
- * 
- * Funcionalidad:
- * - Mostrar información del usuario (avatar, username, email, bio, etc)
- * - Editar perfil (nombre, bio, avatar)
- * - Cambiar contraseña
- * - Lista de posts del usuario
- * - Estadísticas (total posts, comentarios, etc)
- * - Eliminar cuenta (con confirmación)
- */
+// URL de la imagen por defecto
+const DEFAULT_AVATAR_URL = '/Triceratops_Skull_in_Earthy_Brown.png';
+
+// Color del texto oscuro para botones ámbar
+const COLOR_TEXT_DARK = '#1D4342';
+
 const Profile = () => {
-  // TODO: Descomentar cuando useAuth esté implementado
-  // const { user, updateUser } = useAuth();
-
-  // MOCK temporal
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-
-  // Estado del perfil
-  const [profile, setProfile] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
-    bio: user?.bio || '',
-    avatar: user?.avatar || ''
-  });
-
-  // Estado para modo edición
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Estado para los posts del usuario
-  const [userPosts, setUserPosts] = useState<any[]>([]);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
-
-  // Estado para estadísticas
-  const [stats, setStats] = useState({
-    totalPosts: 0,
-    totalComments: 0,
-    joinedDate: new Date().toISOString()
-  });
-
-  /**
-   * Cargar datos del perfil al montar
-   */
-  useEffect(() => {
-    fetchUserProfile();
-    fetchUserPosts();
-  }, []);
-
-  /**
-   * Obtener datos completos del perfil
-   */
-  const fetchUserProfile = async () => {
-    try {
-      // TODO: Implementar cuando el servicio esté listo
-      // const response = await getUserProfile();
-      // setProfile(response);
-      // setStats(response.stats);
-
-      // MOCK temporal
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setStats({
-        totalPosts: 12,
-        totalComments: 45,
-        joinedDate: new Date(Date.now() - 86400000 * 180).toISOString() // 6 meses atrás
-      });
-
-    } catch (err: any) {
-      console.error('Error fetching profile:', err);
-    }
-  };
-
-  /**
-   * Obtener posts del usuario
-   */
-  const fetchUserPosts = async () => {
-    setIsLoadingPosts(true);
-
-    try {
-      // TODO: Implementar cuando el servicio esté listo
-      // const response = await getUserPosts(user.id);
-      // setUserPosts(response);
-
-      // MOCK temporal
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockPosts = Array.from({ length: 3 }, (_, i) => ({
-        id: `${i + 1}`,
-        title: `Mi post épico ${i + 1}`,
-        content: 'Resumen del contenido del post...',
-        createdAt: new Date(Date.now() - 86400000 * (i + 1)).toISOString(),
-        commentsCount: Math.floor(Math.random() * 10)
-      }));
-
-      setUserPosts(mockPosts);
-
-    } catch (err: any) {
-      console.error('Error fetching user posts:', err);
-    } finally {
-      setIsLoadingPosts(false);
-    }
-  };
-
-  /**
-   * Maneja cambios en el formulario de edición
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setProfile({
-      ...profile,
-      [e.target.name]: e.target.value
+    const navigate = useNavigate();
+    const [profile, setProfile] = useState<ProfileType>({
+        username: '',
+        email: '',
+        bio: '',
+        avatar: DEFAULT_AVATAR_URL
     });
-  };
 
-  /**
-   * Guarda los cambios del perfil
-   */
-  const handleSaveProfile = async () => {
-    setIsSaving(true);
-
-    try {
-      // TODO: Implementar cuando el servicio esté listo
-      // await updateProfile(profile);
-      // updateUser(profile); // Actualizar en el contexto
-
-      // MOCK temporal
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Actualizar localStorage (temporal)
-      const updatedUser = { ...user, ...profile };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-
-      // TODO: Mostrar notificación de éxito
-      // toast.success('Perfil actualizado correctamente');
-
-      setIsEditing(false);
-
-    } catch (err: any) {
-      // TODO: Mostrar notificación de error
-      // toast.error('Error al actualizar perfil');
-      console.error('Error updating profile:', err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  /**
-   * Cancela la edición y restaura valores originales
-   */
-  const handleCancelEdit = () => {
-    setProfile({
-      username: user?.username || '',
-      email: user?.email || '',
-      bio: user?.bio || '',
-      avatar: user?.avatar || ''
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+    const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+    const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+    const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string>(DEFAULT_AVATAR_URL);
+    const [stats, setStats] = useState<UserStats>({
+        totalPosts: 0,
+        totalComments: 0,
+        joinedDate: new Date().toISOString()
     });
-    setIsEditing(false);
-  };
+    const [error, setError] = useState<string>('');
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  /**
-   * Formatea la fecha de registro
-   */
-  const formatJoinedDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long'
-    });
-  };
+    // Cargar datos cuando el componente se monta o cuando cambia el usuario en localStorage
+    useEffect(() => {
+        loadUserData();
+        
+        // Escuchar cambios en localStorage (cuando se actualiza el usuario)
+        const handleStorageChange = () => {
+            loadUserData();
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Mi Perfil</h1>
+    const loadUserData = () => {
+        const user = getCurrentUser();
+        if (user) {
+            setCurrentUser(user);
+            // Cargar datos frescos del localStorage primero
+            setProfile({
+                username: user.username,
+                email: user.email,
+                bio: '',
+                avatar: user.avatar_url || DEFAULT_AVATAR_URL
+            });
+            setAvatarPreviewUrl(user.avatar_url || DEFAULT_AVATAR_URL);
+            
+            // Luego hacer fetch al backend para asegurar datos actualizados
+            fetchUserProfile(user.id);
+            fetchUserPosts(user.id);
+        }
+    };
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Columna izquierda: Información del usuario */}
-        <div className="md:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            {/* Avatar */}
-            <div className="text-center mb-4">
-              <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold mx-auto mb-3">
-                {profile.avatar ? (
-                  <img 
-                    src={profile.avatar} 
-                    alt={profile.username}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  profile.username.charAt(0).toUpperCase()
-                )}
-              </div>
-              
-              {/* Botón para cambiar avatar */}
-              {isEditing && (
-                <button className="text-sm text-blue-600 hover:underline">
-                  Cambiar foto
-                </button>
-              )}
-            </div>
+    const getCurrentUser = (): User | null => {
+        try {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const token = localStorage.getItem('token');
+                if (token) {
+                    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                }
+                return user;
+            }
+            return null;
+        } catch (err) {
+            console.error('Error parsing user from localStorage:', err);
+            return null;
+        }
+    };
 
-            {/* Username */}
-            {isEditing ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                  Nombre de usuario
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={profile.username}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            ) : (
-              <h2 className="text-2xl font-bold text-center mb-2">
-                {profile.username}
-              </h2>
-            )}
+    // Fetch perfil del usuario desde el backend
+    const fetchUserProfile = async (userId: number) => {
+        setIsLoadingProfile(true);
+        try {
+            // Ajusta la ruta según tu backend - puede ser /auth/me, /api/users/:id, etc.
+            const { data } = await apiClient.get<User>(`/auth/me`); // O `/users/${userId}`
+            
+            setProfile({
+                username: data.username,
+                email: data.email,
+                bio: '',
+                avatar: data.avatar_url || DEFAULT_AVATAR_URL
+            });
+            
+            setAvatarPreviewUrl(data.avatar_url || DEFAULT_AVATAR_URL);
+            
+            setStats({
+                totalPosts: 0,
+                totalComments: 0,
+                joinedDate: data.created_at
+            });
 
-            {/* Email */}
-            {isEditing ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profile.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            ) : (
-              <p className="text-gray-600 text-center mb-4">
-                {profile.email}
-              </p>
-            )}
+            // Actualizar localStorage con datos frescos
+            localStorage.setItem('user', JSON.stringify(data));
+            setCurrentUser(data);
 
-            {/* Bio */}
-            <div className="mb-4">
-              {isEditing ? (
-                <>
-                  <label className="block text-sm font-medium mb-1">
-                    Biografía
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={profile.bio}
-                    onChange={handleChange}
-                    rows={4}
-                    placeholder="Cuéntanos sobre ti..."
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              ) : (
-                <>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-1">Bio</h3>
-                  <p className="text-gray-600 text-sm">
-                    {profile.bio || 'Sin biografía'}
-                  </p>
-                </>
-              )}
-            </div>
+        } catch (err: any) {
+            console.error('Error fetching profile:', err);
+            // Si falla, mantener los datos del localStorage
+            setError(err.response?.data?.message || 'Error al cargar el perfil');
+        } finally {
+            setIsLoadingProfile(false);
+        }
+    };
 
-            {/* Estadísticas */}
-            <div className="border-t pt-4 mb-4">
-              <div className="flex justify-around text-center">
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalPosts}</p>
-                  <p className="text-sm text-gray-600">Posts</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalComments}</p>
-                  <p className="text-sm text-gray-600">Comentarios</p>
-                </div>
-              </div>
-            </div>
+    // Fetch posts del usuario desde el backend
+    const fetchUserPosts = async (userId: number) => {
+        setIsLoadingPosts(true);
+        try {
+            // Ajusta la ruta según tu backend
+            const { data } = await apiClient.get<Post[]>('/posts', {
+                params: {
+                    userId: userId, // O user_id según tu backend
+                    status: 'published'
+                }
+            });
+            
+            const userPosts: UserPost[] = data.map(post => ({
+                id: post.id.toString(),
+                title: post.title,
+                content: post.summary,
+                createdAt: post.created_at,
+                commentsCount: 0
+            }));
+            
+            setUserPosts(userPosts);
+            
+            setStats(prev => ({
+                ...prev,
+                totalPosts: userPosts.length
+            }));
 
-            {/* Fecha de registro */}
-            <p className="text-sm text-gray-500 text-center mb-4">
-              Miembro desde {formatJoinedDate(stats.joinedDate)}
-            </p>
+        } catch (err: any) {
+            console.error('Error fetching user posts:', err);
+            // Si la ruta no existe o falla, mostrar vacío en lugar de error
+            setUserPosts([]);
+        } finally {
+            setIsLoadingPosts(false);
+        }
+    };
 
-            {/* Botones de acción */}
-            {isEditing ? (
-              <div className="space-y-2">
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400"
-                >
-                  {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  className="w-full py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                Editar Perfil
-              </button>
-            )}
-          </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setProfile({
+            ...profile,
+            [e.target.name]: e.target.value
+        });
+    };
 
-          {/* TODO: Sección de configuración adicional */}
-          {/*
-          <div className="bg-white rounded-lg shadow-md p-6 mt-4">
-            <h3 className="font-semibold mb-3">Configuración</h3>
-            <Link to="/settings/password" className="block text-sm text-blue-600 hover:underline mb-2">
-              Cambiar contraseña
-            </Link>
-            <Link to="/settings/privacy" className="block text-sm text-blue-600 hover:underline mb-2">
-              Privacidad
-            </Link>
-            <button className="text-sm text-red-600 hover:underline">
-              Eliminar cuenta
-            </button>
-          </div>
-          */}
-        </div>
+    const formatJoinedDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long'
+        });
+    };
 
-        {/* Columna derecha: Posts del usuario */}
-        <div className="md:col-span-2">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4">Mis Posts</h2>
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files ? e.target.files[0] : null;
+        if (file) {
+            setNewAvatarFile(file);
+        }
+    };
 
-            {isLoadingPosts ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">Cargando posts...</p>
-              </div>
-            ) : userPosts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600 mb-4">Aún no has creado ningún post</p>
-                <Link
-                  to="/admin/posts/new"
-                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                >
-                  Crear mi primer post
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {userPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="border rounded-lg p-4 hover:shadow-md transition"
-                  >
-                    <Link to={`/posts/${post.id}`}>
-                      <h3 className="text-xl font-semibold mb-2 hover:text-blue-600 transition">
-                        {post.title}
-                      </h3>
-                    </Link>
-                    
-                    <p className="text-gray-600 text-sm mb-3">
-                      {post.content}
+    const uploadAvatarToCloudinary = async (file: File): Promise<string> => {
+        try {
+            const url = await uploadToCloudinary(file);
+            return url;
+        } catch (error: any) {
+            throw new Error(`Fallo al subir a Cloudinary: ${error.message}`);
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        if (!currentUser) return;
+        
+        setIsSaving(true);
+        setError('');
+        let updatedProfile = { ...profile };
+
+        try {
+            // Subir avatar si hay uno nuevo
+            if (newAvatarFile) {
+                const newAvatarUrl = await uploadAvatarToCloudinary(newAvatarFile);
+                updatedProfile = { ...updatedProfile, avatar: newAvatarUrl };
+            }
+
+            // Actualizar perfil en el backend
+            // Ajusta la ruta según tu backend - puede ser /auth/profile, /users/:id, etc.
+            const { data } = await apiClient.put<User>(`/auth/profile`, {
+                username: updatedProfile.username,
+                email: updatedProfile.email,
+                avatar_url: updatedProfile.avatar
+            });
+            
+            // Actualizar localStorage con los nuevos datos
+            localStorage.setItem('user', JSON.stringify(data));
+            
+            // Actualizar estado local
+            setProfile({
+                username: data.username,
+                email: data.email,
+                bio: updatedProfile.bio,
+                avatar: data.avatar_url || DEFAULT_AVATAR_URL
+            });
+            
+            setCurrentUser(data);
+            setNewAvatarFile(null);
+            setAvatarPreviewUrl(data.avatar_url || DEFAULT_AVATAR_URL);
+            setIsEditing(false);
+
+            // Disparar evento personalizado para que otros componentes se enteren del cambio
+            window.dispatchEvent(new Event('userUpdated'));
+
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            setError(err.response?.data?.message || 'Error al actualizar el perfil');
+            setAvatarPreviewUrl(profile.avatar);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        if (!currentUser) return;
+        
+        setProfile({
+            username: currentUser.username,
+            email: currentUser.email,
+            bio: '',
+            avatar: currentUser.avatar_url || DEFAULT_AVATAR_URL
+        });
+        setNewAvatarFile(null);
+        setAvatarPreviewUrl(currentUser.avatar_url || DEFAULT_AVATAR_URL);
+        setIsEditing(false);
+        setError('');
+    };
+
+    if (!currentUser && !isLoadingProfile) {
+        return (
+            <div className="container-custom section-padding animate-fade-in" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <div className="text-center py-12">
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        Debes iniciar sesión para ver tu perfil
                     </p>
+                    <Link
+                        to="/login"
+                        className="btn btn-primary py-2.5 px-6 rounded-full font-semibold mt-4 inline-block"
+                        style={{ backgroundColor: 'var(--color-amber)', color: COLOR_TEXT_DARK }}
+                    >
+                        Iniciar Sesión
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>
-                        {new Date(post.createdAt).toLocaleDateString('es-ES')}
-                      </span>
-                      <span>{post.commentsCount} comentarios</span>
-                    </div>
+    if (isLoadingProfile) {
+        return (
+            <div className="container-custom section-padding animate-fade-in" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <div className="text-center py-12">
+                    <p style={{ color: 'var(--text-muted)' }}>Cargando perfil...</p>
+                </div>
+            </div>
+        );
+    }
 
-                    <div className="flex gap-2 mt-3">
-                      <Link
-                        to={`/admin/posts/${post.id}/edit`}
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        Editar
-                      </Link>
-                      <Link
-                        to={`/posts/${post.id}`}
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        Ver detalles
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+    return (
+        <div className="container-custom section-padding animate-fade-in" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-amber)' }}>
+                Mi Perfil
+            </h1>
 
-                {/* TODO: Agregar paginación si hay muchos posts */}
-              </div>
+            {error && (
+                <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--color-coral)', color: 'white' }}>
+                    {error}
+                </div>
             )}
-          </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+                {/* Columna izquierda: Información del usuario */}
+                <div className="md:col-span-1">
+                    <div 
+                        className="card p-6 rounded-xl shadow-2xl" 
+                        style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                    >
+                        {/* Avatar y Campo de Carga */}
+                        <div className="text-center mb-4">
+                            <div 
+                                className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center text-4xl font-bold mx-auto mb-3 border-4"
+                                style={{ borderColor: 'var(--color-amber)', backgroundColor: 'var(--bg-secondary)' }}
+                            >
+                                <img
+                                    src={avatarPreviewUrl}
+                                    alt={profile.username}
+                                    className="w-full h-full rounded-full object-cover border-4"
+                                    style={{ borderColor: COLOR_TEXT_DARK }}
+                                    onError={(e) => {
+                                        // Si falla la carga de la imagen, usar la por defecto
+                                        e.currentTarget.src = DEFAULT_AVATAR_URL;
+                                    }}
+                                />
+                            </div>
+                            
+                            {/* Botón y Input para cambiar avatar */}
+                            {isEditing && (
+                                <div className="relative inline-block mt-2">
+                                    <button className="text-sm hover:underline font-semibold" style={{ color: 'var(--color-amber)' }}>
+                                        {newAvatarFile ? 'Foto seleccionada' : 'Cambiar foto'}
+                                    </button>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarChange}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Formulario de Edición / Vista de Perfil */}
+                        <div className="flex flex-col gap-3">
+                            {/* Username */}
+                            <div className="mb-2">
+                                <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
+                                    Nombre de usuario
+                                </label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="username"
+                                        value={profile.username}
+                                        onChange={handleChange}
+                                        className="input"
+                                        style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
+                                        disabled={isSaving}
+                                    />
+                                ) : (
+                                    <p className="text-xl font-bold" style={{ color: 'var(--color-amber)' }}>
+                                        {profile.username}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div className="mb-2">
+                                <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
+                                    Email
+                                </label>
+                                {isEditing ? (
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={profile.email}
+                                        onChange={handleChange}
+                                        className="input"
+                                        style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
+                                        disabled={isSaving}
+                                    />
+                                ) : (
+                                    <p className="text-gray-600" style={{ color: 'var(--text-muted)' }}>
+                                        {profile.email}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Bio */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
+                                    Biografía
+                                </label>
+                                {isEditing ? (
+                                    <textarea
+                                        name="bio"
+                                        value={profile.bio}
+                                        onChange={handleChange}
+                                        rows={4}
+                                        placeholder="Cuéntanos sobre ti..."
+                                        className="input"
+                                        style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
+                                        disabled={isSaving}
+                                    />
+                                ) : (
+                                    <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                                        {profile.bio || 'Sin biografía'}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Estadísticas */}
+                        <div className="border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
+                            <div className="flex justify-around text-center">
+                                <div>
+                                    <p className="text-2xl font-bold" style={{ color: 'var(--color-teal)' }}>{stats.totalPosts}</p>
+                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Posts</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold" style={{ color: 'var(--color-teal)' }}>{stats.totalComments}</p>
+                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Comentarios</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Fecha de registro */}
+                        <p className="text-xs text-center pt-2" style={{ color: 'var(--text-muted)' }}>
+                            Miembro desde {formatJoinedDate(stats.joinedDate)}
+                        </p>
+
+                        {/* Botones de acción */}
+                        <div className="pt-2 space-y-2">
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        onClick={handleSaveProfile}
+                                        disabled={isSaving}
+                                        className={`btn btn-primary w-full py-2.5 rounded-full font-semibold transition-all hover:scale-[1.02] ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        style={{ backgroundColor: 'var(--color-amber)', color: COLOR_TEXT_DARK }}
+                                    >
+                                        {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        disabled={isSaving}
+                                        className="btn btn-secondary w-full py-2.5 rounded-full font-semibold transition-all hover:scale-[1.02]"
+                                        style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                                    >
+                                        Cancelar
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="btn btn-primary w-full py-2.5 rounded-full font-semibold transition-all hover:scale-[1.02]"
+                                    style={{ backgroundColor: 'var(--color-amber)', color: COLOR_TEXT_DARK }}
+                                >
+                                    Editar Perfil
+                                </button>
+                            )}
+                        </div>
+                        
+                        {/* Opciones de configuración adicionales */}
+                        <div className="pt-4 border-t mt-4" style={{ borderColor: 'var(--border-light)' }}>
+                            <Link to="/settings/password" className="block text-sm hover:underline" style={{ color: 'var(--color-teal)' }}>
+                                Cambiar contraseña
+                            </Link>
+                            <button className="text-sm mt-2 hover:underline" style={{ color: 'var(--color-coral)' }}>
+                                Eliminar cuenta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Columna derecha: Posts del usuario */}
+                <div className="md:col-span-2">
+                    <div className="card p-6 rounded-xl shadow-2xl" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--color-amber)' }}>
+                            Mis Posts Publicados
+                        </h2>
+
+                        {isLoadingPosts ? (
+                            <div className="text-center py-8">
+                                <p style={{ color: 'var(--text-muted)' }}>Cargando posts...</p>
+                            </div>
+                        ) : userPosts.length === 0 ? (
+                            <div className="text-center py-12">
+                                <p style={{ color: 'var(--text-muted)' }} className="mb-4">
+                                    Aún no has publicado ningún post
+                                </p>
+                                <Link
+                                    to="/admin/posts/new"
+                                    className="btn btn-primary py-2.5 px-6 rounded-full font-semibold transition-all hover:scale-105 inline-block"
+                                    style={{ backgroundColor: 'var(--color-teal)', color: COLOR_TEXT_DARK }}
+                                >
+                                    Crear mi primer post 🦖
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {userPosts.map((post) => (
+                                    <div
+                                        key={post.id}
+                                        className="rounded-lg flex gap-4 hover:shadow-lg transition-shadow"
+                                        style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem' }}
+                                    >
+                                        <div 
+                                            className="w-20 h-20 rounded-lg flex-shrink-0 flex items-center justify-center" 
+                                            style={{ backgroundColor: 'var(--color-amber)' }}
+                                        >
+                                            <span className="text-2xl font-bold" style={{ color: COLOR_TEXT_DARK }}>🦴</span>
+                                        </div>
+                                        
+                                        <div className="flex-grow">
+                                            <Link to={`/posts/${post.id}`}>
+                                                <h3 className="text-xl font-semibold mb-1 hover:underline" style={{ color: 'var(--color-amber)' }}>
+                                                    {post.title}
+                                                </h3>
+                                            </Link>
+                                            
+                                            <p className="text-sm mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                                                {post.content}
+                                            </p>
+
+                                            <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+                                                <span>
+                                                    {new Date(post.createdAt).toLocaleDateString('es-ES')}
+                                                </span>
+                                                <span style={{ color: 'var(--color-teal)' }}>{post.commentsCount} comentarios</span>
+                                            </div>
+
+                                            <div className="flex gap-4 mt-2 text-sm">
+                                                <Link
+                                                    to={`/admin/posts/${post.id}/edit`}
+                                                    className="hover:underline"
+                                                    style={{ color: 'var(--color-teal)' }}
+                                                >
+                                                    Editar
+                                                </Link>
+                                                <Link
+                                                    to={`/posts/${post.id}`}
+                                                    className="hover:underline"
+                                                    style={{ color: 'var(--color-teal)' }}
+                                                >
+                                                    Ver
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Profile;
-
-/**
- * NOTAS DE IMPLEMENTACIÓN FUTURA:
- * 
- * 1. Servicios necesarios (src/services/userService.ts):
- *    - getUserProfile(): obtener datos completos del usuario
- *    - updateProfile(data): actualizar perfil
- *    - uploadAvatar(file): subir foto de perfil
- *    - changePassword(oldPass, newPass)
- *    - deleteAccount()
- * 
- * 2. Upload de avatar:
- *    - Input de tipo file para seleccionar imagen
- *    - Preview antes de subir
- *    - Validar tamaño y formato (JPG, PNG, máx 2MB)
- *    - Crop/resize de imagen en el cliente
- *    - Usar FormData para enviar al backend
- * 
- * 3. Tabs para organizar contenido:
- *    - Tab "Posts": posts del usuario
- *    - Tab "Comentarios": comentarios recientes
- *    - Tab "Guardados": posts guardados/favoritos
- *    - Tab "Borradores": posts no publicados
- * 
- * 4. Cambiar contraseña:
- *    - Modal o página separada
- *    - Campos: contraseña actual, nueva, confirmar nueva
- *    - Validar fortaleza de la nueva contraseña
- *    - Endpoint: PUT /auth/change-password
- * 
- * 5. Eliminar cuenta:
- *    - Modal de confirmación con warnings
- *    - Requerir contraseña para confirmar
- *    - Opción de "desactivar" en lugar de eliminar permanentemente
- *    - Email de confirmación de eliminación
- * 
- * 6. Página de perfil público:
- *    - Crear src/pages/UserProfile.tsx
- *    - Ruta: /users/:username
- *    - Mostrar posts públicos del usuario
- *    - Sin opciones de edición
- * 
- * 7. Configuración de privacidad:
- *    - Perfil público/privado
- *    - Mostrar email públicamente (sí/no)
- *    - Permitir mensajes directos
- *    - Notificaciones (email, push)
- * 
- * 8. Actividad reciente:
- *    - Timeline de acciones del usuario
- *    - Posts creados, comentarios, likes dados
- *    - Con filtros por tipo de actividad
- * 
- * 9. Badges/Achievements:
- *    - Sistema de logros (primer post, 10 posts, 100 comentarios, etc)
- *    - Mostrar badges en el perfil
- *    - Gamificación para incentivar participación
- * 
- * 10. Estadísticas avanzadas:
- *     - Gráficos de posts por mes
- *     - Posts más populares
- *     - Engagement rate
- *     - Usar librería de gráficos (recharts, chart.js)
- */
