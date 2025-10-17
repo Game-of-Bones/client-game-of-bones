@@ -185,4 +185,4 @@ client-game-of-bones/
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+This is an educational project developed within the framework of the Fullstack + DevOps bootcamp at Factoría F5.
