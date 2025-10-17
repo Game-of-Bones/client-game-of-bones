@@ -56,7 +56,7 @@ To run this project, you will need Node.js and npm installed on your system.
 
 1.  Clone the repository:
     ```sh
-    git clone https://your-repository-url/client-game-of-bones.git
+    git clone https://github.com/Game-of-Bones/client-game-of-bones.git
     ```
 2.  Navigate to the project directory:
     ```sh
@@ -66,7 +66,7 @@ To run this project, you will need Node.js and npm installed on your system.
     ```sh
     npm install
     ```
-4.  Create a `.env` file in the root of the project and add the necessary environment variables (see Environment Variables).
+4.  Create a `.env` file in the root of the project and add the necessary environment variables as in the env.example file.
 
 ---
 
