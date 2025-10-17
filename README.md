@@ -41,13 +41,16 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### Prerequisites
 
-Make sure you have Node.js and npm (or yarn) installed on your system.
+To run this project, you will need Node.js and npm installed on your system.
 
 *   **Node.js** (v18.x or higher recommended)
+    *   You can download the official installer from [nodejs.org](https://nodejs.org/).
 *   **npm**
-    ```sh
-    npm install npm@latest -g
-    ```
+    *   `npm` is included with the Node.js installation.
+    *   To ensure you have the latest version, you can optionally run the following command:
+        ```sh
+        npm install npm@latest -g
+        ```
 
 ### Installation
 
@@ -119,9 +122,11 @@ client-game-of-bones/
 │   ├── components/ # Reusable UI components
 │   ├── features/   # Components and logic for specific features (e.g., auth, posts)
 │   ├── hooks/      # Custom React hooks
+│   ├── hooks/      # Custom React hooks for shared logic
 │   ├── pages/      # Top-level page components
 │   ├── services/   # API calls and other external services
 │   ├── store/      # Redux store configuration
+│   ├── store/      # Global state management (Zustand)
 │   ├── App.js      # Main application component
 │   └── index.js    # Application entry point
 └── package.json
