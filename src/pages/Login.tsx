@@ -1,130 +1,265 @@
-// Página de inicio de sesión
-
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import LoginForm from '../components/ui/LoginForm';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import Button from '../components/ui/button';
+import Input from '../components/ui/Input';
+import { useAuthStore } from '../stores/authStore';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-
-  // Obtener la ubicación para la redirección inteligente
   const location = useLocation();
+  
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const from = location.state?.from?.pathname || '/';
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
-  // Estado para manejar errores y loading
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  /**
-   * Maneja cambios en los inputs del formulario
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    // Limpiar el error específico del campo cuando el usuario empieza a escribir
-    if (errors[e.target.name as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [e.target.name]: undefined }));
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
     }
-    // Limpiar el error general del formulario
-    if (errors.form) {
-      setErrors(prev => ({ ...prev, form: undefined }));
+  }, [isAuthenticated, navigate, from]);
+
+  // Limpiar errores al desmontar
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Limpiar error de validación local
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    // Limpiar error del backend
+    if (error) {
+      clearError();
     }
   };
 
-  /**
-   * Valida el formulario y actualiza el estado de errores.
-   * @returns `true` si el formulario es válido, `false` en caso contrario.
-   */
   const validateForm = (): boolean => {
-    const newErrors: { email?: string; password?: string } = {};
+    const errors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = 'El email es requerido.';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'El formato del email es inválido.';
+    if (!formData.email.trim()) {
+      errors.email = 'El email es requerido';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Formato de email inválido';
     }
 
     if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida.';
+      errors.password = 'La contraseña es requerida';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  /**
-   * Maneja el envío del formulario
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Si la validación del frontend falla, no continuar.
     if (!validateForm()) {
       return;
     }
 
-    console.log('📧 Datos enviados:', formData);
-    setIsLoading(true);
-    setErrors({}); // Limpiar errores previos
-
     try {
       await login(formData);
-      // Solo después de un login exitoso, navegar
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      console.error('❌ Error completo:', err); 
-      // Manejar diferentes tipos de errores
-      if (err.response?.status === 401) {
-        setErrors({ form: 'Email o contraseña incorrectos.' });
-      } else if (err.response?.status === 500) {
-        setErrors({ form: 'Error del servidor. Por favor, intenta más tarde.' });
-      } else {
-        setErrors({ form: err.message || 'Error al iniciar sesión.' });
-      }
-      setIsLoading(false); // Solo poner en false si hay error
+      // Si llega aquí, el login fue exitoso
+      // authStore ya redirige automáticamente si isAuthenticated cambia
+    } catch (err) {
+      // El error ya está en el store (authStore.error)
+      console.error('Error en login:', err);
     }
-    // NO hay finally - si el login es exitoso, la navegación ocurre inmediatamente
   };
 
   return (
-    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <img
-          alt="Game of Bones Logo"
-          src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-          className="mx-auto h-10 w-auto"
+    <div className="h-[calc(100vh-88px)] flex overflow-hidden">
+      {/* LADO IZQUIERDO - IMAGEN FÓSIL */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img 
+          src="/public/hand.jpg" 
+          alt="Fósil de concha" 
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-theme-primary">
-          Iniciar Sesión
-        </h2>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm card p-8">
-        {/* Formulario */}
-        <LoginForm
-          formData={formData}
-          isLoading={isLoading}
-          errors={errors}
-          handleChange={handleChange}
-          handleSubmit={handleSubmit}
-        />
+      {/* LADO DERECHO - FORMULARIO */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8 overflow-y-auto">
+        <div className="w-full max-w-md">
+          {/* LOGO */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="flex justify-center mb-6 w-full transition-all duration-300 hover:scale-105"
+            aria-label="Ir a página principal"
+          >
+            <img
+              src="/gob_logo.png"
+              alt="Game of Bones"
+              className="w-72 h-auto object-contain"
+            />
+          </button>
 
-        <p className="mt-10 text-center text-sm text-theme-secondary">
-          ¿No tienes cuenta?{' '}
-          <Link to="/register" className="font-semibold text-accent-coral hover:text-accent-teal">
-            Regístrate aquí
-          </Link>
-        </p>
+          {/* HEADER */}
+          <div className="text-center mb-6">
+            <h1
+              className="text-base sm:text-lg mb-2 uppercase"
+              style={{ 
+                color: '#C9A875',
+                fontFamily: 'Cinzel, serif',
+                letterSpacing: '0.08em',
+              }}
+            >
+              Bienvenido de nuevo
+            </h1>
+            <p
+              className="text-xs uppercase mb-3"
+              style={{ 
+                color: '#E8D9B8',
+                fontFamily: 'Cinzel, serif',
+                letterSpacing: '0.25em',
+              }}
+            >
+              Inicio de sesión
+            </p>
+            <div 
+              className="w-full max-w-sm mx-auto"
+              style={{
+                height: '1px',
+                backgroundColor: 'rgba(201, 168, 117, 0.3)',
+              }}
+            />
+          </div>
+
+          {/* FORMULARIO */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Error del backend */}
+            {error && (
+              <div
+                className="px-4 py-2.5 rounded-lg border text-center"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: '#EF4444',
+                  color: '#FEE2E2',
+                }}
+              >
+                <p className="text-xs" style={{ fontFamily: 'Cinzel, serif' }}>
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Estilos para sobrescribir Input */}
+            <style>{`
+              .login-input-wrapper label {
+                color: #C9A875 !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.75rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.15em !important;
+                margin-bottom: 0.25rem !important;
+              }
+              
+              .login-input-wrapper input {
+                background-color: #8B7355 !important;
+                border-color: transparent !important;
+                color: #FFFFFF !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.875rem !important;
+                padding: 0.5rem 1rem !important;
+              }
+              
+              .login-input-wrapper input::placeholder {
+                color: rgba(255, 255, 255, 0.6) !important;
+              }
+              
+              .login-input-wrapper input:focus {
+                ring-color: #C9A875 !important;
+                border-color: #C9A875 !important;
+              }
+              
+              .login-input-wrapper p[role="alert"] {
+                color: #FCA5A5 !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.75rem !important;
+              }
+            `}</style>
+
+            {/* EMAIL */}
+            <div className="login-input-wrapper">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                label="Correo electrónico"
+                value={formData.email}
+                onChange={handleChange}
+                error={validationErrors.email}
+                placeholder="tu@email.com"
+                autoComplete="email"
+              />
+            </div>
+
+            {/* CONTRASEÑA */}
+            <div className="login-input-wrapper">
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                label="Contraseña"
+                value={formData.password}
+                onChange={handleChange}
+                error={validationErrors.password}
+                placeholder="Tu contraseña"
+                autoComplete="current-password"
+              />
+            </div>
+
+            {/* BOTÓN */}
+            <div className="pt-3">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2 text-xs font-semibold tracking-widest uppercase"
+                style={{ fontFamily: 'Cinzel, serif' }}
+              >
+                {isLoading ? 'INICIANDO SESIÓN...' : 'INICIAR SESIÓN'}
+              </Button>
+            </div>
+
+            {/* ENLACE A REGISTRO */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="text-sm transition-all duration-200 hover:scale-105"
+                style={{ 
+                  color: '#E8D9B8',
+                  fontFamily: 'Cinzel, serif',
+                }}
+              >
+                ¿No tienes cuenta? <span style={{ color: '#D4A574', textDecoration: 'underline' }}>Regístrate aquí</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

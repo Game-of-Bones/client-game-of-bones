@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePostStore } from '../stores/postStore';
 import type { Post, FossilType } from '../types/post.types';
+import CreatePostButton from '../components/ui/CreatePostButton'; // ← tu nuevo FAB
 
 const PostList = () => {
   const { posts, isLoading, error, fetchPosts } = usePostStore();
@@ -25,10 +26,10 @@ const PostList = () => {
     });
   }, [currentPage, filters.fossilType]);
 
-  // Filtrado local por búsqueda (porque el backend puede no tenerlo implementado)
+  // Filtrado local por búsqueda
   const filteredPosts = posts.filter(post => {
     if (!filters.search) return true;
-    
+
     const searchLower = filters.search.toLowerCase();
     return (
       post.title.toLowerCase().includes(searchLower) ||
@@ -56,15 +57,18 @@ const PostList = () => {
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ fontFamily: "'Playfair Display', serif" }}>
-      <div className="container mx-auto px-4">
-        
+    <div className="min-h-screen relative" style={{ fontFamily: "'Playfair Display', serif" }}>
+      
+      {/* 🔘 Botón flotante (FAB responsive) */}
+      <CreatePostButton />
+
+      <div className="container mx-auto px-4 py-8">
         {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#FFFFFF' }}>
             Explora Descubrimientos Fósiles
           </h1>
-          
+
           {/* Búsqueda */}
           <div className="max-w-2xl">
             <input

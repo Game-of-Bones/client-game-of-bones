@@ -1,74 +1,47 @@
-// src/components/ui/CreatePostButton.tsx
-import { Link } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
 
 interface CreatePostButtonProps {
   to?: string;
   className?: string;
-  variant?: 'fixed' | 'inline';
 }
 
 const CreatePostButton = ({ 
-  to = '/posts/new', 
-  className = '',
-  variant = 'fixed' 
+  to = "/posts/new", 
+  className = "" 
 }: CreatePostButtonProps) => {
-  const baseStyles = "group relative px-6 py-3 rounded-lg uppercase text-sm tracking-wider shadow-lg backdrop-blur-sm transition-all duration-300 overflow-hidden inline-flex items-center gap-2";
-  
-  const variantStyles = variant === 'fixed' 
-    ? "fixed top-28 right-8 z-50" 
-    : "inline-block";
-
   return (
     <Link
       to={to}
-      className={`${baseStyles} ${variantStyles} ${className}`}
+      className={`
+        fixed bottom-6 right-6 z-50
+        flex items-center justify-center gap-2
+        px-5 py-3 sm:px-6 sm:py-3
+        rounded-full
+        bg-[rgb(29_67_66/0.85)]
+        text-white font-serif text-sm tracking-wider uppercase
+        shadow-[0_8px_20px_rgba(0,0,0,0.25)]
+        backdrop-blur-md border border-[rgb(141_170_145/0.6)]
+        hover:scale-105 hover:bg-[rgb(29_67_66/0.95)]
+        hover:shadow-[0_10px_30px_rgba(29,67,66,0.5)]
+        transition-all duration-300 ease-out
+        active:scale-95
+        ${className}
+      `}
       style={{
-        backgroundColor: 'rgba(141, 170, 145, 0.85)',
-        border: '1.5px solid #1D4342',
-        color: '#FFFFFF',
-        fontFamily: 'Cinzel, serif',
-        letterSpacing: '0.05em'
+        fontFamily: "Cinzel, serif",
+        letterSpacing: "0.05em",
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 8px 25px rgba(29, 67, 66, 0.4)';
-        e.currentTarget.style.backgroundColor = '#8DAA91';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1) translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 15px rgba(29, 67, 66, 0.2)';
-        e.currentTarget.style.backgroundColor = 'rgba(141, 170, 145, 0.85)';
-      }}
+      aria-label="Crear nuevo post"
     >
-      {/* Efecto de brillo animado */}
-      <span 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{
-          background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 2s infinite',
-        }}
-      />
-      
-      {/* Icono */}
+      {/* Ícono */}
       <PlusCircle 
-        size={18} 
-        className="transition-transform duration-300 group-hover:rotate-90 relative z-10"
+        size={22} 
+        className="transition-transform duration-300 group-hover:rotate-90" 
       />
-      
-      {/* Texto */}
-      <span className="relative z-10">
-        Crear nuevo Post
-      </span>
 
-      {/* Estilo CSS para la animación */}
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
+      {/* Texto solo visible en pantallas medianas o mayores */}
+      <span className="hidden sm:inline-block">Crear Post</span>
     </Link>
   );
 };

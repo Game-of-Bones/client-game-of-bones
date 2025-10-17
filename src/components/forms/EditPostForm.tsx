@@ -1,16 +1,15 @@
 import { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../stores/authStore'; 
-import { usePostStore } from '../../stores/postStore'; 
-import { uploadToCloudinary } from '../../utils/cloudinaryUpload'; 
-import { Upload, Link, Save, MapPin } from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
+import { usePostStore } from '../../stores/postStore';
+import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
+import { Upload, Link, Save } from 'lucide-react';
 import { FOSSIL_TYPE_OPTIONS } from '../../types/post.types';
 import type { Post, FossilType } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    post_content: string;
-    summary: string; 
+    post_content: string; // ✅ Solo contenido (se guardará en summary)
     image_url: string;
     paleontologist: string;
     location: string;
@@ -30,21 +29,20 @@ interface EditPostFormProps {
 
 const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     const navigate = useNavigate();
-    const user = useAuthStore((state) => state.user); 
+    const user = useAuthStore((state) => state.user);
     const updatePost = usePostStore((state) => state.updatePost);
     const isSubmitting = usePostStore((state) => state.isLoading);
     const postError = usePostStore((state) => state.error);
-    
+
     const [formData, setFormData] = useState<FormData>({
         title: initialData.title || '',
-        post_content: initialData.post_content || '',
-        summary: initialData.summary || '', 
+        post_content: initialData.summary || '', // ✅ summary contiene todo el contenido
         image_url: initialData.image_url || '',
         paleontologist: initialData.paleontologist || '',
         location: initialData.location || '',
         latitude: initialData.latitude || null,
         longitude: initialData.longitude || null,
-        fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value, 
+        fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value,
         geological_period: initialData.geological_period || '',
         discovery_date: initialData.discovery_date ? new Date(initialData.discovery_date).toISOString().split('T')[0] : '',
         source: initialData.source || '',
@@ -54,14 +52,13 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     useEffect(() => {
         setFormData({
             title: initialData.title || '',
-            post_content: initialData.post_content || '', 
-            summary: initialData.summary || '', 
+            post_content: initialData.summary || '',
             image_url: initialData.image_url || '',
             paleontologist: initialData.paleontologist || '',
             location: initialData.location || '',
             latitude: initialData.latitude || null,
             longitude: initialData.longitude || null,
-            fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value, 
+            fossil_type: initialData.fossil_type || FOSSIL_TYPE_OPTIONS[0].value,
             geological_period: initialData.geological_period || '',
             discovery_date: initialData.discovery_date ? new Date(initialData.discovery_date).toISOString().split('T')[0] : '',
             source: initialData.source || '',
@@ -72,14 +69,13 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState('');
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    const [isGeolocating, setIsGeolocating] = useState(false);
-    const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file'); 
+    const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        
+
         if (errors[name]) {
             setErrors(prev => {
                 const newErrors = { ...prev };
@@ -104,52 +100,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
             setServerError(error.message || 'Error al subir la imagen a Cloudinary');
         } finally {
             setIsUploadingImage(false);
-            e.target.value = ''; 
-        }
-    };
-
-    const handleGeolocate = async () => {
-        const location = formData.location.trim();
-        if (!location) {
-            setServerError('Por favor, introduce una ubicación antes de geocodificar.');
-            return;
-        }
-
-        setIsGeolocating(true);
-        setServerError('');
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
-                {
-                    headers: {
-                        'User-Agent': 'PaleontologApp/1.0'
-                    }
-                }
-            );
-            
-            if (!response.ok) {
-                throw new Error('Error al conectar con el servicio de geocodificación');
-            }
-
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                setFormData(prev => ({
-                    ...prev,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lon)
-                }));
-                setServerError('');
-            } else {
-                setServerError('No se encontraron coordenadas para esa ubicación. Intenta ser más específico.');
-            }
-        } catch (error: any) {
-            console.error('Geocoding error:', error);
-            setServerError(error.message || 'Error al obtener las coordenadas de la ubicación');
-        } finally {
-            setIsGeolocating(false);
+            e.target.value = '';
         }
     };
 
@@ -157,10 +108,8 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
         const newErrors: Record<string, string> = {};
 
         if (!formData.title.trim()) newErrors.title = 'El Título del Post es obligatorio.';
-        if (!formData.summary.trim()) newErrors.summary = 'El Subtítulo/Resumen es obligatorio.';
-        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido Detallado es obligatorio.';
+        if (!formData.post_content.trim()) newErrors.post_content = 'El Contenido de la Publicación es obligatorio.';
         if (!formData.fossil_type) newErrors.fossil_type = 'Debes seleccionar el Tipo de Fósil.';
-        
         if (!formData.image_url && !isUploadingImage) newErrors.image_url = 'Debes incluir una imagen principal.';
 
         setErrors(newErrors);
@@ -170,19 +119,18 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     const handleSubmit = async (e: React.FormEvent, statusOverride: 'draft' | 'published') => {
         e.preventDefault();
         setServerError('');
-    
+
         if (!validateForm()) {
             setServerError('POR FAVOR, RELLENE TODOS LOS CAMPOS OBLIGATORIOS.');
             return;
         }
-    
+
         if (isSubmitting || isUploadingImage) return;
-    
+
         try {
             const dataToSubmit = {
                 title: formData.title,
-                summary: formData.summary, 
-                post_content: formData.post_content,
+                summary: formData.post_content, // ✅ Todo el contenido en summary
                 image_url: formData.image_url,
                 paleontologist: formData.paleontologist || undefined,
                 location: formData.location || undefined,
@@ -194,14 +142,14 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                 source: formData.source || undefined,
                 status: statusOverride,
             };
-    
+
             await updatePost(Number(postId), dataToSubmit);
-            
+
             const redirectPath = statusOverride === 'published' ? `/posts/${postId}` : '/profile';
             navigate(redirectPath);
-    
+
         } catch (err: any) {
-            setServerError(postError || err.message || 'Error al actualizar el post.'); 
+            setServerError(postError || err.message || 'Error al actualizar el post.');
         }
     };
 
@@ -259,9 +207,9 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 style={{ 
-                    fontFamily: 'Cinzel, serif', 
-                    fontSize: '32px', 
+                <h1 style={{
+                    fontFamily: 'Cinzel, serif',
+                    fontSize: '32px',
                     fontWeight: '600',
                     color: '#C0B39A',
                     letterSpacing: '1px',
@@ -269,8 +217,8 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                 }}>
                     Editar Descubrimiento
                 </h1>
-                <p style={{ 
-                    fontSize: '14px', 
+                <p style={{
+                    fontSize: '14px',
                     color: '#8B6543',
                     fontFamily: 'Playfair Display, serif'
                 }}>
@@ -279,10 +227,10 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
             </div>
 
             {(serverError || postError) && (
-                <div style={{ 
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)', 
-                    color: '#dc2626', 
-                    padding: '16px', 
+                <div style={{
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    color: '#dc2626',
+                    padding: '16px',
                     borderRadius: '6px',
                     marginBottom: '24px',
                     textAlign: 'center',
@@ -291,11 +239,11 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     {serverError || postError}
                 </div>
             )}
-            
-            <p style={{ 
-                fontSize: '13px', 
-                fontStyle: 'italic', 
-                marginBottom: '24px', 
+
+            <p style={{
+                fontSize: '13px',
+                fontStyle: 'italic',
+                marginBottom: '24px',
                 textAlign: 'center',
                 color: '#F76C5E',
                 fontFamily: 'Playfair Display, serif'
@@ -304,7 +252,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                
+
                 {/* Título */}
                 <div>
                     <label htmlFor="title" style={labelStyle}>Título del Post *</label>
@@ -328,31 +276,10 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     )}
                 </div>
 
-                {/* Subtítulo */}
-                <div>
-                    <label htmlFor="summary" style={labelStyle}>Subtítulo del Post *</label>
-                    <input
-                        id="summary"
-                        name="summary"
-                        type="text"
-                        value={formData.summary}
-                        onChange={handleChange}
-                        placeholder="Un breve resumen o eslogan..."
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            borderColor: errors.summary ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.summary && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.summary}</p>
-                    )}
-                </div>
-                
                 {/* Imagen */}
-                <div style={{ 
-                    backgroundColor: 'rgba(245, 230, 204, 0.3)', 
-                    padding: '24px', 
+                <div style={{
+                    backgroundColor: 'rgba(245, 230, 204, 0.3)',
+                    padding: '24px',
                     borderRadius: '6px',
                     border: '1px solid rgba(192, 179, 154, 0.3)'
                 }}>
@@ -365,9 +292,9 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                             <Link size={16} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }} />
                             URL
                         </button>
-                        <button 
-                            type="button" 
-                            onClick={() => { setUploadMethod('file'); fileInputRef.current?.click(); }} 
+                        <button
+                            type="button"
+                            onClick={() => { setUploadMethod('file'); fileInputRef.current?.click(); }}
                             style={uploadMethod === 'file' ? buttonPrimaryStyle : buttonSecondaryStyle}
                         >
                             <Upload size={16} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }} />
@@ -398,11 +325,11 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                             <img src={formData.image_url} alt="Vista previa del descubrimiento" style={{ width: '100%', maxHeight: '350px', objectFit: 'cover' }} />
                         </div>
                     ) : (
-                        <div style={{ 
-                            marginTop: '16px', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            justifyContent: 'center', 
+                        <div style={{
+                            marginTop: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
                             alignItems: 'center',
                             backgroundColor: '#F5E6CC',
                             borderRadius: '6px',
@@ -419,6 +346,28 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                                 <p style={{ marginTop: '8px', fontSize: '12px', color: '#dc2626' }}>{errors.image_url}</p>
                             )}
                         </div>
+                    )}
+                </div>
+
+                {/* Contenido del Post */}
+                <div>
+                    <label htmlFor="post_content" style={labelStyle}>Contenido de la Publicación *</label>
+                    <textarea
+                        id="post_content"
+                        name="post_content"
+                        value={formData.post_content}
+                        onChange={handleChange}
+                        placeholder="Escribe el contenido completo del post: descripción, métodos de excavación, importancia del hallazgo, etc..."
+                        rows={10}
+                        disabled={isSubmitting}
+                        style={{
+                            ...inputStyle,
+                            resize: 'vertical' as const,
+                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
+                        }}
+                    />
+                    {errors.post_content && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 
@@ -455,39 +404,16 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                 {/* Lugar del Descubrimiento */}
                 <div>
                     <label htmlFor="location" style={labelStyle}>Lugar del Descubrimiento</label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <input
-                            id="location"
-                            name="location"
-                            type="text"
-                            value={formData.location}
-                            onChange={handleChange}
-                            placeholder="Ej: Patagonia, Argentina"
-                            disabled={isSubmitting}
-                            style={{ ...inputStyle, flex: 1 }}
-                        />
-                        <button
-                            type="button"
-                            onClick={handleGeolocate}
-                            disabled={isGeolocating || isSubmitting || !formData.location}
-                            style={{
-                                ...buttonSecondaryStyle,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                whiteSpace: 'nowrap',
-                                opacity: (isGeolocating || isSubmitting || !formData.location) ? 0.5 : 1
-                            }}
-                        >
-                            <MapPin size={16} />
-                            {isGeolocating ? 'Buscando...' : 'Obtener Coordenadas'}
-                        </button>
-                    </div>
-                    {formData.latitude !== null && formData.longitude !== null && (
-                        <p style={{ marginTop: '8px', fontSize: '11px', color: '#6DA49C', fontWeight: '500' }}>
-                            ✓ Coordenadas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-                        </p>
-                    )}
+                    <input
+                        id="location"
+                        name="location"
+                        type="text"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="Ej: Patagonia, Argentina"
+                        disabled={isSubmitting}
+                        style={inputStyle}
+                    />
                 </div>
 
                 {/* Fecha de Descubrimiento */}
@@ -503,7 +429,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                         style={inputStyle}
                     />
                 </div>
-                
+
                 {/* Tipo de Fósil */}
                 <div>
                     <label htmlFor="fossil_type" style={labelStyle}>Tipo de Fósil *</label>
@@ -526,28 +452,6 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     </select>
                     {errors.fossil_type && (
                         <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.fossil_type}</p>
-                    )}
-                </div>
-                
-                {/* Contenido del Post */}
-                <div>
-                    <label htmlFor="post_content" style={labelStyle}>Contenido del Post (Detallado) *</label>
-                    <textarea
-                        id="post_content"
-                        name="post_content"
-                        value={formData.post_content}
-                        onChange={handleChange}
-                        placeholder="Escribe la descripción detallada, métodos de excavación, importancia del hallazgo, etc..."
-                        rows={8}
-                        disabled={isSubmitting}
-                        style={{
-                            ...inputStyle,
-                            resize: 'vertical' as const,
-                            borderColor: errors.post_content ? '#dc2626' : '#C0B39A'
-                        }}
-                    />
-                    {errors.post_content && (
-                        <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{errors.post_content}</p>
                     )}
                 </div>
 
@@ -582,10 +486,10 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
 
                     <div>
                         <label style={labelStyle}>Estatus del Post</label>
-                        <div style={{ 
-                            display: 'flex', 
-                            gap: '24px', 
-                            padding: '12px 16px', 
+                        <div style={{
+                            display: 'flex',
+                            gap: '24px',
+                            padding: '12px 16px',
                             backgroundColor: '#F5E6CC',
                             borderRadius: '6px',
                             border: '1px solid #C0B39A'
@@ -633,24 +537,24 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
                     >
                         Cancelar
                     </button>
-                    
+
                     <button
                         type="button"
                         onClick={(e) => handleSubmit(e, 'draft')}
                         disabled={isSubmitting || isUploadingImage}
-                        style={{ 
-                            ...buttonPrimaryStyle, 
+                        style={{
+                            ...buttonPrimaryStyle,
                             backgroundColor: '#D4A574',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            opacity: (isSubmitting || isUploadingImage) ? 0.5 : 1 
+                            opacity: (isSubmitting || isUploadingImage) ? 0.5 : 1
                         }}
                     >
                         <Save size={16} />
                         {isSubmitting ? 'Guardando...' : 'Guardar Borrador'}
                     </button>
-                    
+
                     <button
                         type="button"
                         onClick={(e) => handleSubmit(e, 'published')}

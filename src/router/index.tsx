@@ -11,7 +11,7 @@ import Home from '../pages/home';
 import Profile from '../pages/Profile'; 
 import PostList from '../pages/PostList';
 import PostDetail from '../pages/PostDetail';
-import Creators from '../pages/Creators'; // ⬅️ NUEVA IMPORTACIÓN
+import Creators from '../pages/Creators'; 
 
 // Páginas de admin
 import CreatePost from '../pages/CreatePost';
