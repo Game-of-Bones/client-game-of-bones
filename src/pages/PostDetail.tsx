@@ -28,51 +28,51 @@ interface Like {
 const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isDeleting }: any) => {
   if (!isOpen) return null;
   return (
-    <div 
+    <div
       className="fixed inset-0 flex items-center justify-center z-50"
       style={{ backgroundColor: 'rgba(29, 67, 66, 0.67)' }}
       onClick={onCancel}
     >
-      <div 
+      <div
         className="rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
         style={{ backgroundColor: 'rgba(29, 67, 66, 0.95)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 relative">
-            <img 
-              src="/Triceratops_Skull_in_Earthy_Brown.png" 
-              alt="Triceratops Skull" 
+            <img
+              src="/Triceratops_Skull_in_Earthy_Brown.png"
+              alt="Triceratops Skull"
               className="w-full h-full object-contain"
             />
           </div>
         </div>
-        
-        <h3 
+
+        <h3
           className="text-2xl sm:text-3xl font-bold text-center mb-3"
           style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
         >
           {title}
         </h3>
-        
-        <p 
+
+        <p
           className="text-center mb-8 text-base sm:text-lg"
           style={{ fontFamily: "'Playfair Display', serif", color: '#FFFFFF' }}
         >
           {message}
         </p>
-        
+
         <div className="flex justify-center gap-4">
-          <button 
-            onClick={onCancel} 
+          <button
+            onClick={onCancel}
             disabled={isDeleting}
             className="py-3 px-8 rounded-full text-white font-semibold transition-all hover:scale-105"
             style={{ backgroundColor: '#F76C5E', fontFamily: "'Playfair Display', serif" }}
           >
             Cancelar
           </button>
-          <button 
-            onClick={onConfirm} 
+          <button
+            onClick={onConfirm}
             disabled={isDeleting}
             className="py-3 px-8 rounded-full text-white font-semibold transition-all hover:scale-105"
             style={{ backgroundColor: '#8DAA91', fontFamily: "'Playfair Display', serif" }}
@@ -122,13 +122,13 @@ const PostDetail = () => {
   const fetchPost = async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch(`http://localhost:3001/api/posts/${id}`);
       if (!response.ok) throw new Error('Error al cargar el post');
       const result = await response.json();
       console.log('✅ Post obtenido:', result);
-      
+
       const postData = result.data || result;
       setPost(postData);
     } catch (err: any) {
@@ -142,19 +142,19 @@ const PostDetail = () => {
   const fetchComments = async () => {
     try {
       const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
-      
+
       if (!response.ok) {
         console.warn('⚠️ Error al cargar comentarios:', response.status);
         setComments([]);
         return;
       }
-      
+
       const data = await response.json();
       console.log('✅ Comentarios obtenidos:', data);
-      
+
       // ✅ Manejar formato: { data: { comments: [], count: 0 }, success: true }
       let commentsArray: Comment[] = [];
-      
+
       if (Array.isArray(data)) {
         commentsArray = data;
       } else if (data.data && Array.isArray(data.data.comments)) {
@@ -164,9 +164,9 @@ const PostDetail = () => {
       } else if (data.comments && Array.isArray(data.comments)) {
         commentsArray = data.comments;
       }
-      
+
       setComments(commentsArray);
-      
+
     } catch (err: any) {
       console.error('❌ Error al obtener comentarios:', err);
       setComments([]);
@@ -175,34 +175,30 @@ const PostDetail = () => {
 
   const fetchLikes = async () => {
     try {
-      // ✅ INTENTAR OBTENER LIKES DEL BACKEND
-      const response = await fetch(`http://localhost:3001/api/posts/${id}/likes`);
-      
+      // ✅ Usar el endpoint existente que cuenta los likes
+      const response = await fetch(`http://localhost:3001/api/posts/${id}`);
+
       if (!response.ok) {
-        console.warn('⚠️ Endpoint de likes no disponible. Usando fallback.');
-        setLikes([]);
+        console.warn('⚠️ Error al cargar datos del post');
         setLikesCount(0);
         setUserLiked(false);
         return;
       }
-      
-      const data = await response.json();
-      console.log('✅ Likes obtenidos:', data);
-      
-      // Manejar diferentes formatos de respuesta
-      const likesArray = Array.isArray(data) ? data : (data.data || []);
-      setLikes(likesArray);
-      setLikesCount(likesArray.length);
-      
-      // ✅ Verificar si el usuario actual dio like
-      if (user) {
-        const hasLiked = likesArray.some((like: Like) => like.user_id === user.id);
-        setUserLiked(hasLiked);
+
+      const result = await response.json();
+      const postData = result.data || result;
+
+      // Si el backend devuelve el contador de likes en el post
+      if (postData.likes_count !== undefined) {
+        setLikesCount(postData.likes_count);
       }
-      
+
+      // ⚠️ Como no podemos verificar si el usuario dio like, lo dejamos en false por defecto
+      // El estado se manejará localmente durante la sesión
+      setUserLiked(false);
+
     } catch (err: any) {
       console.error('❌ Error al obtener likes:', err);
-      setLikes([]);
       setLikesCount(0);
       setUserLiked(false);
     }
@@ -222,28 +218,28 @@ const PostDetail = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Error al procesar el like');
-      
+
       const result = await response.json();
       console.log('✅ Like toggle exitoso:', result);
-      
+
       // ✅ Actualizar estados según la respuesta del backend
       if (result.liked !== undefined) {
         setUserLiked(result.liked);
       } else {
         setUserLiked(!userLiked);
       }
-      
+
       if (result.likes_count !== undefined) {
         setLikesCount(result.likes_count);
       } else {
         setLikesCount(userLiked ? likesCount - 1 : likesCount + 1);
       }
-      
+
       // ✅ Recargar likes para tener datos actualizados
       await fetchLikes();
-      
+
     } catch (err: any) {
       console.error('❌ Error al dar like:', err);
       alert('Error al procesar el like');
@@ -252,7 +248,7 @@ const PostDetail = () => {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       alert('Debes iniciar sesión para comentar');
       return;
@@ -276,14 +272,14 @@ const PostDetail = () => {
       });
 
       if (!response.ok) throw new Error('Error al crear comentario');
-      
+
       const result = await response.json();
       console.log('✅ Comentario creado:', result);
-      
+
       // ✅ Recargar comentarios para obtener datos actualizados del backend
       await fetchComments();
       setNewComment('');
-      
+
     } catch (err: any) {
       console.error('❌ Error al comentar:', err);
       alert('Error al publicar el comentario');
@@ -294,7 +290,7 @@ const PostDetail = () => {
 
   const handleDeleteComment = async (commentId: number) => {
     setIsDeleting(true);
-    
+
     try {
       const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
         method: 'DELETE',
@@ -304,13 +300,13 @@ const PostDetail = () => {
       });
 
       if (!response.ok) throw new Error('Error al eliminar comentario');
-      
+
       console.log('✅ Comentario eliminado');
-      
+
       // ✅ Recargar comentarios después de eliminar
       await fetchComments();
       setDeleteCommentId(null);
-      
+
     } catch (err: any) {
       console.error('❌ Error al eliminar comentario:', err);
       alert('Error al eliminar el comentario');
@@ -328,9 +324,9 @@ const PostDetail = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Error al eliminar el post');
-      
+
       console.log('✅ Post eliminado exitosamente');
       navigate('/posts');
     } catch (err: any) {
@@ -395,7 +391,7 @@ const PostDetail = () => {
   return (
     <div className="min-h-screen pb-8" style={{ fontFamily: "'Playfair Display', serif" }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        
+
         <div className="text-right mb-3 sm:mb-4">
           <span className="text-base sm:text-lg md:text-xl" style={{ color: '#FFFFFF' }}>
             📍 {post.location || 'Ubicación no especificada'}
@@ -404,8 +400,8 @@ const PostDetail = () => {
 
         {post.image_url && (
           <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden">
-            <img 
-              src={post.image_url} 
+            <img
+              src={post.image_url}
               alt={post.title}
               className="w-full h-[250px] sm:h-[350px] md:h-[400px] lg:h-[500px] object-cover"
             />
@@ -428,8 +424,8 @@ const PostDetail = () => {
               className="flex items-center gap-2 transition-all hover:scale-110"
               title={userLiked ? "Quitar like" : "Dar like"}
             >
-              <span 
-                style={{ 
+              <span
+                style={{
                   fontSize: '28px',
                   filter: userLiked ? 'none' : 'grayscale(100%)',
                   opacity: userLiked ? 1 : 0.5,
@@ -453,7 +449,7 @@ const PostDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          
+
           {/* SIDEBAR */}
           <div className="lg:col-span-3 order-2 lg:order-1">
             <div className="lg:sticky lg:top-4">
@@ -464,14 +460,14 @@ const PostDetail = () => {
                   style={{ backgroundColor: 'rgba(72, 169, 166, 0.9)', color: '#FFFFFF' }}
                 >
                   <span>Más Información</span>
-                  <ChevronDown 
-                    className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`} 
-                    size={18} 
+                  <ChevronDown
+                    className={`transform transition-transform ${moreInfoOpen ? 'rotate-180' : ''}`}
+                    size={18}
                   />
                 </button>
 
                 {moreInfoOpen && (
-                  <div 
+                  <div
                     className="mt-2 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-2 sm:space-y-3"
                     style={{ backgroundColor: 'rgba(72, 169, 166, 0.5)', color: '#FFFFFF' }}
                   >
@@ -525,7 +521,7 @@ const PostDetail = () => {
               </div>
             )}
 
-            <div 
+            <div
               className="rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 mx-2 sm:mx-0 relative"
               style={{ backgroundColor: 'rgba(70, 46, 27, 0.4)' }}
             >
@@ -538,7 +534,7 @@ const PostDetail = () => {
                   <p className="italic opacity-70">Sin contenido disponible</p>
                 )}
               </div>
-              
+
               {canDeletePost && (
                 <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex gap-2">
                   <button
@@ -549,7 +545,7 @@ const PostDetail = () => {
                   >
                     <Edit2 size={20} style={{ color: '#48a9a6' }} />
                   </button>
-                  
+
                   <button
                     onClick={() => setDeleteModalOpen(true)}
                     className="p-2 rounded-full hover:bg-red-500/20 transition-all"
@@ -562,7 +558,7 @@ const PostDetail = () => {
             </div>
 
             {/* SECCIÓN DE COMENTARIOS */}
-            <div 
+            <div
               className="rounded-xl sm:rounded-2xl p-4 sm:p-6 mx-2 sm:mx-0"
               style={{ backgroundColor: 'rgba(72, 169, 166, 0.2)' }}
             >
@@ -580,8 +576,8 @@ const PostDetail = () => {
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="Escribe un comentario..."
                       className="flex-1 px-4 py-2 rounded-full"
-                      style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
                         color: '#2D1F13',
                         border: 'none',
                         outline: 'none'
@@ -592,7 +588,7 @@ const PostDetail = () => {
                       type="submit"
                       disabled={isSubmittingComment || !newComment.trim()}
                       className="p-2 rounded-full transition-all hover:scale-110"
-                      style={{ 
+                      style={{
                         backgroundColor: '#48a9a6',
                         opacity: (isSubmittingComment || !newComment.trim()) ? 0.5 : 1
                       }}
@@ -616,9 +612,9 @@ const PostDetail = () => {
                 ) : (
                   comments.map(comment => {
                     const canDeleteComment = user && (user.id === comment.user_id || user.role === 'admin');
-                    
+
                     return (
-                      <div 
+                      <div
                         key={comment.id}
                         className="p-4 rounded-lg relative"
                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
@@ -635,7 +631,7 @@ const PostDetail = () => {
                               {formatDate(comment.created_at)}
                             </p>
                           </div>
-                          
+
                           {canDeleteComment && (
                             <button
                               onClick={() => setDeleteCommentId(comment.id)}
