@@ -91,15 +91,63 @@ VITE_API_URL=http://localhost:3000
 
 ---
 
-## Features
+## Main Features of the Application
 
-*   **User Management**: User registration and login.
-*   **Post Discovery**: Browse, read, and search for articles.
-*   **Content Organization**: Filter posts by categories and tags.
-*   **User Interaction**: Create, read, and delete comments on posts.
-*   **Content Creation**: Author/Admin panel to manage posts, categories, and tags.
+## Post Management
 
-*(Add or remove features based on your application's final implementation.)*
+- **Create and Edit Articles:**  
+  The existence of an edit route (`/posts/:id/edit`) and the nature of the application indicate that authorized users (authors/admins) can create and modify posts.
+
+- **Read Articles:**  
+  Users can view a list of all posts and click to access a detailed page for each one.
+
+- **Delete Articles:**  
+  There’s functionality to delete posts, protected by a confirmation modal to prevent accidental deletions.
+
+---
+
+## Detailed Paleontological Data Display
+
+Each post is not just an article, but a technical record that can display:
+
+- **Basic Information:** Title, summary, main content, and featured image.  
+- **Discovery Data:** Discovery date, paleontologist’s name, geological period, and location.  
+- **Fossil Technical Data:** Type of fossil (bones, shells, amber, etc.) and geographical coordinates (latitude and longitude).
+
+---
+
+## User Management and Authentication
+
+- **Sign Up and Login:**  
+  The application includes a system for users to register and log in.
+
+- **Content Association:**  
+  Posts are linked to an author, displaying their username.
+
+---
+
+## Content Organization and Navigation
+
+- **Categories and Tags:**  
+  The API defines endpoints for `/categories` and `/tags`, which implies users can filter and browse posts using these taxonomies.
+
+---
+
+## User Interactivity
+
+- **Comment System:**  
+  The API has an endpoint for `/comments`, indicating that users can read and write comments on posts.
+
+---
+
+## Modern and Responsive User Interface
+
+- **Adaptive Design:**  
+  The use of Tailwind CSS suggests that the interface is built to work seamlessly across different screen sizes, from mobile to desktop.
+
+- **Smooth Experience:**  
+  As a Single-Page Application (SPA) built with React and React Router, navigation between pages is fast and does not require a full page reload.
+
 
 ---
 
