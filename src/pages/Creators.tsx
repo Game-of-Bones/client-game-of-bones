@@ -188,18 +188,18 @@ const Creators: React.FC = () => {
       linkedin: "https://www.linkedin.com/in/nicoleguevaragutierrez/",
     },
     {
-      name: "Ana",
+      name: "Ana Muruzábal",
       role: "Full Stack Developer",
       image: "/public/ana.jpg",
       github: "https://github.com/usuario3",
       linkedin: "https://linkedin.com/in/perfil3"
     },
     {
-      name: "Maria Del Carmen",
+      name: "Maria Del Carmen Tajuelo",
       role: "Full Stack Developer",
-      image: "/Maria_Del_Carmen.jpg",
-      github: "https://github.com/usuario3",
-      linkedin: "https://linkedin.com/in/perfil3"
+      image: "/public/Carmen_Tajuelo.jpg",
+      github: "https://github.com/CarmenTajuelo",
+      linkedin: "https://www.linkedin.com/in/carmentajuelo/"
     }
   ];
 
