@@ -11,7 +11,7 @@ import axios from 'axios';
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({
-  // URL del backend desde .env (puede ser 3000 o 3001 según el equipo)
+  // URL del backend desde .env (puede ser 3000 o 3001 según nuestro equipo)
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   
   // Timeout: cancelar petición si tarda más de 10 segundos

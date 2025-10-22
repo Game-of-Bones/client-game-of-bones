@@ -9,7 +9,7 @@ import type { Post, FossilType } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    post_content: string; // ✅ Solo contenido (se guardará en summary)
+    post_content: string; //se guardará en summary
     image_url: string;
     paleontologist: string;
     location: string;
@@ -36,7 +36,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
 
     const [formData, setFormData] = useState<FormData>({
         title: initialData.title || '',
-        post_content: initialData.summary || '', // ✅ summary contiene todo el contenido
+        post_content: initialData.summary || '', //summary contiene todo el contenido
         image_url: initialData.image_url || '',
         paleontologist: initialData.paleontologist || '',
         location: initialData.location || '',
@@ -130,7 +130,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postId, initialData }) => {
         try {
             const dataToSubmit = {
                 title: formData.title,
-                summary: formData.post_content, // ✅ Todo el contenido en summary
+                summary: formData.post_content, //Todo el contenido en summary
                 image_url: formData.image_url,
                 paleontologist: formData.paleontologist || undefined,
                 location: formData.location || undefined,

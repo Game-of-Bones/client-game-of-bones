@@ -98,7 +98,7 @@ const Register = () => {
     }
 
     try {
-      // ✅ LLAMADA REAL AL BACKEND (sin role, siempre será 'user')
+      // LLAMADA REAL AL BACKEND (sin role, siempre será 'user')
       await register({
         username: formData.username,
         email: formData.email,

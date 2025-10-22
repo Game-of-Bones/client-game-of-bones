@@ -3,7 +3,7 @@ import { login, register, logout, getCurrentUser } from '../services';
 import type { LoginCredentials, RegisterData, User } from '../types/auth.types';
 
 /**
- * ZUSTAND AUTH STORE - Game of Bones
+ * ZUSTAND AUTH STORE
  * 
  * Store global para manejar el estado de autenticación.
  */
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
 
   /**
    * CHECK AUTH - Verifica token al cargar la app
-   * En tu caso, getCurrentUser() ya maneja esto desde localStorage
+   * getCurrentUser() ya nos maneja esto desde localStorage
    */
   checkAuth: () => {
     const token = localStorage.getItem('token');

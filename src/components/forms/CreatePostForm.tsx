@@ -9,7 +9,7 @@ import type { FossilType, CreatePostData } from '../../types/post.types';
 
 type FormData = {
     title: string;
-    post_content: string; // ✅ Solo contenido (se guardará en summary)
+    post_content: string; // se guardará en summary
     image_url: string;
     paleontologist: string;
     location: string;
@@ -31,7 +31,7 @@ const CreatePostForm = () => {
 
     const [formData, setFormData] = useState<FormData>({
         title: '',
-        post_content: '', // ✅ Todo el contenido aquí
+        post_content: '', 
         image_url: '',
         paleontologist: '',
         location: '',
@@ -105,17 +105,17 @@ const CreatePostForm = () => {
 
         if (isSubmitting || isUploadingImage) return;
 
-        // ✅ Validar usuario autenticado
+        // Validar usuario autenticado
         if (!user?.id) {
             setServerError('Debes estar autenticado para crear un post');
             return;
         }
 
         try {
-            // ✅ El contenido completo va en summary (como espera el backend)
+            // El contenido completo va en summary (como espera el backend)
             const dataToSubmit: CreatePostData = {
                 title: formData.title,
-                summary: formData.post_content, // ✅ Todo el contenido en summary
+                summary: formData.post_content, // Todo el contenido en summary
                 fossil_type: formData.fossil_type as FossilType,
                 status: statusOverride,
                 user_id: user.id,

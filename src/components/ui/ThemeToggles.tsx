@@ -97,8 +97,7 @@ export function ThemeToggleCompact() {
 }
 
 /**
- * ThemeToggleWithLabel - Versión con label
- * Ideal para menús de configuración o sidebars
+ * ThemeToggleWithLabel - Versión con label 
  */
 export function ThemeToggleWithLabel() {
   return <ThemeToggle size={20} showLabel={true} />;
@@ -118,8 +117,7 @@ export function ThemeToggleLarge() {
 }
 
 /**
- * ThemeToggleSwitch - Versión switch con iconos laterales
- * Ideal para páginas de configuración o ajustes
+ * ThemeToggleSwitch - Versión switch con iconos laterales 
  */
 export function ThemeToggleSwitch() {
   const { theme, toggleTheme } = useTheme();

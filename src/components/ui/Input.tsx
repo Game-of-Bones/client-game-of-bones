@@ -1,11 +1,6 @@
 import React, { forwardRef, type InputHTMLAttributes } from 'react';
 
-/**
- * Input Component - Sistema de Diseño DinoPress
- * * MODIFICACIÓN: Se añaden 'inputClass' (antes 'className') y 'labelHidden' para
- * dar mayor control de estilo y visibilidad desde componentes padres.
- * * ... [El resto de la documentación se mantiene] ...
- */
+/* Input Component  */
 
 // Interfaz de props extendiendo los atributos nativos de input
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -45,8 +40,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             helperText,
             id,
             containerClassName = '',
-            inputClass = '', // Renombrado de 'className' a 'inputClass'
-            labelHidden = false, // Nueva propiedad
+            inputClass = '', 
+            labelHidden = false, 
             disabled = false,
             required = false,
             type = 'text',

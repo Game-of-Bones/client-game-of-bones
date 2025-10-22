@@ -17,14 +17,9 @@ const SearchIcon = (props: React.ComponentProps<'svg'>) => (
 );
 
 
-/**
- * NotFound - Página 404
- * * Estilo renovado: Utiliza variables de color y clases CSS del sistema de temas (global.css)
- * para garantizar la compatibilidad con Dark/Light Mode y mantener la estética de Figma.
- */
-const NotFound = () => {
+/** * NotFound - Página 404 */
+const NotFound = () => {  
     
-    // NOTA: Usamos clases de utilidad basadas en las variables CSS definidas en global.css
     
     /**
      * Función tipada para manejar el error de carga de imagen.
@@ -37,8 +32,7 @@ const NotFound = () => {
         target.alt = "Logo Game of Bones - 404";
     }
 
-    return (
-        // El fondo del body ya es manejado por global.css con --bg-primary.
+    return (        
         <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-10">
             
             {/* Aplica el efecto de cristal y fondo semitransparente */}
@@ -55,7 +49,6 @@ const NotFound = () => {
                 </div>
                 
                 {/* Título de Error */}
-                {/* Utilizamos font-cinzel para un estilo destacado y text-gradient */}
                 <h1 
                     className={`text-7xl sm:text-9xl font-extrabold mb-4 text-gradient`}
                     // Corrección: Usamos estilo inline para forzar la fuente Cinzel
@@ -73,7 +66,6 @@ const NotFound = () => {
                 </h2>
                 
                 {/* Mensaje Descriptivo */}
-                {/* La fuente Playfair ya se aplica por defecto al body, pero la aseguramos aquí si es necesario */}
                 <p 
                     className={`text-base sm:text-lg mb-10`} 
                     style={{ color: 'var(--text-secondary)', fontFamily: `'Playfair Display', serif` }}
@@ -107,7 +99,6 @@ const NotFound = () => {
                 </div>
                 
                 {/* Espacio para la futura Búsqueda */}
-                {/* Usamos border-color: var(--border-light) para el modo oscuro/claro */}
                 <div className="mt-12 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
                     <p 
                         className={`text-sm font-light`} 

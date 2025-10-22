@@ -86,7 +86,7 @@ export const FOSSIL_TYPE_OPTIONS = [
   { value: 'amber_insects' as FossilType, label: 'Insectos en Ámbar' },
 ] as const;
 
-// ✅ HELPER: Separa el summary en dos partes para mostrar en el frontend
+// HELPER: Separa el summary en dos partes para mostrar en el frontend
 export function splitPostContent(summary: string): { shortSummary: string; detailedContent: string } {
   // Si el summary tiene doble salto de línea, separamos
   const parts = summary.split('\n\n');

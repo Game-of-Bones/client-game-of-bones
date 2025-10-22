@@ -88,7 +88,7 @@ export function ThemeProvider({ children, defaultTheme = 'light' }: ThemeProvide
     // Guardar en localStorage
     localStorage.setItem(STORAGE_KEY, theme);
 
-    // Aplicar clase para darkMode de Tailwind (opcional, ya tenemos data-theme)
+    // Aplicar clase para darkMode de Tailwind (ya tenemos data-theme)
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
@@ -110,7 +110,7 @@ export function ThemeProvider({ children, defaultTheme = 'light' }: ThemeProvide
       }
     };
 
-    // Usar addEventListener si está disponible, sino addListener (Safari antiguo)
+    // Usar addEventListener si está disponible, sino addListener
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);

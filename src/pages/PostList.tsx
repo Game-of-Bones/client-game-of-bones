@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePostStore } from '../stores/postStore';
-import type { Post, FossilType } from '../types/post.types';
+import type {FossilType } from '../types/post.types';
 import CreatePostButton from '../components/ui/CreatePostButton'; // ← tu nuevo FAB
 
 const PostList = () => {
@@ -59,7 +59,7 @@ const PostList = () => {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: "'Playfair Display', serif" }}>
       
-      {/* 🔘 Botón flotante (FAB responsive) */}
+      {/*Botón flotante (FAB responsive) */}
       <CreatePostButton />
 
       <div className="container mx-auto px-4 py-8">

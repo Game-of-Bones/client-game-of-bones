@@ -17,10 +17,10 @@ export const toggleLike = async (postId: number): Promise<ToggleLikeResponse> =>
 
 export const checkIfLiked = async (postId: number): Promise<boolean> => {
   try {
-    // Si tu backend tiene este endpoint:
-    // const response = await apiClient.get(`/api/posts/${postId}/like/check`);
-    // return response.data.liked;
     
+    const response = await apiClient.get(`/api/posts/${postId}/like/check`);
+    return response.data.liked;
+
     console.warn('⚠️ checkIfLiked: Este endpoint no existe en el backend.');
     return false;
   } catch (error: any) {

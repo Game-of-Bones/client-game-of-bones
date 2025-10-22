@@ -1,5 +1,5 @@
 /**
- * CLOUDINARY UPLOAD UTILITY - Game of Bones
+ * CLOUDINARY UPLOAD UTILITY
  * 
  * Utilidad para subir imágenes a Cloudinary desde el frontend
  */
@@ -50,7 +50,7 @@ export async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  formData.append('folder', 'game-of-bones/posts'); // Opcional: organizar en carpetas
+  formData.append('folder', 'game-of-bones/posts'); //organizar en carpetas
 
   try {
     const response = await fetch(

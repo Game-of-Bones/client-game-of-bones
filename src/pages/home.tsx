@@ -4,7 +4,7 @@ import { BookOpen, Sparkles } from 'lucide-react';
 import MapComponent from '../components/ui/MapComponent';
 import CreatePostButton from '../components/ui/CreatePostButton';
 import { getAllPosts } from '../services/postService';
-import type { Post } from '../types/post.types'; // ✅ Importar el tipo correcto
+import type { Post } from '../types/post.types'; 
 
 const Home = () => {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ const Home = () => {
     navigate(`/posts/${postId}`);
   };
 
-  // ✅ Función helper para obtener la imagen del post
+  // Función helper para obtener la imagen del post
   const getPostImage = (post: Post): string | null => {
     return post.image_url || null;
   };

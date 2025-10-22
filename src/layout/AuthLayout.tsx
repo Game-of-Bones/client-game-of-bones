@@ -26,7 +26,7 @@ const AuthLayout = () => {
         </main>
 
         {/* Footer consistente en toda la web */}
-        <Footer />  {/* 👈 REEMPLAZA todo el footer antiguo con esta línea */}
+        <Footer />  {/*REEMPLAZA todo el footer antiguo con esta línea */}
       </div>
     </ThemeProvider>
   );

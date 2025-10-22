@@ -1,4 +1,3 @@
-// src/pages/CreatePost.tsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreatePostForm from '../components/forms/CreatePostForm';
@@ -8,7 +7,7 @@ const CreatePostPage = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
-  // 🔒 Protección: Si no hay usuario, redirigir (dentro de useEffect)
+  //Protección: Si no hay usuario, redirigir (dentro de useEffect)
   useEffect(() => {
     if (!user) {
       navigate('/login', { replace: true });

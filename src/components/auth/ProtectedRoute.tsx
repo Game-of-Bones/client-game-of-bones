@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth'; // Ajusta la ruta según donde esté el archivo
+import { useAuth } from '../../hooks/useAuth'; 
 
 /**
  * ProtectedRoute - Componente para proteger rutas (Layout Route)
@@ -17,7 +17,6 @@ const ProtectedRoute = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]">
         <div className="text-center">
-          {/* Puedes usar el diseño de carga de la primera versión si lo prefieres */}
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-coral)] mx-auto mb-4"></div>
           <p className="text-[var(--text-secondary)] text-lg">Verificando sesión...</p>
         </div>

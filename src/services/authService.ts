@@ -24,7 +24,7 @@ interface RegisterData {
   username: string;
   email: string;
   password: string;
-  role?: 'admin' | 'user'; // Opcional, por defecto será 'user'
+  role?: 'admin' | 'user'; //por defecto será 'user'
 }
 
 interface User {

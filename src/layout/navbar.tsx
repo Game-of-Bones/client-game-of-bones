@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, LogOut } from "lucide-react"; // ← AÑADIDO LogOut
+import { User, Menu, X, LogOut } from "lucide-react"; 
 import { ThemeToggleCompact } from "../components/ui/ThemeToggles";
 import { useTheme } from "../context/ThemeContext";
-import { useAuthStore } from "../stores/authStore"; // ← AÑADIDO
+import { useAuthStore } from "../stores/authStore"; 
 
-const Navbar: React.FC = () => { // ← QUITADO props, ahora lee de Zustand
+const Navbar: React.FC = () => { //lee de Zustand
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // ← AÑADIDO: Leer auth desde Zustand
+  //Leer auth desde Zustand
   const { user, isAuthenticated, logout } = useAuthStore();
 
   // Color de letra según el tema
   const menuColor = theme === "dark" ? "#98b189" : "#462e1b";
 
-  // ← AÑADIDO: Función de logout
+  //Función de logout
   const handleLogout = () => {
     logout();
     setMobileMenuOpen(false);
@@ -97,7 +97,7 @@ const Navbar: React.FC = () => { // ← QUITADO props, ahora lee de Zustand
                 <span>INICIAR SESIÓN</span>
               </Link>
             ) : (
-              <> {/* ← AÑADIDO: Perfil + Logout */}
+              <> {/*Perfil + Logout */}
                 <button
                   onClick={() => navigate("/profile")}
                   className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -122,7 +122,7 @@ const Navbar: React.FC = () => { // ← QUITADO props, ahora lee de Zustand
                   </span>
                 </button>
 
-                {/* ← AÑADIDO: Botón Logout */}
+                {/*Botón Logout */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 hover:opacity-75 transition-opacity text-base xl:text-lg uppercase tracking-wider whitespace-nowrap"
@@ -225,7 +225,7 @@ const Navbar: React.FC = () => { // ← QUITADO props, ahora lee de Zustand
                     </span>
                   </button>
 
-                  {/* ← AÑADIDO: Logout mobile */}
+                  {/*Logout mobile */}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 hover:opacity-75 transition-opacity uppercase tracking-wider"

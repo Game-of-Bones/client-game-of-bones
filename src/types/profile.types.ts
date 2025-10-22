@@ -1,5 +1,3 @@
-// src/types/profile.ts (o donde definas tus types)
-
 export interface ProfileType {
     username: string;
     email: string;
@@ -19,5 +17,5 @@ export interface ProfileType {
     content: string;
     createdAt: string; // ISOString
     commentsCount: number;
-    // Puedes añadir otros campos necesarios como 'coverImage' si aplica
+    
   }

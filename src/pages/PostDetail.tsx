@@ -377,7 +377,7 @@ const PostDetail = () => {
     );
   }
 
-  // ✅ Separar el contenido en resumen corto y contenido detallado
+  // Separar el contenido en resumen corto y contenido detallado
   const { detailedContent } = splitPostContent(post.summary);
 
   return (

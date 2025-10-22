@@ -1,5 +1,4 @@
 // Página de gestión de usuarios (solo para administradores)
-
 import { useState, useEffect } from 'react';
 // TODO: Importar servicios cuando estén disponibles
 // import { getUsers, updateUserRole, deleteUser } from '../services/userService';
@@ -21,12 +20,11 @@ import { useState, useEffect } from 'react';
  */
 
 // Tipo basado en el modelo User del backend
-// NOTA: Necesito ver tu modelo User completo para ajustar esto
 interface User {
   id: number;
   username: string;
   email: string;
-  role: 'user' | 'admin'; // Ajustar según tu modelo
+  role: 'user' | 'admin'; // Ajustar según nuestro modelo
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -37,7 +35,7 @@ interface User {
 }
 
 const UserManagement = () => {
-  // TODO: Verificar que el usuario actual es admin
+  //Verificar que el usuario actual es admin
   // const { user } = useAuth();
   // if (!user || user.role !== 'admin') navigate('/');
 
@@ -63,14 +61,14 @@ const UserManagement = () => {
       setError('');
 
       try {
-        // TODO: Implementar cuando el servicio esté listo
+        //Implementar cuando el servicio esté listo
         // const response = await getUsers({
         //   search: searchTerm,
         //   role: roleFilter !== 'all' ? roleFilter : undefined
         // });
         // setUsers(response.data);
 
-        // MOCK temporal - ELIMINAR cuando el servicio esté listo
+        // MOCK temporal - lo eliminaremos cuando el servicio esté listo
         await new Promise(resolve => setTimeout(resolve, 800));
         
         const mockUsers: User[] = [
@@ -126,7 +124,7 @@ const UserManagement = () => {
    */
   const handleRoleChange = async (userId: number, newRole: 'user' | 'admin') => {
     try {
-      // TODO: Implementar cuando el servicio esté listo
+      //Implementar cuando el servicio esté listo
       // await updateUserRole(userId, newRole);
       
       // Actualizar estado local
@@ -156,7 +154,7 @@ const UserManagement = () => {
     if (!userToDelete) return;
 
     try {
-      // TODO: Implementar cuando el servicio esté listo
+      //Implementar cuando el servicio esté listo
       // await deleteUser(userToDelete.id);
       
       // Remover del estado local

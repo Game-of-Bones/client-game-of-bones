@@ -1,8 +1,6 @@
 import React from 'react';
 
-/**
- * BADGE COMPONENT - Sistema de Diseño Game of Bones
- * 
+/** 
  * Componente para mostrar etiquetas de roles y estados
  * con diferentes variantes visuales y tamaños.
  * 
@@ -193,7 +191,7 @@ const Badge: React.FC<BadgeProps> = ({
 export default Badge;
 
 // ========================================
-// UTILIDADES Y HELPERS (Opcional - para futuro)
+// UTILIDADES Y HELPERS (para implementar en un futuro futuro)
 // ========================================
 
 /**
@@ -203,7 +201,7 @@ export default Badge;
  * const userBadge = getUserRoleBadge(user.role);
  * return <Badge {...userBadge}>userBadge.label</Badge>
  * 
- * TODO: Implementar cuando se defina el sistema de roles en el backend
+ * Implementar cuando definamos el sistema de roles en el backend
  */
 export const getUserRoleBadge = (role: string): { variant: BadgeVariant; label: string } => {
   switch (role.toLowerCase()) {
@@ -224,7 +222,7 @@ export const getUserRoleBadge = (role: string): { variant: BadgeVariant; label: 
  * const postBadge = getPostStatusBadge(post.status);
  * return <Badge {...postBadge}>{postBadge.label}</Badge>
  * 
- * TODO: Implementar cuando se defina el sistema de estados en el backend
+ * Implementar cuando definamos el sistema de estados en el backend
  */
 export const getPostStatusBadge = (status: string): { variant: BadgeVariant; label: string } => {
   switch (status.toLowerCase()) {
@@ -243,7 +241,7 @@ export const getPostStatusBadge = (status: string): { variant: BadgeVariant; lab
 // ========================================
 
 /**
- * TODO: Posibles mejoras futuras
+ * Posibles mejoras futuras
  * 
  * 1. ICONOS:
  *    - Agregar prop opcional `icon` para incluir iconos de lucide-react

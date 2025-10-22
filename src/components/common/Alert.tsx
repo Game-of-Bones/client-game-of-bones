@@ -39,11 +39,11 @@ const Alert: React.FC<AlertProps> = ({ type, message }) => {
         <div 
             role="alert" 
             className={`${baseStyles} ${styles.container}`}
-            // Aplicamos estilos custom si tienes un tema específico, si no, usa el de Tailwind por defecto
+            // Aplicamos estilos custom si tenemos un tema específico, si no, usa el de Tailwind por defecto
             style={{ 
                 // Ejemplo para adaptarlo a tu tema si es oscuro:
                 // Si type === 'error', el color de fondo sería más oscuro, y el texto claro.
-                // Lo mantendremos con estilos claros para buena visibilidad por defecto.
+                // Lo mantenemos con estilos claros para buena visibilidad por defecto.
             }}
         >
             {styles.icon}

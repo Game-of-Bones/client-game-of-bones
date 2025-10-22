@@ -8,7 +8,7 @@ const EditPostPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // ✅ Obtener funciones del store
+  //Obtener funciones del store
   const fetchPostById = usePostStore((state) => state.fetchPostById);
   const clearCurrentPost = usePostStore((state) => state.clearCurrentPost);
   
@@ -40,13 +40,13 @@ const EditPostPage = () => {
 
     loadPost();
 
-    // 🧹 Limpiar al desmontar
+    //Limpiar al desmontar
     return () => {
       clearCurrentPost();
     };
   }, [id, fetchPostById, clearCurrentPost]);
 
-  // 🔄 LOADING STATE
+  //LOADING STATE
   if (loading) {
     return (
       <div style={{ 
@@ -63,7 +63,7 @@ const EditPostPage = () => {
     );
   }
 
-  // ❌ ERROR STATE
+  //ERROR STATE
   if (error) {
     return (
       <div style={{ 
@@ -97,12 +97,12 @@ const EditPostPage = () => {
     );
   }
 
-  // ⏳ WAITING FOR DATA
+  //WAITING FOR DATA
   if (!post || !id) {
     return null;
   }
 
-  // ✅ RENDER FORM (solo cuando post existe)
+  //RENDER FORM (solo cuando post existe)
   return (
     <div>
       <EditPostForm postId={id} initialData={post} />

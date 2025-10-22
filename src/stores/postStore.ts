@@ -27,7 +27,7 @@ interface PostActions {
     page?: number;
     limit?: number;
   }) => Promise<void>;
-  fetchPostById: (id: number) => Promise<Post>; // ✅ Ahora retorna Post
+  fetchPostById: (id: number) => Promise<Post>; //retorna Post
   createPost: (data: CreatePostData) => Promise<Post>;
   updatePost: (id: number, data: UpdatePostData) => Promise<Post>;
   deletePost: (id: number) => Promise<void>;
@@ -61,14 +61,14 @@ export const usePostStore = create<PostState & PostActions>((set) => ({
     try {
       const post = await getPostById(id);
       set({ currentPost: post, isLoading: false });
-      return post; // ✅ Retornar el post
+      return post; //  Retornar el post
     } catch (error: any) {
       set({
         error: error.message || 'Post no encontrado',
         isLoading: false,
         currentPost: null,
       });
-      throw error; // ✅ Propagar el error
+      throw error; //  Propagar el error
     }
   },
 
