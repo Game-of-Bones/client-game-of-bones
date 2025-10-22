@@ -55,16 +55,16 @@ const MapComponent = () => {
   const INITIAL_ZOOM = 4.0;
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM);
 
-  // 🔥 Obtener posts de la BD
+  //  Obtener posts de la BD
   const posts = usePostStore((state) => state.posts);
   const fetchPosts = usePostStore((state) => state.fetchPosts);
 
-  // 🔥 Cargar posts al montar el componente
+  //  Cargar posts al montar el componente
   useEffect(() => {
     fetchPosts({ status: 'published' });
   }, [fetchPosts]);
 
-  // 🔥 Convertir posts a discoveries (filtrar solo los que tienen coordenadas)
+  //  Convertir posts a discoveries (filtrar solo los que tienen coordenadas)
   const discoveries: Discovery[] = posts
     .filter(post => post.latitude !== null && post.longitude !== null)
     .map(post => ({
@@ -459,7 +459,7 @@ const MapComponent = () => {
             className="font-semibold mb-2"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
-            🌍 Mapa Interactivo
+             Mapa Interactivo
           </p>
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             • Arrastra para rotar el globo
