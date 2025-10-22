@@ -8,21 +8,27 @@ import Register from '../pages/Register';
 
 // Páginas principales (con Navbar y Footer)
 import Home from '../pages/home';
+import Profile from '../pages/Profile'; 
+import PostList from '../pages/PostList';
+import PostDetail from '../pages/PostDetail';
+import Creators from '../pages/Creators'; 
 
 // Páginas de admin
+import CreatePost from '../pages/CreatePost';
 import EditPost from '../pages/EditPost';
+import UserManagement from '../pages/UserManagement';
 
 // HOCs de protección
-import AdminRoute from '../components/common/AdminRoute'; // Asegúrate de tener este componente
+import ProtectedRoute from '../components/auth/ProtectedRoute'; 
+import AdminRoute from '../components/common/AdminRoute';
 
 // NotFound temporal
-function NotFound() {
-  return <div className="p-8">404 - Not Found</div>;
-}
+import NotFound from '../pages/NotFound';
 
 export const router = createBrowserRouter([
   // ============================================
-  // RUTAS DE AUTENTICACIÓN (sin Navbar, con Footer y botón de tema)
+  // RUTAS DE AUTENTICACIÓN (sin Navbar, con Footer)
+  // Backend: POST /api/auth/login y POST /api/auth/register
   // ============================================
   {
     element: <AuthLayout />,
@@ -46,52 +52,86 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <NotFound />,
     children: [
-      { index: true, element: <Home /> },
+      { 
+        index: true, 
+        element: <Home /> 
+      },
 
-      // 🔒 Rutas de administración
+      // ============================================
+      // 👥 PÁGINA ABOUT/CREATORS (pública) ⬅️ NUEVA RUTA
+      // ============================================
+      { 
+        path: 'creators', 
+        element: <Creators /> 
+      },
+
+      // ============================================
+      // 📚 RUTAS DE POSTS
+      // Backend: GET /api/posts
+      // ============================================
+      { 
+        path: 'posts', 
+        element: <PostList /> 
+      },
+      
+      // ============================================
+      // 📄 DETALLE DE POST (público)
+      // Backend: GET /api/posts/:id
+      // ============================================
+      { 
+        path: 'posts/:id', 
+        element: <PostDetail /> 
+      },
+
+      // ============================================
+      // 🔒 RUTAS PROTEGIDAS (requieren autenticación)
+      // ============================================
       {
-        path: 'admin',
+        element: <ProtectedRoute />,
         children: [
-          // {
-          //   path: 'posts/new',
-          //   element: (
-          //     <AdminRoute>
-          //       <CreatePost />
-          //     </AdminRoute>
-          //   )
-          // },
-          {
-            path: 'posts/:id/edit',
-            element: (
-              <AdminRoute>
-                <EditPost />
-              </AdminRoute>
-            )
+          // ✏️ CREAR POST
+          // Backend: POST /api/posts (requiere verifyToken)
+          { 
+            path: 'posts/new',
+            element: <CreatePost />
           },
-          // {
-          //   path: 'users',
-          //   element: (
-          //     <AdminRoute>
-          //       <UserManagement />
-          //     </AdminRoute>
-          //   )
-          // }
+          
+          // ✏️ EDITAR POST
+          // Backend: PUT /api/posts/:id (requiere verifyToken + ser autor o admin)
+          { 
+            path: 'posts/:id/edit',
+            element: <EditPost />
+          },
+
+          // 👤 PERFIL DE USUARIO
+          {
+            path: 'profile',
+            element: <Profile />
+          },
+
+          // ============================================
+          // 👑 RUTAS DE ADMINISTRACIÓN (requieren rol admin)
+          // ============================================
+          {
+            path: 'admin',
+            element: <AdminRoute />,
+            children: [
+              { 
+                path: 'users',
+                element: <UserManagement />
+              }
+            ]
+          },
         ]
       },
 
-      // 🔒 Rutas futuras (descomenta cuando las tengas):
-      // { path: 'posts', element: <PostList /> },
-      // { path: 'posts/:id', element: <PostDetail /> },
-      // {
-      //   path: 'profile',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Profile />
-      //     </ProtectedRoute>
-      //   ),
-      // },
-
-      { path: '*', element: <NotFound /> },
+      // ============================================
+      // ⚠️ Página 404
+      // ============================================
+      { 
+        path: '*', 
+        element: <NotFound /> 
+      },
     ],
   },
 ]);

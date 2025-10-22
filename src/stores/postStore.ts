@@ -1,10 +1,16 @@
 import { create } from 'zustand';
-import postService from '../services/postService';
-import type { Post, CreatePostData, UpdatePostData } from '../types/post.types';
-
-/**
- * ZUSTAND POST STORE - Game of Bones
- */
+import { 
+  getAllPosts, 
+  getPostById, 
+  createPost, 
+  updatePost, 
+  deletePost,
+  type Post,
+  type CreatePostData,
+  type UpdatePostData,
+  type PostStatus,
+  type FossilType
+} from '../services';
 
 interface PostState {
   posts: Post[];
@@ -14,8 +20,14 @@ interface PostState {
 }
 
 interface PostActions {
-  fetchPosts: () => Promise<void>;
-  fetchPostById: (id: number) => Promise<void>;
+  fetchPosts: (filters?: {
+    status?: PostStatus;
+    fossil_type?: FossilType;
+    user_id?: number;
+    page?: number;
+    limit?: number;
+  }) => Promise<void>;
+  fetchPostById: (id: number) => Promise<Post>; // ✅ Ahora retorna Post
   createPost: (data: CreatePostData) => Promise<Post>;
   updatePost: (id: number, data: UpdatePostData) => Promise<Post>;
   deletePost: (id: number) => Promise<void>;
@@ -24,27 +36,17 @@ interface PostActions {
 }
 
 export const usePostStore = create<PostState & PostActions>((set) => ({
-  // ========================================
-  // ESTADO INICIAL
-  // ========================================
   posts: [],
   currentPost: null,
   isLoading: false,
   error: null,
 
-  // ========================================
-  // ACCIONES
-  // ========================================
-
-  /**
-   * Obtener todos los posts
-   */
-  fetchPosts: async () => {
+  fetchPosts: async (filters) => {
     set({ isLoading: true, error: null });
 
     try {
-      const posts = await postService.getAllPosts();
-      set({ posts, isLoading: false });
+      const data = await getAllPosts(filters);
+      set({ posts: data.posts, isLoading: false });
     } catch (error: any) {
       set({
         error: error.message || 'Error al cargar los posts',
@@ -53,34 +55,29 @@ export const usePostStore = create<PostState & PostActions>((set) => ({
     }
   },
 
-  /**
-   * Obtener un post por ID
-   */
   fetchPostById: async (id: number) => {
     set({ isLoading: true, error: null });
 
     try {
-      const post = await postService.getPostById(id);
+      const post = await getPostById(id);
       set({ currentPost: post, isLoading: false });
+      return post; // ✅ Retornar el post
     } catch (error: any) {
       set({
         error: error.message || 'Post no encontrado',
         isLoading: false,
         currentPost: null,
       });
+      throw error; // ✅ Propagar el error
     }
   },
 
-  /**
-   * Crear nuevo post
-   */
   createPost: async (data: CreatePostData) => {
     set({ isLoading: true, error: null });
 
     try {
-      const newPost = await postService.createPost(data);
+      const newPost = await createPost(data);
       
-      // Añadir el nuevo post a la lista
       set((state) => ({
         posts: [newPost, ...state.posts],
         isLoading: false,
@@ -96,16 +93,12 @@ export const usePostStore = create<PostState & PostActions>((set) => ({
     }
   },
 
-  /**
-   * Actualizar post existente
-   */
   updatePost: async (id: number, data: UpdatePostData) => {
     set({ isLoading: true, error: null });
 
     try {
-      const updatedPost = await postService.updatePost(id, data);
+      const updatedPost = await updatePost(id, data);
 
-      // Actualizar en la lista de posts
       set((state) => ({
         posts: state.posts.map((post) =>
           post.id === id ? updatedPost : post
@@ -124,16 +117,12 @@ export const usePostStore = create<PostState & PostActions>((set) => ({
     }
   },
 
-  /**
-   * Eliminar post
-   */
   deletePost: async (id: number) => {
     set({ isLoading: true, error: null });
 
     try {
-      await postService.deletePost(id);
+      await deletePost(id);
 
-      // Eliminar de la lista
       set((state) => ({
         posts: state.posts.filter((post) => post.id !== id),
         currentPost: state.currentPost?.id === id ? null : state.currentPost,
@@ -148,16 +137,10 @@ export const usePostStore = create<PostState & PostActions>((set) => ({
     }
   },
 
-  /**
-   * Limpiar errores
-   */
   clearError: () => {
     set({ error: null });
   },
 
-  /**
-   * Limpiar post actual
-   */
   clearCurrentPost: () => {
     set({ currentPost: null });
   },

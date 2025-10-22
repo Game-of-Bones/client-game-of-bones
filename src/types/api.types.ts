@@ -1,7 +1,11 @@
+/**
+ * TIPOS GENÉRICOS PARA RESPUESTAS DE API
+ */
+
 export interface ApiResponse<T> {
-  data: T;
-  message?: string;
   success: boolean;
+  message?: string;
+  data: T;
 }
 
 export interface ApiError {
@@ -15,4 +19,5 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+  pages: number;
 }

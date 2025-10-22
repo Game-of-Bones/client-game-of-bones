@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/button';
+import Input from '../components/ui/Input';
 import { useAuthStore } from '../stores/authStore';
-
-/**
- * REGISTER PAGE - Game of Bones
- * 
- * Página de registro con diseño exacto del Figma.
- * Split-screen: Fósil izquierda, formulario derecha.
- */
 
 const Register = () => {
   const navigate = useNavigate();
@@ -24,12 +18,14 @@ const Register = () => {
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
+  // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
+  // Limpiar errores al desmontar
   useEffect(() => {
     return () => {
       clearError();
@@ -44,6 +40,7 @@ const Register = () => {
       [name]: value,
     }));
 
+    // Limpiar error de validación local
     if (validationErrors[name]) {
       setValidationErrors((prev) => {
         const newErrors = { ...prev };
@@ -52,6 +49,7 @@ const Register = () => {
       });
     }
 
+    // Limpiar error del backend
     if (error) {
       clearError();
     }
@@ -100,20 +98,25 @@ const Register = () => {
     }
 
     try {
+      // ✅ LLAMADA REAL AL BACKEND (sin role, siempre será 'user')
       await register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
+      
+      // Si llega aquí, el registro fue exitoso
+      // authStore ya redirige automáticamente si isAuthenticated cambia
     } catch (err) {
+      // El error ya está en el store (authStore.error)
       console.error('Error en registro:', err);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-88px)] flex">
+    <div className="h-[calc(100vh-88px)] flex overflow-hidden">
       {/* LADO IZQUIERDO - IMAGEN FÓSIL */}
-      <div className="hidden lg:block lg:w-1/2 relative">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         <img 
           src="/shell_fossil.jpg" 
           alt="Fósil de concha" 
@@ -122,36 +125,36 @@ const Register = () => {
       </div>
 
       {/* LADO DERECHO - FORMULARIO */}
-      <div
-        className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12"
-        style={{ backgroundColor: '#5D4A3A' }}
-      >
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className="w-full max-w-md">
           {/* LOGO */}
-          <div className="flex justify-center mb-10">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="flex justify-center mb-6 w-full transition-all duration-300 hover:scale-105"
+            aria-label="Ir a página principal"
+          >
             <img
               src="/gob_logo.png"
               alt="Game of Bones"
-              className="h-24 w-auto object-contain"
+              className="w-72 h-auto object-contain"
             />
-          </div>
+          </button>
 
           {/* HEADER */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1
-              className="text-lg sm:text-xl mb-3"
+              className="text-base sm:text-lg mb-2 uppercase"
               style={{ 
                 color: '#C9A875',
                 fontFamily: 'Cinzel, serif',
                 letterSpacing: '0.08em',
-                lineHeight: '1.5',
-                textTransform: 'uppercase',
               }}
             >
               Rellena los datos para crear tu perfil
             </h1>
             <p
-              className="text-sm uppercase mb-4"
+              className="text-xs uppercase mb-3"
               style={{ 
                 color: '#E8D9B8',
                 fontFamily: 'Cinzel, serif',
@@ -160,233 +163,154 @@ const Register = () => {
             >
               Registro
             </p>
-            {/* Línea horizontal */}
             <div 
               className="w-full max-w-sm mx-auto"
               style={{
                 height: '1px',
-                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                backgroundColor: 'rgba(201, 168, 117, 0.3)',
               }}
             />
           </div>
 
           {/* FORMULARIO */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {/* Error del backend */}
             {error && (
               <div
-                className="px-4 py-3 rounded border text-center"
+                className="px-4 py-2.5 rounded-lg border text-center"
                 style={{
                   backgroundColor: 'rgba(239, 68, 68, 0.1)',
                   borderColor: '#EF4444',
                   color: '#FEE2E2',
                 }}
               >
-                <p className="text-sm">{error}</p>
+                <p className="text-xs" style={{ fontFamily: 'Cinzel, serif' }}>
+                  {error}
+                </p>
               </div>
             )}
 
-            {/* NOMBRE */}
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-xs mb-2 uppercase"
-                style={{ 
-                  color: '#C9A875',
-                  fontFamily: 'Cinzel, serif',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                Nombre
-              </label>
-              <input
+            {/* Estilos para sobrescribir Input */}
+            <style>{`
+              .register-input-wrapper label {
+                color: #C9A875 !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.75rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.15em !important;
+                margin-bottom: 0.25rem !important;
+              }
+              
+              .register-input-wrapper input {
+                background-color: #8B7355 !important;
+                border-color: transparent !important;
+                color: #FFFFFF !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.875rem !important;
+                padding: 0.5rem 1rem !important;
+              }
+              
+              .register-input-wrapper input::placeholder {
+                color: rgba(255, 255, 255, 0.6) !important;
+              }
+              
+              .register-input-wrapper input:focus {
+                ring-color: #C9A875 !important;
+                border-color: #C9A875 !important;
+              }
+              
+              .register-input-wrapper p[role="alert"] {
+                color: #FCA5A5 !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 0.75rem !important;
+              }
+            `}</style>
+
+            {/* NOMBRE DE USUARIO */}
+            <div className="register-input-wrapper">
+              <Input
                 id="username"
                 name="username"
                 type="text"
+                label="Nombre de usuario"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
-                style={{ 
-                  backgroundColor: '#8B7355',
-                  borderColor: validationErrors.username ? '#EF4444' : 'transparent',
-                  color: '#FFFFFF',
-                  fontFamily: 'Cinzel, serif',
-                }}
+                error={validationErrors.username}
+                placeholder="Tu nombre de usuario"
                 autoComplete="username"
-              />
-              {validationErrors.username && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
-                  {validationErrors.username}
-                </p>
-              )}
-            </div>
-
-            {/* NOMBRE DE PERFIL */}
-            <div>
-              <label
-                htmlFor="username-display"
-                className="block text-xs mb-2 uppercase"
-                style={{ 
-                  color: '#C9A875',
-                  fontFamily: 'Cinzel, serif',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                Nombre de perfil
-              </label>
-              <input
-                id="username-display"
-                type="text"
-                value={formData.username || ''}
-                readOnly
-                className="w-full px-4 py-2.5 rounded border cursor-not-allowed opacity-70"
-                style={{ 
-                  backgroundColor: '#6B5B4A',
-                  borderColor: 'transparent',
-                  color: '#9CA3AF',
-                  fontFamily: 'Cinzel, serif',
-                }}
               />
             </div>
 
             {/* EMAIL */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-xs mb-2 uppercase"
-                style={{ 
-                  color: '#C9A875',
-                  fontFamily: 'Cinzel, serif',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                Correo electrónico
-              </label>
-              <input
+            <div className="register-input-wrapper">
+              <Input
                 id="email"
                 name="email"
                 type="email"
+                label="Correo electrónico"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
-                style={{ 
-                  backgroundColor: '#8B7355',
-                  borderColor: validationErrors.email ? '#EF4444' : 'transparent',
-                  color: '#FFFFFF',
-                  fontFamily: 'Cinzel, serif',
-                }}
+                error={validationErrors.email}
+                placeholder="tu@email.com"
                 autoComplete="email"
               />
-              {validationErrors.email && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
-                  {validationErrors.email}
-                </p>
-              )}
             </div>
 
             {/* CONTRASEÑA */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs mb-2 uppercase"
-                style={{ 
-                  color: '#C9A875',
-                  fontFamily: 'Cinzel, serif',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                Contraseña
-              </label>
-              <input
+            <div className="register-input-wrapper">
+              <Input
                 id="password"
                 name="password"
                 type="password"
+                label="Contraseña"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
-                style={{ 
-                  backgroundColor: '#8B7355',
-                  borderColor: validationErrors.password ? '#EF4444' : 'transparent',
-                  color: '#FFFFFF',
-                  fontFamily: 'Cinzel, serif',
-                }}
+                error={validationErrors.password}
+                placeholder="Mínimo 6 caracteres"
                 autoComplete="new-password"
               />
-              {validationErrors.password && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
-                  {validationErrors.password}
-                </p>
-              )}
             </div>
 
             {/* CONFIRMAR CONTRASEÑA */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-xs mb-2 uppercase"
-                style={{ 
-                  color: '#C9A875',
-                  fontFamily: 'Cinzel, serif',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                Confirmar contraseña
-              </label>
-              <input
+            <div className="register-input-wrapper">
+              <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
+                label="Confirmar contraseña"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded border focus:outline-none transition-colors"
-                style={{ 
-                  backgroundColor: '#8B7355',
-                  borderColor: validationErrors.confirmPassword ? '#EF4444' : 'transparent',
-                  color: '#FFFFFF',
-                  fontFamily: 'Cinzel, serif',
-                }}
+                error={validationErrors.confirmPassword}
+                placeholder="Repite tu contraseña"
                 autoComplete="new-password"
               />
-              {validationErrors.confirmPassword && (
-                <p className="mt-1 text-xs" style={{ color: '#FCA5A5' }}>
-                  {validationErrors.confirmPassword}
-                </p>
-              )}
             </div>
 
             {/* BOTÓN */}
-            <div className="pt-6">
+            <div className="pt-3">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full"
+                className="w-full py-2 text-xs font-semibold tracking-widest uppercase"
+                style={{ fontFamily: 'Cinzel, serif' }}
               >
                 {isLoading ? 'REGISTRANDO...' : 'REGISTRAR'}
               </Button>
             </div>
 
             {/* ENLACE A LOGIN */}
-            <div className="text-center pt-4">
-              <p
-                className="text-sm"
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-sm transition-all duration-200 hover:scale-105"
                 style={{ 
                   color: '#E8D9B8',
                   fontFamily: 'Cinzel, serif',
                 }}
               >
-                ¿Estás ya registrado?{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="underline hover:text-[#C9A875] transition-colors"
-                  style={{ 
-                    color: '#D4A574',
-                    fontFamily: 'Cinzel, serif',
-                  }}
-                >
-                  ¡Inicia sesión aquí!
-                </button>
-              </p>
+                ¿Ya tienes cuenta? <span style={{ color: '#D4A574', textDecoration: 'underline' }}>Inicia sesión aquí</span>
+              </button>
             </div>
           </form>
         </div>

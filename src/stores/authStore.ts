@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import authService from '../services/authService';
+import { login, register, logout, getCurrentUser } from '../services';
 import type { LoginCredentials, RegisterData, User } from '../types/auth.types';
 
 /**
@@ -13,26 +13,26 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null; // ← AÑADIDO para manejar errores
+  error: string | null;
 }
 
 interface AuthActions {
-  checkAuth: () => Promise<void>;
+  checkAuth: () => void;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  clearError: () => void; // ← AÑADIDO para limpiar errores
+  clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>((set) => ({
   // ========================================
   // ESTADO INICIAL
   // ========================================
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: true,
-  error: null, // ← AÑADIDO
+  user: getCurrentUser(), // ← Obtener usuario del localStorage al iniciar
+  token: localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('token'),
+  isLoading: false,
+  error: null,
 
   // ========================================
   // ACCIONES
@@ -40,52 +40,30 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
 
   /**
    * CHECK AUTH - Verifica token al cargar la app
+   * En tu caso, getCurrentUser() ya maneja esto desde localStorage
    */
-  checkAuth: async () => {
+  checkAuth: () => {
     const token = localStorage.getItem('token');
+    const user = getCurrentUser();
     
-    if (!token) {
-      set({ 
-        isLoading: false, 
-        isAuthenticated: false, 
-        user: null, 
-        token: null,
-        error: null,
-      });
-      return;
-    }
-
-    try {
-      const user = await authService.verifyToken();
-      set({ 
-        user, 
-        token, 
-        isAuthenticated: true, 
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      console.error('Token inválido:', error);
-      localStorage.removeItem('token');
-      set({ 
-        user: null, 
-        token: null, 
-        isAuthenticated: false, 
-        isLoading: false,
-        error: null,
-      });
-    }
+    set({ 
+      user,
+      token,
+      isAuthenticated: !!token && !!user,
+      isLoading: false,
+      error: null,
+    });
   },
 
   /**
    * LOGIN - Autenticar usuario
    */
   login: async (credentials: LoginCredentials) => {
-    set({ isLoading: true, error: null }); // ← Limpiar errores previos
+    set({ isLoading: true, error: null });
     
     try {
-      const { user, token } = await authService.login(credentials);
-      localStorage.setItem('token', token);
+      // El service ya guarda en localStorage
+      const { user, token } = await login(credentials);
       
       set({ 
         user, 
@@ -95,16 +73,14 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
         error: null,
       });
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 
-                          error?.message || 
-                          'Error al iniciar sesión';
+      const errorMessage = error?.message || 'Error al iniciar sesión';
       
       set({ 
         isLoading: false,
         error: errorMessage,
       });
       
-      throw error; // Re-lanzar para que el componente lo maneje
+      throw error;
     }
   },
 
@@ -112,11 +88,11 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
    * REGISTER - Registrar nuevo usuario
    */
   register: async (data: RegisterData) => {
-    set({ isLoading: true, error: null }); // ← Limpiar errores previos
+    set({ isLoading: true, error: null });
     
     try {
-      const { user, token } = await authService.register(data);
-      localStorage.setItem('token', token);
+      // El service ya guarda en localStorage
+      const { user, token } = await register(data);
       
       set({ 
         user, 
@@ -126,16 +102,14 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
         error: null,
       });
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 
-                          error?.message || 
-                          'Error al registrar usuario';
+      const errorMessage = error?.message || 'Error al registrar usuario';
       
       set({ 
         isLoading: false,
         error: errorMessage,
       });
       
-      throw error; // Re-lanzar para que el componente lo maneje
+      throw error;
     }
   },
 
@@ -143,7 +117,13 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
    * LOGOUT - Cerrar sesión
    */
   logout: () => {
-    authService.logout();
+    // Limpiar localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Llamar a logout del service (puede hacer redirección adicional)
+    logout();
+    
     set({
       user: null,
       token: null,

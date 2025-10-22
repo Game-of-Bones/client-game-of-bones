@@ -1,15 +1,14 @@
+/**
+ * TIPOS PARA AUTENTICACIÓN
+ */
+
 export interface User {
   id: number;
   username: string;
   email: string;
+  avatar_url?: string; 
   role: 'admin' | 'user';
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  created_at: string;
 }
 
 export interface LoginCredentials {
@@ -21,11 +20,44 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
+  role?: 'admin' | 'user';
 }
 
-export interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
-  checkAuth: () => Promise<void>;
+// ============================================
+// TIPOS PARA RESPUESTAS DE API (genéricos)
+// ============================================
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
 }
+
+export interface ApiError {
+  message: string;
+  statusCode: number;
+  errors?: string[];
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface ApiError {
+  message: string;
+  statusCode: number;
+  errors?: string[];
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+

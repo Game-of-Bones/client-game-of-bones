@@ -1,43 +1,43 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-
-interface AdminRouteProps {
-  children: React.ReactNode;
-}
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthStore } from '../../stores/authStore';
 
 /**
- * AdminRoute - Protege rutas que requieren rol de administrador
- * Redirige a /login si no está autenticado
- * Redirige a / (home) si no es admin
+ * ADMIN ROUTE - Game of Bones
+ * 
+ * HOC para proteger rutas que requieren rol de administrador.
+ * 
+ * Funcionalidad:
+ * - Verifica que el usuario esté autenticado Y sea admin
+ * - Si es admin, renderiza las rutas hijas con <Outlet />
+ * - Si NO es admin, redirige a la página principal
+ * 
+ * Uso en React Router v6:
+ * ```tsx
+ * {
+ *   path: 'admin',
+ *   element: <AdminRoute />,
+ *   children: [
+ *     { path: 'users', element: <UserManagement /> }
+ *   ]
+ * }
+ * ```
  */
-const AdminRoute = ({ children }: AdminRouteProps) => {
-  const location = useLocation();
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  // Mostrar loading mientras verifica autenticación
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si NO está autenticado, redirigir a login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Si está autenticado pero NO es admin, redirigir a home
-  if (user?.role !== 'admin') {
+const AdminRoute = () => {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  
+  /**
+   * Si no está autenticado o no es admin, redirigir a home
+   */
+  if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
-
-  // Si está autenticado Y es admin, renderizar el componente hijo
-  return <>{children}</>;
+  
+  /**
+   * Si es admin, renderizar las rutas hijas
+   * <Outlet /> renderiza las rutas children definidas en el router
+   */
+  return <Outlet />;
 };
 
 export default AdminRoute;
